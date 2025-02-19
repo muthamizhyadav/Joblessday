@@ -3,6 +3,7 @@ import {AppColors} from '../constants/colors.config';
 import {useState} from 'react';
 import SvgIcon from '../shared/Svg';
 import SharedButton from '../shared/SharedButton';
+import {useNavigation} from '@react-navigation/native';
 
 const OnboardScreen = () => {
   const [selected, setSelected] = useState<number>(0);
@@ -10,6 +11,7 @@ const OnboardScreen = () => {
     console.log(selectedValue, 'onPress={()=>OnSelect(1)}');
     setSelected(selectedValue);
   };
+  const navigation = useNavigation<any>();
 
   return (
     <View
@@ -98,9 +100,9 @@ const OnboardScreen = () => {
         </View>
       </View>
       <SharedButton
-        title="Get Started"
+        title="Continue"
         disabled={selected == 0}
-        onPress={() => console.log('clicked')}
+        onPress={() => navigation.navigate('Signup',{id:selected})}
         style={{position: 'absolute', bottom: 30, width: '90%', height: 50}}
       />
     </View>

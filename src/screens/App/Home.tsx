@@ -9,8 +9,10 @@ import {
   View,
 } from 'react-native';
 import SvgIcon from '../../shared/Svg';
+import {useSelector} from 'react-redux';
 
 const HomeScreen: React.FC = () => {
+  const {user, tokens} = useSelector((state: any) => state.app.data);
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -35,7 +37,7 @@ const HomeScreen: React.FC = () => {
                 fontSize: 14,
                 paddingLeft: 4,
               }}>
-              Marcus
+              {user?.name}
             </Text>
           </View>
         </View>

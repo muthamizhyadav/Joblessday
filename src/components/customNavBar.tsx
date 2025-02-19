@@ -87,6 +87,10 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
         return (
           <SvgIcon name="job" height={20} width={20} strokeColor={color} />
         );
+      case 'Job Posts':
+        return (
+          <SvgIcon name="job" height={20} width={20} strokeColor={color} />
+        );
       case 'Profile':
         return (
           <SvgIcon name="profile" height={20} width={20} strokeColor={color} />

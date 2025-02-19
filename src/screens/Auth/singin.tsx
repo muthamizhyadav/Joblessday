@@ -16,6 +16,10 @@ import {useNavigation} from '@react-navigation/native';
 import SharedButton from '../../shared/SharedButton';
 import {LoginInitValue} from '../../validations/initialValues';
 import {LoginInSchema} from '../../validations';
+import {useDispatch} from 'react-redux';
+import {setProfileData} from '../../store/slice';
+import {useLoginMutation} from '../../api/api';
+import Toast from 'react-native-toast-message';
 
 const SigninScreen: React.FC = () => {
   const {height, width} = useWindowDimensions();
@@ -23,6 +27,8 @@ const SigninScreen: React.FC = () => {
   const imageWidth = width * 0.8;
   const navigation = useNavigation<any>();
   const [passwordIcon, setPasswordIcon] = React.useState(false);
+  const [loginRequest, loginResponse] = useLoginMutation();
+  const dispatch = useDispatch();
 
   const PasswordIconChange = () => {
     setPasswordIcon(!passwordIcon);
@@ -37,9 +43,25 @@ const SigninScreen: React.FC = () => {
   });
 
   const Submit = (data: any) => {
-    console.log('Submitted', data);
-    navigation.navigate('MainApp');
+    loginRequest(data);
   };
+
+  React.useEffect(() => {
+    if (loginResponse?.isSuccess) {
+      Toast.show({
+        type: 'success',
+        text1: 'Login successful! Redirecting to your dashboard...',
+      });
+      dispatch(setProfileData(loginResponse?.data));
+      navigation.navigate('MainApp');
+    } else if (loginResponse?.isError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Login failed',
+        text2: loginResponse?.error?.data?.message,
+      });
+    }
+  }, [loginResponse?.isSuccess || loginResponse?.isError]);
 
   return (
     <KeyboardAvoidingView
@@ -82,8 +104,11 @@ const SigninScreen: React.FC = () => {
           </TouchableHighlight>
           <SharedButton
             title="Login"
-            disabled={!formik.isValid || !formik.dirty}
+            disabled={
+              !formik.isValid || !formik.dirty || loginResponse?.isLoading
+            }
             onPress={formik.handleSubmit}
+            isLoading={loginResponse?.isLoading}
           />
           <View style={styles.orContainer}>
             <Text style={styles.line}></Text>
@@ -102,7 +127,7 @@ const SigninScreen: React.FC = () => {
                 Don't have an account?{' '}
                 <Text
                   style={{color: '#6d28d9', fontWeight: 700}}
-                  onPress={() => navigation.navigate('Signup')}>
+                  onPress={() => navigation.navigate('Onboard')}>
                   Signup
                 </Text>
               </Text>

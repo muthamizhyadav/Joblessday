@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  ActivityIndicator,
 } from 'react-native';
 
 interface ButtonProps {
@@ -13,6 +14,7 @@ interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 const SharedButton: React.FC<ButtonProps> = ({
@@ -21,13 +23,18 @@ const SharedButton: React.FC<ButtonProps> = ({
   style,
   textStyle,
   disabled = false,
+  isLoading,
 }) => {
   return (
     <TouchableOpacity
       style={[styles.button, style, disabled && styles.buttonDisabled]}
       onPress={onPress}
       disabled={disabled}>
-      <Text style={[styles.text, textStyle]}>{title}</Text>
+      {isLoading ? (
+        <ActivityIndicator size={'small'} color={'white'} />
+      ) : (
+        <Text style={[styles.text, textStyle]}>{title}</Text>
+      )}
     </TouchableOpacity>
   );
 };

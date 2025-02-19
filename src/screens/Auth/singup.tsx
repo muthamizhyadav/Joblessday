@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   TouchableHighlight,
+  ToastAndroid,
 } from 'react-native';
 import SharedButton from '../../shared/SharedButton';
 import {useNavigation} from '@react-navigation/native';
@@ -15,14 +16,21 @@ import SvgIcon from '../../shared/Svg';
 import SharedInput from '../../shared/input';
 import {useFormik} from 'formik';
 import {SignupinitValue, SignUpSchema} from '../../validations';
+import {useRoute} from '@react-navigation/native';
+import {useRegisterMutation} from '../../api/api';
+import {RegisterRequest} from '../../api/models';
+import Toast from 'react-native-toast-message';
 
 const SignupScreen: React.FC = () => {
+  const route = useRoute<any>();
+  const {id} = route.params || {};
   const {height, width} = useWindowDimensions();
   const imageHeight = height * 0.3;
   const imageWidth = width * 0.8;
   const navigation = useNavigation<any>();
   const [passwordIcon, setPasswordIcon] = React.useState(false);
   const [confirmpasswordIcon, setconfirmpasswordIcon] = React.useState(false);
+  const [registerRequest, registerResponse] = useRegisterMutation();
 
   const PasswordIconChange = () => {
     setPasswordIcon(!passwordIcon);
@@ -36,13 +44,37 @@ const SignupScreen: React.FC = () => {
     initialValues: SignupinitValue,
     validationSchema: SignUpSchema,
     onSubmit: values => {
-      Submit(values);
+      const requestData = {
+        ...values,
+        ...{role: id == '1' ? 'recruiter' : 'candidate'},
+      };
+      Submit(requestData);
     },
   });
 
-  const Submit = (data: any) => {
-    console.log('Submitted', data);
+  const Submit = (data: RegisterRequest) => {
+    registerRequest(data);
   };
+
+  React.useEffect(() => {
+    if (registerResponse?.isSuccess) {
+      Toast.show({
+        type: 'success',
+        text1: 'Success! ',
+        text2: 'Your account has been registered successfully.',
+        position: 'top',
+      });
+      navigation.navigate('singin');
+    } else if (registerResponse?.isError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: registerResponse?.error?.data?.message,
+        position: 'bottom',
+      });
+    } else {
+    }
+  }, [registerResponse?.isSuccess || registerResponse?.isError]);
 
   return (
     <KeyboardAvoidingView
@@ -99,27 +131,19 @@ const SignupScreen: React.FC = () => {
             confirmpasswordIcon={confirmpasswordIcon}
           />
           <SharedButton
-            title="Create your account"
-            disabled={!formik.isValid || !formik.dirty}
+            title="Create your acccount"
+            disabled={
+              !formik.isValid || !formik.dirty || registerResponse?.isLoading
+            }
             onPress={formik.handleSubmit}
+            isLoading={registerResponse?.isLoading}
           />
-          <TouchableHighlight style={styles.signup}>
-            <View style={styles.googleBtnContent}>
-              <Text style={styles.googleText}>
-                Already have an account?{' '}
-                <Text
-                  style={{color: '#6d28d9', fontWeight: 700}}
-                  onPress={() => navigation.navigate('singin')}>
-                  Login
-                </Text>
-              </Text>
-            </View>
-          </TouchableHighlight>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -5,3 +5,4 @@ export const AppColors = {
     AppTextColor: '#ffff',
     AppDisabledTextColor: 'black'
 }
+

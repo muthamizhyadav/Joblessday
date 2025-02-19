@@ -19,6 +19,10 @@ import setting from '../assets/svg/setting.svg';
 import profile from '../assets/svg/profile.svg';
 import job from '../assets/svg/job.svg';
 import bell from '../assets/svg/bell.svg';
+import back from '../assets/svg/back.svg';
+import plus from '../assets/svg/plus.svg';
+import search from '../assets/svg/search.svg';
+import filter from '../assets/svg/filter.svg';
 
 const icons: Record<string, React.FC<SvgProps>> = {
   recruiter: Recruiter,
@@ -36,6 +40,10 @@ const icons: Record<string, React.FC<SvgProps>> = {
   profile,
   job,
   bell,
+  back,
+  plus,
+  search,
+  filter,
 };
 
 interface SvgIconProps {
@@ -54,8 +62,6 @@ const SvgIcon: React.FC<SvgIconProps> = ({
   strokeColor,
 }) => {
   const IconComponent = icons[name];
-  console.log('IconComponent:', IconComponent);
-
   if (!IconComponent) {
     return <View />;
   } else {
