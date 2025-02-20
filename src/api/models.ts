@@ -29,18 +29,33 @@ interface User {
     updatedAt: string;
 }
 
-interface Token {
-    token: string;
-    expires: string;
-}
-
-interface Tokens {
-    access: Token;
-    refresh: Token;
-}
-
-
 export interface LoginResponse {
     user: User;
-    tokens: Tokens;
+    tokens: string;
+}
+
+export interface CreateJobPostRequest {
+    industry: string,
+    role: string,
+    department: string,
+    designation: string,
+    salaryfrom: number,
+    salaryto: number,
+    worklocation: number
+    step?: number
+}
+
+
+export interface CreateJobPostResponse {
+    industry: string,
+    role: string,
+    department: string,
+    designation: string,
+    salaryfrom: number,
+    salaryto: number,
+    worklocation: number,
+    test: any[],
+    step?: number,
+    userId?: string,
+    createdAt: string
 }

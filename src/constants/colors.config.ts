@@ -3,6 +3,7 @@ export const AppColors = {
     AppButtonBackground: '#7c3aed',
     AppDisabledColor: '#9ca3af',
     AppTextColor: '#ffff',
-    AppDisabledTextColor: 'black'
+    AppDisabledTextColor: 'black',
+    AppBorderColor: "#9ca3af"
 }
 
