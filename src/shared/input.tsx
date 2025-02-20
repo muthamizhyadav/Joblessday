@@ -26,6 +26,7 @@ interface InputProps extends TextInputProps {
   passwordIcon?: boolean;
   confiemPasswordIconChange?: () => void;
   confirmpasswordIcon?: boolean;
+  height?:number
 }
 
 const SharedInput: React.FC<InputProps> = ({
@@ -42,6 +43,7 @@ const SharedInput: React.FC<InputProps> = ({
   confiemPasswordIconChange,
   passwordIcon,
   confirmpasswordIcon,
+  height,
   ...rest
 }) => {
   const getInputProps = (): TextInputProps => {
@@ -71,7 +73,7 @@ const SharedInput: React.FC<InputProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <TextInput
-        style={[styles.input, error ? styles.inputError : null]}
+        style={[{...styles.input, height:height}, error ? styles.inputError : null]}
         placeholderTextColor="#999"
         {...getInputProps()}
         {...rest}
@@ -81,7 +83,6 @@ const SharedInput: React.FC<InputProps> = ({
         }}
       />
       {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
-      {/*  */}
       {name == 'password' ? (
         <TouchableOpacity
           onPress={PasswordIconChange}

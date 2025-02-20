@@ -24,6 +24,8 @@ import plus from '../assets/svg/plus.svg';
 import search from '../assets/svg/search.svg';
 import filter from '../assets/svg/filter.svg';
 import upload from '../assets/svg/upload.svg';
+import tick from '../assets/svg/tick.svg';
+import close from '../assets/svg/close.svg';
 
 const icons: Record<string, React.FC<SvgProps>> = {
   recruiter: Recruiter,
@@ -46,6 +48,8 @@ const icons: Record<string, React.FC<SvgProps>> = {
   search,
   filter,
   upload,
+  tick,
+  close,
 };
 
 interface SvgIconProps {

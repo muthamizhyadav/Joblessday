@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {
+  Button,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -29,7 +31,15 @@ const AddJobPostScreen: React.FC = () => {
     useCreateJobPostMutation();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [postCreationData, setPostCreationData] = useState<any>();
+  const [questionTab, setQuestionTab] = useState(1);
+  const [questionTypes] = useState(['MCQ', 'True/False', 'Short Answer']);
+  const [questionText, setQuestionText] = useState('');
+  const [options, setOptions] = useState<any>([{id: 1, text: ''}]);
+  const [marks, setMarks] = useState('');
+  const [correctAnswers, setCorrectAnswers] = useState<any>([]);
+  const [testTitle, setTestTitle] = useState('');
 
+  const [selectedQuestionType, setSelectedQuestionType] = useState('');
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -72,6 +82,59 @@ const AddJobPostScreen: React.FC = () => {
     }
   }, [createJobPostResponse?.isSuccess, createJobPostResponse?.isError]);
 
+  const changeQuestionTab = (selected: number) => {
+    setQuestionTab(selected);
+  };
+
+  const addOption = () => {
+    setOptions([...options, {id: options.length + 1, text: ''}]);
+  };
+
+  const removeOption = (id: any) => {
+    setOptions(options.filter((opt: any) => opt.id !== id));
+    setCorrectAnswers(correctAnswers.filter((ans: any) => ans !== id));
+  };
+
+  const updateOption = (id: any, text: any) => {
+    setOptions(
+      options.map((opt: any) => (opt.id === id ? {...opt, text} : opt)),
+    );
+    console.log(id, text, 'lplplplplp');
+  };
+
+  const Preview = () => {
+    const selectedOptions = options.filter((e: any) => e.text);
+
+    const datas = {
+      question: questionText,
+      options: selectedOptions,
+      marks: marks,
+      testTitle: testTitle,
+    };
+
+    if (!datas?.testTitle) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter Test Title',
+      });
+    } else if (!datas?.marks) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter total marks Title',
+      });
+    } else if (!questionText) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter Valid Question',
+      });
+    } else if (selectedOptions.length == 0) {
+      Toast.show({
+        type: 'error',
+        text1: 'Set Options',
+      });
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -103,9 +166,7 @@ const AddJobPostScreen: React.FC = () => {
         onNext={handleNext}
         onPrevious={handlePrevious}
       />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1, gap: 4}}>
+      <ScrollView>
         {currentStep == 0 ? (
           <ScrollView
             style={{
@@ -236,14 +297,20 @@ const AddJobPostScreen: React.FC = () => {
                 placeholder="Total mark"
               />
             </View>
-            <Text style={{fontSize: 24}}>Question Upload :</Text>
+            <Text style={{fontSize: 24, marginBottom: 2}}>
+              Question Upload :
+            </Text>
             <View style={styles.questionTab}>
               <TouchableOpacity
+                onPress={() => changeQuestionTab(1)}
                 style={{
                   width: '50%',
-                  backgroundColor: AppColors.AppButtonBackground,
-                  margin: 0,
-                  borderRadius: 40,
+                  backgroundColor:
+                    questionTab == 1
+                      ? AppColors.AppButtonBackground
+                      : AppColors.AppBackground,
+                  margin: questionTab == 1 ? 3 : 0,
+                  borderRadius: 10,
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -254,18 +321,34 @@ const AddJobPostScreen: React.FC = () => {
                   name="plus"
                   width={20}
                   height={20}
-                  strokeColor="white"
+                  strokeColor={
+                    questionTab == 1
+                      ? AppColors.AppTextColor
+                      : AppColors.AppButtonBackground
+                  }
                 />
-                <Text style={{color: AppColors.AppTextColor, fontSize: 16}}>
-                  Add Question
+                <Text
+                  style={{
+                    color:
+                      questionTab == 1
+                        ? AppColors.AppTextColor
+                        : AppColors.AppButtonBackground,
+                    fontSize: 16,
+                    fontWeight: questionTab == 1 ? 800 : 600,
+                  }}>
+                  Add Questions
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
+                onPress={() => changeQuestionTab(2)}
                 style={{
-                  width: '50%',
-                  backgroundColor: AppColors.AppButtonBackground,
-                  margin: 0,
-                  borderRadius: 40,
+                  width: '48.5%',
+                  backgroundColor:
+                    questionTab == 2
+                      ? AppColors.AppButtonBackground
+                      : AppColors.AppBackground,
+                  margin: questionTab == 2 ? 2 : 0,
+                  borderRadius: 10,
                   display: 'flex',
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -276,16 +359,156 @@ const AddJobPostScreen: React.FC = () => {
                   name="upload"
                   width={20}
                   height={20}
-                  strokeColor="white"
+                  strokeColor={
+                    questionTab == 2
+                      ? AppColors.AppTextColor
+                      : AppColors.AppButtonBackground
+                  }
                 />
-                <Text style={{color: AppColors.AppTextColor, fontSize: 16}}>
-                  Upload Question
+                <Text
+                  style={{
+                    color:
+                      questionTab == 2
+                        ? AppColors.AppTextColor
+                        : AppColors.AppButtonBackground,
+                    fontSize: 16,
+                    fontWeight: questionTab == 2 ? 800 : 600,
+                  }}>
+                  Upload Questions
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
-      </KeyboardAvoidingView>
+        {questionTab == 1 ? (
+          <View style={{width: '90%', alignSelf: 'center', marginTop: 5}}>
+            <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 8}}>
+              Select Question Type:
+            </Text>
+            <View
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: 4,
+                marginLeft: 5,
+              }}>
+              {questionTypes &&
+                questionTypes.map((item, ind) => (
+                  <TouchableOpacity
+                    style={{
+                      padding: 8,
+                      backgroundColor:
+                        selectedQuestionType == item
+                          ? AppColors.AppButtonBackground
+                          : '#ede9fe',
+                      borderRadius: 40,
+                      borderWidth: 1,
+                      borderColor: AppColors.AppButtonBackground,
+                      paddingHorizontal: 20,
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 3,
+                    }}
+                    key={ind}
+                    onPress={() => setSelectedQuestionType(item)}>
+                    {selectedQuestionType == item ? (
+                      <SvgIcon
+                        name="tick"
+                        width={18}
+                        height={15}
+                        strokeColor="white"
+                      />
+                    ) : null}
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        color:
+                          selectedQuestionType == item
+                            ? AppColors.AppTextColor
+                            : '',
+                      }}>
+                      {item}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+            </View>
+            {selectedQuestionType && (
+              <>
+                <View>
+                  <Text style={{fontSize: 16, marginTop: 10}}>Question:</Text>
+                  <SharedInput
+                    placeholder="Enter question text"
+                    value={questionText}
+                    onChangeText={setQuestionText}
+                    inputType="text"
+                    name={'question'}
+                  />
+                  <Text style={{fontSize: 16}}>Options:</Text>
+                  {selectedQuestionType !== 'Short Answer'
+                    ? options.map((item: any, ind: any) => (
+                        <View
+                          key={ind}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            width: '100%',
+                            alignItems: 'center',
+                          }}>
+                          <SharedInput
+                            placeholder={`Option ${ind + 1}`}
+                            inputType="text"
+                            name={`option${ind + 1}`}
+                            value={item?.text}
+                            containerStyle={{width: '70%'}}
+                            onChange={(text: any) =>
+                              updateOption(item.id, text)
+                            }
+                          />
+                          {item.text ? (
+                            <>
+                              <TouchableOpacity
+                                style={{
+                                  width: 50,
+                                  height: 40,
+                                }}
+                                onPress={addOption}>
+                                <Text
+                                  style={{
+                                    color: '#7e22ce',
+                                    fontWeight: 800,
+                                    paddingLeft: 10,
+                                  }}>
+                                  + Add
+                                </Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={{
+                                  width: 50,
+                                  height: 40,
+                                  margin: 10,
+                                }}
+                                onPress={() => removeOption(item.id)}>
+                                <SvgIcon
+                                  name="close"
+                                  strokeColor={'red'}
+                                  height={20}
+                                  width={20}
+                                />
+                              </TouchableOpacity>
+                            </>
+                          ) : null}
+                        </View>
+                      ))
+                    : null}
+                </View>
+                <SharedButton onPress={Preview} title="Preview and Submit" />
+              </>
+            )}
+          </View>
+        ) : (
+          <View></View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -317,8 +540,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 50,
     borderWidth: 1,
-    borderColor: AppColors.AppBorderColor,
-    borderRadius: 40,
+    borderColor: AppColors.AppButtonBackground,
+    borderRadius: 10,
     backgroundColor: AppColors.AppBackground,
   },
 });
