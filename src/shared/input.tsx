@@ -73,7 +73,7 @@ const SharedInput: React.FC<InputProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <TextInput
-        style={[{...styles.input, height:height}, error ? styles.inputError : null]}
+        style={[{...styles.input}, error ? styles.inputError : null]}
         placeholderTextColor="#999"
         {...getInputProps()}
         {...rest}

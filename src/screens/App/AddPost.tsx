@@ -1,9 +1,5 @@
 import * as React from 'react';
 import {
-  Button,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,6 +19,7 @@ import {JobPostSchema} from '../../validations';
 import {useFormik} from 'formik';
 import {useCreateJobPostMutation} from '../../api/api';
 import Toast from 'react-native-toast-message';
+import BottomSheet, { BottomSheetRefProps } from './../../shared/bottomSheet';
 
 const AddJobPostScreen: React.FC = () => {
   const [data] = useState(Industries);
@@ -31,20 +28,29 @@ const AddJobPostScreen: React.FC = () => {
     useCreateJobPostMutation();
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [postCreationData, setPostCreationData] = useState<any>();
-  const [questionTab, setQuestionTab] = useState(1);
+  const [questionTab, setQuestionTasb] = useState(1);
   const [questionTypes] = useState(['MCQ', 'True/False', 'Short Answer']);
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState<any>([{id: 1, text: ''}]);
   const [marks, setMarks] = useState('');
   const [correctAnswers, setCorrectAnswers] = useState<any>([]);
   const [testTitle, setTestTitle] = useState('');
-
+  const ref = React.useRef<BottomSheetRefProps>(null);
   const [selectedQuestionType, setSelectedQuestionType] = useState('');
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
+
+  const onPress = React.useCallback(() => {
+    const isActive = ref?.current?.isActive();
+    if (isActive) {
+      ref?.current?.scrollTo(0);
+    } else {
+      ref?.current?.scrollTo(-200);
+    }
+  }, []);
 
   const handlePrevious = () => {
     if (currentStep > 0) {
@@ -132,8 +138,15 @@ const AddJobPostScreen: React.FC = () => {
         type: 'error',
         text1: 'Set Options',
       });
+    }else{
+      onPress()
     }
   };
+
+  React.useEffect(()=>{
+    console.log(testTitle,"testTitle");
+    
+  },[testTitle])
 
   return (
     <View style={styles.container}>
@@ -287,6 +300,7 @@ const AddJobPostScreen: React.FC = () => {
                 name={'testTitle'}
                 inputType="text"
                 placeholder="Test Title"
+                onChange={setTestTitle}
               />
             </View>
             <View>
@@ -295,6 +309,7 @@ const AddJobPostScreen: React.FC = () => {
                 name={'testTitle'}
                 inputType="numeric"
                 placeholder="Total mark"
+                onChange={setMarks}
               />
             </View>
             <Text style={{fontSize: 24, marginBottom: 2}}>
@@ -439,7 +454,7 @@ const AddJobPostScreen: React.FC = () => {
                   <SharedInput
                     placeholder="Enter question text"
                     value={questionText}
-                    onChangeText={setQuestionText}
+                    onChange={setQuestionText}
                     inputType="text"
                     name={'question'}
                   />
@@ -501,7 +516,7 @@ const AddJobPostScreen: React.FC = () => {
                       ))
                     : null}
                 </View>
-                <SharedButton onPress={Preview} title="Preview and Submit" />
+                <SharedButton onPress={Preview} title="Preview and Submit" style={{marginBottom:10}}/>
               </>
             )}
           </View>
@@ -509,6 +524,26 @@ const AddJobPostScreen: React.FC = () => {
           <View></View>
         )}
       </ScrollView>
+      <>
+      <BottomSheet ref={ref}>
+        <View style={{width:"90%", alignSelf:'center'}}>
+        <Text style={{fontSize:20, fontWeight:"bold", paddingTop:5}}>Total Mark : {marks}</Text>
+
+        <Text style={{fontSize:20, fontWeight:'bold', color:"#475569"}}>Question:</Text>
+        <Text style={{paddingLeft:10, fontSize:18, color:"#64748b"}}>
+          {questionText}
+        </Text>
+        <Text style={{fontSize:20,fontWeight:"800", marginTop:10, marginBottom:10}}>
+          Options :
+        </Text>
+        {
+            options && options.map((item:any,ind:number)=>(
+              <Text key={ind} style={{fontSize:18,fontWeight:800}}> {ind+1}. {item.text}</Text>
+            ))
+          }
+        </View>
+        </BottomSheet>
+      </>
     </View>
   );
 };
