@@ -1,5 +1,7 @@
 import * as React from 'react';
 import {
+  PermissionsAndroid,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,24 +21,34 @@ import {JobPostSchema} from '../../validations';
 import {useFormik} from 'formik';
 import {useCreateJobPostMutation} from '../../api/api';
 import Toast from 'react-native-toast-message';
-import BottomSheet, { BottomSheetRefProps } from './../../shared/bottomSheet';
+import BottomSheet, {BottomSheetRefProps} from './../../shared/bottomSheet';
+import DocumentPicker from 'react-native-document-picker';
+import RNFS from 'react-native-fs';
+import * as XLSX from 'xlsx';
+import RNFetchBlob from 'react-native-blob-util';
+import Radio from '../../shared/radio';
 
 const AddJobPostScreen: React.FC = () => {
   const [data] = useState(Industries);
   const steps = ['Post creation', 'Test creation'];
   const [createJobPostRequest, createJobPostResponse] =
     useCreateJobPostMutation();
-  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [currentStep, setCurrentStep] = useState<number>(0);
   const [postCreationData, setPostCreationData] = useState<any>();
-  const [questionTab, setQuestionTasb] = useState(1);
+  const [questionTab, setQuestionTab] = useState(1);
   const [questionTypes] = useState(['MCQ', 'True/False', 'Short Answer']);
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState<any>([{id: 1, text: ''}]);
   const [marks, setMarks] = useState('');
-  const [correctAnswers, setCorrectAnswers] = useState<any>([]);
+  const [correctAnswers, setCorrectAnswers] = useState<any>('');
   const [testTitle, setTestTitle] = useState('');
   const ref = React.useRef<BottomSheetRefProps>(null);
   const [selectedQuestionType, setSelectedQuestionType] = useState('');
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [validUploadData, setValidUploadData] = useState([]);
+  const [errorUploadData, setErrorUploadData] = useState([]);
+  const [selected, setSelected] = useState<string | null>(null);
+
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -98,14 +110,12 @@ const AddJobPostScreen: React.FC = () => {
 
   const removeOption = (id: any) => {
     setOptions(options.filter((opt: any) => opt.id !== id));
-    setCorrectAnswers(correctAnswers.filter((ans: any) => ans !== id));
   };
 
   const updateOption = (id: any, text: any) => {
     setOptions(
       options.map((opt: any) => (opt.id === id ? {...opt, text} : opt)),
     );
-    console.log(id, text, 'lplplplplp');
   };
 
   const Preview = () => {
@@ -138,15 +148,163 @@ const AddJobPostScreen: React.FC = () => {
         type: 'error',
         text1: 'Set Options',
       });
-    }else{
-      onPress()
+    } else {
+      onPress();
     }
   };
 
-  React.useEffect(()=>{
-    console.log(testTitle,"testTitle");
-    
-  },[testTitle])
+  React.useEffect(() => {
+    console.log(testTitle, 'testTitle');
+  }, [testTitle]);
+
+  const downloadFile = async () => {
+    try {
+      const fileName = 'questions.xlsx';
+
+      const filePath = Platform.select({
+        ios: `${RNFS.MainBundlePath}/${fileName}`,
+        android: `${RNFS.DocumentDirectoryPath}/${fileName}`,
+      }) as string;
+
+      if (Platform.OS === 'android') {
+        await RNFS.copyFileAssets(fileName, filePath);
+      }
+
+      const fileExists = await RNFS.exists(filePath);
+      if (!fileExists) {
+        Toast.show({type: 'error', text1: 'Error', text2: 'File not found'});
+        return;
+      }
+
+      if (Platform.OS === 'android' && Platform.Version >= 29) {
+        const destinationPath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}`;
+        const base64Data = await RNFS.readFile(filePath, 'base64');
+        await RNFetchBlob.fs.writeFile(destinationPath, base64Data, 'base64');
+        RNFetchBlob.android.addCompleteDownload({
+          title: 'Download Complete',
+          description: `File saved: ${destinationPath}`,
+          mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          path: destinationPath,
+          showNotification: true,
+        });
+
+        Toast.show({
+          type: 'success',
+          text1: 'Download Complete',
+          text2: `Saved to: ${destinationPath}`,
+        });
+        return;
+      }
+
+      if (Platform.OS === 'android' && Platform.Version < 29) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        );
+        if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+          Toast.show({type: 'error', text1: 'Permission Denied'});
+          return;
+        }
+      }
+
+      const destinationPath = `${RNFetchBlob.fs.dirs.DownloadDir}/${fileName}`;
+      await RNFS.copyFile(filePath, destinationPath);
+
+      RNFetchBlob.android.addCompleteDownload({
+        title: 'Download Complete',
+        description: `File saved: ${destinationPath}`,
+        mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        path: destinationPath,
+        showNotification: true,
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Download Complete',
+        text2: `Saved to: ${destinationPath}`,
+      });
+    } catch (error: any) {
+      console.error('Download Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: `Failed: ${error.message}`,
+      });
+    }
+  };
+
+  const formatKeysToLowerCase = (data: any) => {
+    return data.map((item: any) =>
+      Object.fromEntries(
+        Object.entries(item).map(([key, value]) => [key.toLowerCase(), value]),
+      ),
+    );
+  };
+
+  const validateKeys = (data: any) => {
+    const requiredKeywords = ['answer', 'question', 'option'];
+    const validData: any = [];
+    const errorData: any = [];
+
+    data.forEach((item: any) => {
+      const keys = Object.keys(item);
+      const isValid = keys.every(key =>
+        requiredKeywords.some(kw => key.includes(kw)),
+      );
+
+      if (isValid) {
+        validData.push(item);
+      } else {
+        errorData.push(item);
+      }
+    });
+
+    return {validData, errorData};
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      const res = await DocumentPicker.pick({
+        type: [
+          DocumentPicker.types.csv,
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ],
+      });
+      if (res?.length > 0) {
+        const fileUri = res[0].uri;
+        const fileContent = await RNFS.readFile(fileUri, 'base64');
+        const workbook = XLSX.read(fileContent, {type: 'base64'});
+        const sheetName = workbook.SheetNames[0];
+        const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        const lowerCaseConversion = formatKeysToLowerCase(sheetData);
+        const {validData, errorData} = validateKeys(lowerCaseConversion);
+        if (errorData.length > 0) {
+          Toast.show({
+            type: 'error',
+            text1: `${errorData?.length} Invalid data`,
+          });
+        } else if (validData.length > 0) {
+          console.log(validData.length, 'validData.length');
+          Toast.show({
+            type: 'success',
+            text1: `${validData.length} records uploaded successfully. ${errorData.length} records contain errors.`,
+          });
+        }
+        setValidUploadData(validData);
+      }
+      setSelectedFile(res[0]);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        console.log('User canceled file picker');
+      } else {
+        console.log('Error selecting file: ', err);
+      }
+    }
+  };
+
+  const submitQuestion = () => {
+    console.log('question');
+  };
 
   return (
     <View style={styles.container}>
@@ -170,7 +328,16 @@ const AddJobPostScreen: React.FC = () => {
             }}>
             Create Job Posts
           </Text>
-          <TouchableOpacity></TouchableOpacity>
+          <TouchableOpacity style={{marginRight: 10, alignSelf: 'center'}}>
+            <Text
+              style={{
+                color: 'white',
+                fontSize: 18,
+                textDecorationLine: 'underline',
+              }}>
+              Skip
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       <Stepper
@@ -395,7 +562,7 @@ const AddJobPostScreen: React.FC = () => {
             </View>
           </View>
         )}
-        {questionTab == 1 ? (
+        {questionTab == 1 && currentStep == 1 ? (
           <View style={{width: '90%', alignSelf: 'center', marginTop: 5}}>
             <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 8}}>
               Select Question Type:
@@ -516,32 +683,135 @@ const AddJobPostScreen: React.FC = () => {
                       ))
                     : null}
                 </View>
-                <SharedButton onPress={Preview} title="Preview and Submit" style={{marginBottom:10}}/>
+                <SharedButton
+                  onPress={Preview}
+                  title="Preview and Submit"
+                  style={{marginBottom: 10}}
+                />
               </>
             )}
           </View>
-        ) : (
-          <View></View>
-        )}
+        ) : currentStep == 1 ? (
+          <View style={{width: '90%', alignSelf: 'center', marginTop: 10}}>
+            <TouchableOpacity
+              style={styles.downloadText}
+              onPress={downloadFile}>
+              <SvgIcon
+                width={20}
+                height={20}
+                name="download"
+                strokeColor={AppColors.AppButtonBackground}
+              />
+              <Text
+                style={{
+                  color: AppColors.AppButtonBackground,
+                  fontWeight: 'bold',
+                }}>
+                Click here to download sample file
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.uploadBox}
+              onPress={handleFileUpload}>
+              <Text style={styles.uploadText}>
+                {selectedFile
+                  ? `Selected: ${selectedFile.name}`
+                  : 'Tap to Upload File'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </ScrollView>
       <>
-      <BottomSheet ref={ref}>
-        <View style={{width:"90%", alignSelf:'center'}}>
-        <Text style={{fontSize:20, fontWeight:"bold", paddingTop:5}}>Total Mark : {marks}</Text>
+        <BottomSheet ref={ref}>
+          <View style={{width: '90%', alignSelf: 'center'}}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: 'bold',
+                textAlign: 'center',
+                paddingTop: 5,
+              }}>
+              Total Mark : {marks}
+            </Text>
 
-        <Text style={{fontSize:20, fontWeight:'bold', color:"#475569"}}>Question:</Text>
-        <Text style={{paddingLeft:10, fontSize:18, color:"#64748b"}}>
-          {questionText}
-        </Text>
-        <Text style={{fontSize:20,fontWeight:"800", marginTop:10, marginBottom:10}}>
-          Options :
-        </Text>
-        {
-            options && options.map((item:any,ind:number)=>(
-              <Text key={ind} style={{fontSize:18,fontWeight:800}}> {ind+1}. {item.text}</Text>
-            ))
-          }
-        </View>
+            <Text style={{fontSize: 20, fontWeight: 'bold', color: '#475569'}}>
+              Question:
+            </Text>
+            <Text style={{paddingLeft: 15, fontSize: 18, color: '#64748b'}}>
+              {questionText}
+            </Text>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: '800',
+                marginTop: 15,
+                marginBottom: 10,
+              }}>
+              Options :
+            </Text>
+            <Text style={{fontSize: 16}}>
+              (Select any one as the correct answer.)
+            </Text>
+            {options &&
+              options.map((item: any, ind: number) => (
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: 5,
+                    margin: 10,
+                  }}
+                  key={ind}>
+                  <TouchableOpacity
+                    style={{
+                      borderColor:
+                        item.text == correctAnswers
+                          ? AppColors.AppButtonBackground
+                          : '#94a3b8',
+                      borderWidth: 1,
+                      minWidth: '50%',
+                      width: 'auto',
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 6,
+                      borderRadius: 4,
+                      backgroundColor:
+                        item.text == correctAnswers
+                          ? AppColors.AppBackground
+                          : 'transparent',
+                    }}
+                    onPress={() => setCorrectAnswers(item.text)}>
+                    <Radio
+                      selected={item.text == correctAnswers}
+                      borderColor="#64748b"
+                      selectedColor={AppColors.AppButtonBackground}
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        fontWeight: item.text == correctAnswers ? 700 : 600,
+                        padding: 4,
+                        color:
+                          item.text == correctAnswers
+                            ? AppColors.AppButtonBackground
+                            : '',
+                      }}>
+                      {item.text}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+          </View>
+          <View style={{width: '90%', alignSelf: 'center', marginTop: 20}}>
+            <SharedButton
+              onPress={submitQuestion}
+              title="Submit"
+              isLoading={false}
+              disabled={!correctAnswers}
+            />
+          </View>
         </BottomSheet>
       </>
     </View>
@@ -578,6 +848,29 @@ const styles = StyleSheet.create({
     borderColor: AppColors.AppButtonBackground,
     borderRadius: 10,
     backgroundColor: AppColors.AppBackground,
+  },
+  uploadBox: {
+    width: '100%',
+    height: 120,
+    borderWidth: 2,
+    borderColor: AppColors.AppButtonBackground,
+    borderStyle: 'dotted',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ede9fe',
+  },
+  uploadText: {
+    color: '#666',
+    fontSize: 16,
+  },
+  downloadText: {
+    margin: 'auto',
+    marginTop: 10,
+    marginBottom: 20,
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 4,
   },
 });
 export const AddJobPost = AddJobPostScreen;
