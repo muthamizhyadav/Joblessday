@@ -27,6 +27,19 @@ import upload from '../assets/svg/upload.svg';
 import tick from '../assets/svg/tick.svg';
 import close from '../assets/svg/close.svg';
 import download from '../assets/svg/download.svg';
+import redirect from '../assets/svg/redirect.svg';
+import location from '../assets/svg/location.svg';
+import locationround from '../assets/svg/locationround.svg';
+import applications from '../assets/svg/applications.svg';
+import edit from '../assets/svg/edit.svg';
+import delet from '../assets/svg/delete.svg';
+import candidate from '../assets/svg/userGroup.svg';
+import email from '../assets/svg/email.svg';
+import phone from '../assets/svg/phone.svg';
+import link from '../assets/svg/phone.svg';
+
+
+
 
 const icons: Record<string, React.FC<SvgProps>> = {
   recruiter: Recruiter,
@@ -52,6 +65,16 @@ const icons: Record<string, React.FC<SvgProps>> = {
   tick,
   close,
   download,
+  redirect,
+  location,
+  locationround,
+  applications,
+  edit,
+  delet,
+  candidate,
+  email,
+  phone,
+  link
 };
 
 interface SvgIconProps {

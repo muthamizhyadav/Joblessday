@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { CreateJobPostRequest, CreateJobPostResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from './models';
+import { CreateJobPostRequest, CreateJobPostResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UpdateJobPostRequest } from './models';
 
 
 export const Appapi = createApi({
@@ -39,8 +39,16 @@ export const Appapi = createApi({
             }),
         }),
 
+        createTestForJobPost: build.mutation<any, UpdateJobPostRequest>({
+            query: (registerRequest) => ({
+                url: 'v1/jobless/post/' + registerRequest?.id,
+                method: 'PUT',
+                body: registerRequest?.test
+            }),
+        }),
+
     }),
 });
 
 
-export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation } = Appapi 
+export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation, useCreateTestForJobPostMutation } = Appapi 

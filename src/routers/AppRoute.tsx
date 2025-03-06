@@ -10,6 +10,7 @@ import {
   Settings,
 } from '../screens/App';
 import {useSelector} from 'react-redux';
+import { Candidate } from '../screens/App/Candidate';
 
 const Tab = createBottomTabNavigator();
 
@@ -25,6 +26,11 @@ const TabNavigator = () => {
         component={Home}
         options={{animation: 'fade', lazy: true}}
       />
+      <Tab.Screen
+        name="candidates"
+        component={Candidate}
+        options={{animation: 'fade', lazy: true}}
+      />
       {Role == 'recruiter' ? (
         <Tab.Screen
           name="Job Posts"
@@ -38,11 +44,11 @@ const TabNavigator = () => {
           options={{animation: 'fade', lazy: true}}
         />
       )}
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Settings"
         component={Settings}
         options={{animation: 'fade', lazy: true}}
-      />
+      /> */}
       <Tab.Screen
         name="Profile"
         component={Profile}

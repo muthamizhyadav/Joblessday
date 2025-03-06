@@ -19,7 +19,10 @@ import Stepper from '../../shared/stepper';
 import {jobPostinitValue} from '../../validations/job.initialValues';
 import {JobPostSchema} from '../../validations';
 import {useFormik} from 'formik';
-import {useCreateJobPostMutation} from '../../api/api';
+import {
+  useCreateJobPostMutation,
+  useCreateTestForJobPostMutation,
+} from '../../api/api';
 import Toast from 'react-native-toast-message';
 import BottomSheet, {BottomSheetRefProps} from './../../shared/bottomSheet';
 import DocumentPicker from 'react-native-document-picker';
@@ -47,6 +50,8 @@ const AddJobPostScreen: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [validUploadData, setValidUploadData] = useState([]);
   const [errorUploadData, setErrorUploadData] = useState([]);
+  const [createQuestionsRequest, CreateQuestionResponse] =
+    useCreateTestForJobPostMutation();
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleNext = () => {
@@ -257,53 +262,71 @@ const AddJobPostScreen: React.FC = () => {
         errorData.push(item);
       }
     });
-
     return {validData, errorData};
   };
 
   const handleFileUpload = async () => {
-    try {
-      const res = await DocumentPicker.pick({
-        type: [
-          DocumentPicker.types.csv,
-          'application/vnd.ms-excel',
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ],
+    if (!testTitle) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter Test Title',
       });
-      if (res?.length > 0) {
-        const fileUri = res[0].uri;
-        const fileContent = await RNFS.readFile(fileUri, 'base64');
-        const workbook = XLSX.read(fileContent, {type: 'base64'});
-        const sheetName = workbook.SheetNames[0];
-        const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-        const lowerCaseConversion = formatKeysToLowerCase(sheetData);
-        const {validData, errorData} = validateKeys(lowerCaseConversion);
-        if (errorData.length > 0) {
-          Toast.show({
-            type: 'error',
-            text1: `${errorData?.length} Invalid data`,
-          });
-        } else if (validData.length > 0) {
-          console.log(validData.length, 'validData.length');
-          Toast.show({
-            type: 'success',
-            text1: `${validData.length} records uploaded successfully. ${errorData.length} records contain errors.`,
-          });
+    } else if (!marks) {
+      Toast.show({
+        type: 'error',
+        text1: 'Enter total marks Title',
+      });
+    } else {
+      try {
+        const res = await DocumentPicker.pick({
+          type: [
+            DocumentPicker.types.csv,
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          ],
+        });
+        if (res?.length > 0) {
+          const fileUri = res[0].uri;
+          const fileContent = await RNFS.readFile(fileUri, 'base64');
+          const workbook = XLSX.read(fileContent, {type: 'base64'});
+          const sheetName = workbook.SheetNames[0];
+          const sheetData = XLSX.utils.sheet_to_json(
+            workbook.Sheets[sheetName],
+          );
+          const lowerCaseConversion = formatKeysToLowerCase(sheetData);
+          const {validData, errorData} = validateKeys(lowerCaseConversion);
+          if (errorData.length > 0) {
+            Toast.show({
+              type: 'error',
+              text1: `${errorData?.length} Invalid data`,
+            });
+          } else if (validData.length > 0) {
+            console.log(validData.length, 'validData.length');
+            Toast.show({
+              type: 'success',
+              text1: `${validData.length} records uploaded successfully. ${errorData.length} records contain errors.`,
+            });
+          }
+          setValidUploadData(validData);
         }
-        setValidUploadData(validData);
-      }
-      setSelectedFile(res[0]);
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        console.log('User canceled file picker');
-      } else {
-        console.log('Error selecting file: ', err);
+        setSelectedFile(res[0]);
+      } catch (err) {
+        if (DocumentPicker.isCancel(err)) {
+          console.log('User canceled file picker');
+        } else {
+          console.log('Error selecting file: ', err);
+        }
       }
     }
   };
 
   const submitQuestion = () => {
-    console.log('question');
+    console.log(validUploadData, 'question');
+    const data = {
+      id: createJobPostResponse?.data?._id,
+      test: validUploadData,
+    };
+    console.log(data, 'fddata');
   };
 
   return (

@@ -95,6 +95,10 @@ const CustomNavBar: React.FC<BottomTabBarProps> = ({
         return (
           <SvgIcon name="profile" height={20} width={20} strokeColor={color} />
         );
+      case 'candidates':
+        return (
+          <SvgIcon name='candidate' height={20} width={20} strokeColor={color}/>
+        )
       default:
         return (
           <SvgIcon name="home" height={20} width={20} strokeColor={color} />
