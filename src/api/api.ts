@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { CreateJobPostRequest, CreateJobPostResponse, FetchPostRequest, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UpdateJobPostRequest } from './models';
+import { CreateJobPostRequest, CreateJobPostResponse, FetchPostRequest, fetchSlotResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, slotCreationRequest, slotCreationResponse, UpdateJobPostRequest } from './models';
 
 
 export const Appapi = createApi({
@@ -55,8 +55,23 @@ export const Appapi = createApi({
             }),
         }),
 
+        createSlot: build.mutation<slotCreationResponse, slotCreationRequest>({
+            query: (slotPayload) => ({
+                url: 'v1/jobless/slot',
+                method: 'POST',
+                body: slotPayload
+            }),
+        }),
+
+        fetchSlots: build.mutation<fetchSlotResponse, any>({
+            query: (fetchpost) => ({
+                url: 'v1/jobless/slot/fetch/slots',
+                method: 'GET',
+            }),
+        }),
+
     }),
 });
 
 
-export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation, useCreateTestForJobPostMutation, useFetchJobPostMutation } = Appapi 
+export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation, useCreateTestForJobPostMutation, useFetchJobPostMutation, useCreateSlotMutation, useFetchSlotsMutation } = Appapi 

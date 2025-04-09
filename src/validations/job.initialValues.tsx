@@ -7,3 +7,10 @@ export const jobPostinitValue = {
   salaryto: '',
   worklocation: '',
 };
+
+export const SlotInitValue = {
+  postId: '',
+  date: '',
+  startTime: '',
+  endTime: '',
+};

@@ -3,6 +3,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {Forgot, NewPassword, Onboard, OTP, Signin, Signup} from '../screens';
 import TabNavigator from './AppRoute';
 import {AddJobPost} from '../screens/App';
+import { Slotcreation } from '../screens/App/Slotcreation';
 const Stack = createStackNavigator();
 
 const StackNavigator = () => {
@@ -18,6 +19,9 @@ const StackNavigator = () => {
       <Stack.Screen name="OTP" component={OTP} />
       <Stack.Screen name="MainApp" component={TabNavigator} />
       <Stack.Screen name="Addpost" component={AddJobPost} />
+      <Stack.Screen name="slotCreation" component={Slotcreation} />
+
+      
     </Stack.Navigator>
   );
 };

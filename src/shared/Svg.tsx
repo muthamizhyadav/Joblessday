@@ -41,6 +41,8 @@ import clock from '../assets/svg/clock.svg';
 import briefcase from '../assets/svg/briefcase.svg';
 import calendor from '../assets/svg/calendor.svg';
 import file from '../assets/svg/file.svg';
+import slot from '../assets/svg/slot.svg';
+
 
 
 
@@ -87,7 +89,8 @@ const icons: Record<string, React.FC<SvgProps>> = {
   clock,
   briefcase,
   calendor,
-  file
+  file,
+  slot
 };
 
 interface SvgIconProps {

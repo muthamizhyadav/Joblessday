@@ -48,6 +48,8 @@ const SigninScreen: React.FC = () => {
 
   React.useEffect(() => {
     if (loginResponse?.isSuccess) {
+      console.log(loginResponse?.data);
+      
       Toast.show({
         type: 'success',
         text1: 'Login successful! Redirecting to your dashboard...',

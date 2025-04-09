@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {
+  Alert,
   Image,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,6 +12,8 @@ import {
 import SvgIcon from '../../shared/Svg';
 import {useSelector} from 'react-redux';
 import {AppColors} from '../../constants/colors.config';
+import {useNavigation} from '@react-navigation/native';
+import {Platform} from 'react-native';
 interface JobPost {
   id: string;
   title: string;
@@ -38,13 +42,20 @@ interface TimeSlot {
 
 const HomeScreen: React.FC = () => {
   const {user, tokens} = useSelector((state: any) => state.app.data);
+  const navigation = useNavigation<any>();
   console.log(user, 'user');
+
   const stats = [
     {title: 'Jobs Posted Today', value: 12, icon: 'briefcase'},
     {title: 'Total Applications Today', value: 45, icon: 'file'},
     {title: 'Interviews Scheduled', value: 8, icon: 'clock'},
     {title: 'Applications Awaiting Review', value: 23, icon: 'email'},
   ];
+
+  const slotCreationNavigation = () => {
+    console.log('DD');
+    navigation.navigate('slotCreation');
+  };
 
   const interviews: Interview[] = [
     {
@@ -96,9 +107,18 @@ const HomeScreen: React.FC = () => {
       </View>
     </View>
   );
+  const makeCall = () => {
+    let phoneNumber = '';
+    if (Platform.OS === 'android') {
+      phoneNumber = `tel:${8778010278}`;
+    } else {
+      phoneNumber = `telprompt:${8778010278}`;
+    }
+    Linking.openURL(phoneNumber);
+  };
 
   return (
-    <ScrollView style={styles.container}>
+    <>
       <View style={styles.headerSection}>
         <View
           style={{
@@ -134,129 +154,147 @@ const HomeScreen: React.FC = () => {
             height: '100%',
             paddingLeft: 10,
           }}>
-          <TouchableOpacity style={{paddingRight: 10}}>
-            <SvgIcon
-              name="bell"
-              width={30}
-              height={30}
-              strokeColor={AppColors.AppButtonBackground}
-            />
-          </TouchableOpacity>
+          <View style={{position: 'relative'}}>
+            <TouchableOpacity style={{paddingRight: 10}}>
+              <SvgIcon
+                name="bell"
+                width={30}
+                height={30}
+                strokeColor={AppColors.AppButtonBackground}
+              />
+              <Text
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: 'red',
+                  borderRadius: 50,
+                  position: 'absolute',
+                  top: 0,
+                  right: 15,
+                }}></Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      <View style={styles.bannerSlot}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Hello, Recruiter 👋</Text>
-          {/* <View style={styles.notificationBadge}>
+      <ScrollView style={styles.container}>
+        <View style={styles.bannerSlot}>
+          <View style={styles.header}>
+            <Text style={styles.greeting}>Hello, Recruiter 👋</Text>
+            {/* <View style={styles.notificationBadge}>
             <Text style={styles.notificationText}>3</Text>
           </View> */}
+          </View>
+
+          <View style={styles.jobSummary}>
+            <View style={styles.summaryHeader}>
+              <Text style={styles.jobTitle}>Open Job Slots: 3</Text>
+              <SvgIcon name="clock" strokeColor="#fff" height={20} width={20} />
+            </View>
+            <Text style={styles.jobTime}>⏳ 10:00 AM – 5:00 PM </Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, {width: '60%'}]} />
+            </View>
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <SvgIcon
+                name="briefcase"
+                width={20}
+                height={20}
+                strokeColor="#fff"
+              />
+              <Text style={styles.statNumber}>3</Text>
+              <Text style={styles.statLabel}>Jobs Today</Text>
+            </View>
+            <View style={styles.statCard}>
+              <SvgIcon
+                name="candidate"
+                width={20}
+                height={20}
+                strokeColor="#fff"
+              />
+              <Text style={styles.statNumber}>21</Text>
+              <Text style={styles.statLabel}>Applicants</Text>
+            </View>
+            <View style={styles.statCard}>
+              <SvgIcon
+                name="calendor"
+                width={20}
+                height={20}
+                strokeColor="#fff"
+              />
+              <Text style={styles.statNumber}>2</Text>
+              <Text style={styles.statLabel}>Interviews</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={slotCreationNavigation}>
+            <Text style={styles.createButtonText}> + Create New Job Slot</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.jobSummary}>
-          <View style={styles.summaryHeader}>
-            <Text style={styles.jobTitle}>Open Job Slots: 3</Text>
-            <SvgIcon name="clock" strokeColor="#fff" height={20} width={20} />
-          </View>
-          <Text style={styles.jobTime}>⏳ 10:00 AM – 5:00 PM </Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, {width: '60%'}]} />
-          </View>
-        </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <SvgIcon
-              name="briefcase"
-              width={20}
-              height={20}
-              strokeColor="#fff"
-            />
-            <Text style={styles.statNumber}>3</Text>
-            <Text style={styles.statLabel}>Jobs Today</Text>
-          </View>
-          <View style={styles.statCard}>
-            <SvgIcon
-              name="candidate"
-              width={20}
-              height={20}
-              strokeColor="#fff"
-            />
-            <Text style={styles.statNumber}>21</Text>
-            <Text style={styles.statLabel}>Applicants</Text>
-          </View>
-          <View style={styles.statCard}>
-            <SvgIcon
-              name="calendor"
-              width={20}
-              height={20}
-              strokeColor="#fff"
-            />
-            <Text style={styles.statNumber}>2</Text>
-            <Text style={styles.statLabel}>Interviews</Text>
+        <View style={styles.container2}>
+          <Text style={styles.sectionTitle}>Quick Stats</Text>
+          <View style={styles.gridContainer}>
+            {stats.map((stat, index) => (
+              <QuickStat
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+              />
+            ))}
           </View>
         </View>
 
-        <TouchableOpacity style={styles.createButton}>
-          <Text style={styles.createButtonText}> + Create New Job Slot</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.container2}>
-        <Text style={styles.sectionTitle}>Quick Stats</Text>
-        <View style={styles.gridContainer}>
-          {stats.map((stat, index) => (
-            <QuickStat
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-            />
-          ))}
-        </View>
-      </View>
-
-      <View style={styles.container3}>
-        <Text style={styles.sectionTitle3}>Upcoming Interviews</Text>
-        <ScrollView>
-          {interviews.map(interview => (
-            <View key={interview.id} style={styles.interviewItem}>
-              <View style={styles.leftContainer}>
-                <Text style={styles.candidateName}>
-                  {interview.candidateName}
-                </Text>
-                <Text style={styles.jobTitle}>{interview.jobTitle}</Text>
-                <View style={styles.timeStatusContainer}>
-                  <SvgIcon
-                    name="clock"
-                    width={20}
-                    height={20}
-                    strokeColor="gray"
-                  />
-                  <Text style={styles.interviewTime}>
-                    {interview.interviewTime}
+        <View style={styles.container3}>
+          <Text style={styles.sectionTitle3}>Upcoming Interviews</Text>
+          <ScrollView>
+            {interviews.map(interview => (
+              <View key={interview.id} style={styles.interviewItem}>
+                <View style={styles.leftContainer}>
+                  <Text style={styles.candidateName}>
+                    {interview.candidateName}
                   </Text>
-                  {renderStatusIndicator(interview.status)}
+                  <Text style={styles.jobTitle}>{interview.jobTitle}</Text>
+                  <View style={styles.timeStatusContainer}>
+                    <SvgIcon
+                      name="clock"
+                      width={20}
+                      height={20}
+                      strokeColor="gray"
+                    />
+                    <Text style={styles.interviewTime}>
+                      {interview.interviewTime}
+                    </Text>
+                    {renderStatusIndicator(interview.status)}
+                  </View>
+                </View>
+
+                <View style={styles.rightContainer}>
+                  <TouchableOpacity
+                    style={styles.callButton}
+                    onPress={makeCall}>
+                    <SvgIcon
+                      name="phone"
+                      width={20}
+                      height={20}
+                      strokeColor={AppColors.AppButtonBackground}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.rescheduleButton}>
+                    <Text style={styles.rescheduleText}>Reschedule</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              <View style={styles.rightContainer}>
-                <TouchableOpacity style={styles.callButton}>
-                  <SvgIcon
-                    name="phone"
-                    width={20}
-                    height={20}
-                    strokeColor={AppColors.AppButtonBackground}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.rescheduleButton}>
-                  <Text style={styles.rescheduleText}>Reschedule</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-      </View>
-    </ScrollView>
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
+    </>
   );
 };
 

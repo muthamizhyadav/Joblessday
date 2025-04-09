@@ -72,3 +72,22 @@ export interface FetchPostRequest {
     pageNo: number,
     pageSize: number,
 }
+
+export interface slotCreationRequest {
+    postId: string,
+    endTime: string,
+    startTime: string,
+    date: string,
+}
+
+
+export interface slotCreationResponse {
+    postId: string,
+    endTime: string,
+    startTime: string,
+    date: string,
+    userId: string,
+    _id: string,
+    createdAt: string,
+    updatedAt: string
+}

@@ -15,6 +15,7 @@ interface SharedDropdownProps {
   searchOptions?: boolean;
   searchPlaceHolder?: string;
   onBlur?: () => void;
+  objectsend?:boolean
 }
 
 const SharedDropdown: React.FC<SharedDropdownProps> = ({
@@ -24,6 +25,7 @@ const SharedDropdown: React.FC<SharedDropdownProps> = ({
   onChange,
   searchOptions,
   searchPlaceHolder,
+  objectsend=false,
   onBlur,
 }) => {
   return (
@@ -34,7 +36,7 @@ const SharedDropdown: React.FC<SharedDropdownProps> = ({
         valueField="value"
         value={value}
         placeholder={placeholder}
-        onChange={item => onChange(item.value)}
+        onChange={item => onChange(objectsend? item:item.value)}
         style={styles.dropdown}
         containerStyle={styles.dropdownContainer}
         selectedTextStyle={styles.selectedText}
