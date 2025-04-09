@@ -37,6 +37,15 @@ import candidate from '../assets/svg/userGroup.svg';
 import email from '../assets/svg/email.svg';
 import phone from '../assets/svg/phone.svg';
 import link from '../assets/svg/phone.svg';
+import clock from '../assets/svg/clock.svg';
+import briefcase from '../assets/svg/briefcase.svg';
+import calendor from '../assets/svg/calendor.svg';
+import file from '../assets/svg/file.svg';
+
+
+
+
+
 
 
 
@@ -74,7 +83,11 @@ const icons: Record<string, React.FC<SvgProps>> = {
   candidate,
   email,
   phone,
-  link
+  link,
+  clock,
+  briefcase,
+  calendor,
+  file
 };
 
 interface SvgIconProps {

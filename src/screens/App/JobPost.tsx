@@ -1,9 +1,12 @@
 import * as React from 'react';
 import {
+  ActivityIndicator,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import SvgIcon from '../../shared/Svg';
@@ -13,72 +16,72 @@ import BottomSheetComponent from '../../shared/bottomSheet';
 import {useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {FlatList} from 'react-native-gesture-handler';
+import {useFetchJobPostMutation} from '../../api/api';
+import NumberFormatter from '../../shared/numberFormat';
 
 interface JobPostCardProps {
   industry: string;
   role: string;
   department: string;
-  salary: string;
+  salaryfrom: number;
+  salaryto: number;
   designation: string;
   active: boolean;
+  _id: string;
 }
-
-const jobPosts = [
-  {
-    id: '1',
-    industry: 'Information Technology',
-    role: 'Software Engineer',
-    department: 'Engineering',
-    salary: '$80,000 - $100,000',
-    designation: 'Senior Developer',
-    active: true,
-  },
-  {
-    id: '2',
-    industry: 'Healthcare',
-    role: 'Marketing Manager',
-    department: 'Marketing',
-    salary: '$70,000 - $90,000',
-    designation: 'Team Lead',
-    active: false,
-  },
-  {
-    id: '3',
-    industry: 'Finance',
-    role: 'Sales Executive',
-    department: 'Sales',
-    salary: '$50,000 - $70,000',
-    designation: 'Associate',
-    active: true,
-  },
-  {
-    id: '4',
-    industry: 'Finance',
-    role: 'Sales Executive',
-    department: 'Sales',
-    salary: '$50,000 - $70,000',
-    designation: 'Associate',
-    active: false,
-  },
-];
 
 const JobPostScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [bottomSheet, setBottomSheet] = useState(false);
+  const [fetchJobPostRequest, fetchjobPostResponse] = useFetchJobPostMutation();
+  const [pageNo, setPageNo] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [posts, setPosts] = useState<JobPostCardProps>();
 
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
+  };
+
+  const fetchJobPosts = () => {
+    fetchJobPostRequest({
+      pageNo,
+      pageSize,
+    });
+  };
+
+  React.useEffect(() => {
+    fetchJobPosts();
+  }, [pageNo]);
+
+  React.useEffect(() => {
+    console.log(fetchjobPostResponse, 'fetchjobPostResponse');
+    if (fetchjobPostResponse?.isSuccess) {
+      setPosts(fetchjobPostResponse?.data);
+    }
+  }, [fetchjobPostResponse]);
+
+  const renderFooter = () => {
+    return (
+      <View style={{alignItems: 'center', marginVertical: 10}}>
+        <View style={{height: 30}} />
+        {fetchjobPostResponse?.isLoading && (
+          <ActivityIndicator size="large" color="blue" />
+        )}
+      </View>
+    );
   };
 
   const JobPostCard: React.FC<JobPostCardProps> = ({
     industry,
     role,
     department,
-    salary,
+    salaryfrom,
+    salaryto,
     designation,
     active,
+    _id,
   }) => (
-    <View style={styles.card}>
+    <View style={styles.card} key={_id}>
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.label}>Industry:</Text>
@@ -104,7 +107,19 @@ const JobPostScreen: React.FC = () => {
       <View style={styles.row}>
         <View style={styles.column}>
           <Text style={styles.label}>Salary:</Text>
-          <Text style={styles.text}>{salary}</Text>
+          <Text style={styles.text}>
+            <NumberFormatter
+              value={salaryfrom}
+              symbol="₹"
+              thousandSeparator=","
+            />{' '}
+            -{' '}
+            <NumberFormatter
+              value={salaryto}
+              symbol="₹"
+              thousandSeparator=","
+            />
+          </Text>
         </View>
         <View style={styles.column}>
           <Text style={styles.label}>Status:</Text>
@@ -140,12 +155,15 @@ const JobPostScreen: React.FC = () => {
 
   const renderItem = ({item}) => (
     <JobPostCard
+      key={item?._id}
       industry={item.industry}
       role={item.role}
       department={item.department}
-      salary={item.salary}
+      salaryfrom={item.salaryfrom}
+      salaryto={item.salaryto}
       designation={item.designation}
       active={item.active}
+      _id={''}
     />
   );
 
@@ -234,18 +252,28 @@ const JobPostScreen: React.FC = () => {
           </View>
         </View>
         <FlatList
-          data={jobPosts}
+          data={posts && posts?.length > 0 ? posts : []}
           renderItem={renderItem}
           keyExtractor={item => item.id}
           contentContainerStyle={{padding: 16}}
-          ListFooterComponent={<View style={{height: 30}} />}
-        />
-        <BottomSheetComponent
-          open={bottomSheet}
-          setOpen={setBottomSheet}
-          customComponent={<View />}
+          ListFooterComponent={renderFooter}
         />
       </View>
+      <Modal
+        animationType="slide"
+        visible={bottomSheet}
+        transparent
+        onRequestClose={() => setBottomSheet(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={() => setBottomSheet(false)}>
+            <View style={styles.backdrop} />
+          </TouchableWithoutFeedback>
+          <View style={styles.modalContainer}>
+            <View style={styles.handle} />
+            <Text>Your Content Here</Text>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -276,7 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     margin: 10,
-    elevation: 2,
+    elevation: 0,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
@@ -371,6 +399,34 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     color: '#552bac',
     fontWeight: 600,
+  },
+  modal: {
+    height: '40%',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: '100%',
+    height: '60%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    paddingTop: 10,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 10,
   },
 });
 

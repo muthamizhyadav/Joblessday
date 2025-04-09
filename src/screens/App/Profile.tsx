@@ -82,10 +82,10 @@ const ProfileScreen: React.FC = () => {
           <SvgIcon name="location" strokeColor="#666" />
           <Text style={styles.contactText}>{profileData.location}</Text>
         </View>
-        <View style={styles.contactItem}>
+        {/* <View style={styles.contactItem}>
           <SvgIcon name="link" strokeColor="#666" />
           <Text style={styles.contactText}>{profileData.linkedin}</Text>
-        </View>
+        </View> */}
       </View>
 
       {/* Bio Section */}

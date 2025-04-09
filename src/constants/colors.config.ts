@@ -4,6 +4,7 @@ export const AppColors = {
     AppDisabledColor: '#9ca3af',
     AppTextColor: '#ffff',
     AppDisabledTextColor: 'black',
-    AppBorderColor: "#9ca3af"
+    AppBorderColor: "#9ca3af",
+    White:"white"
 }
 

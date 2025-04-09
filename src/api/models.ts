@@ -58,11 +58,17 @@ export interface CreateJobPostResponse {
     step?: number,
     userId?: string,
     createdAt: string
-    _id:string
+    _id: string
 }
 
 
 export interface UpdateJobPostRequest {
     test: any[],
     id: string,
+}
+
+
+export interface FetchPostRequest {
+    pageNo: number,
+    pageSize: number,
 }

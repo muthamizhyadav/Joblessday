@@ -1,5 +1,12 @@
 import * as React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
 import SearchBar from '../../shared/searchInput';
 import SvgIcon from '../../shared/Svg';
 import {useNavigation} from '@react-navigation/native';
@@ -15,6 +22,13 @@ interface CandidateCardProps {
   skills: any[];
   status: boolean;
 }
+
+interface RadioButtonProps {
+  value: 'fresher' | 'experience';
+  selectedValue: string;
+  onValueChange: (value: 'fresher' | 'experience') => void;
+}
+
 const candidates = [
   {
     name: 'Michael Chen',
@@ -144,6 +158,7 @@ const CandidateScreen: React.FC = () => {
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
   };
+  const [selectedValue, setSelectedValue] = React.useState<string>('');
 
   const CandidateCard: React.FC<CandidateCardProps> = ({
     name,
@@ -207,6 +222,25 @@ const CandidateScreen: React.FC = () => {
       status={item.status}
     />
   );
+
+  const RadioButtonGroup: React.FC<RadioButtonProps> = ({
+    value,
+    selectedValue,
+    onValueChange,
+  }) => {
+    return (
+      <TouchableOpacity
+        style={styles.radioButtonContainer}
+        onPress={() => onValueChange(value)}>
+        <View style={styles.radioOuter}>
+          {selectedValue === value && <View style={styles.radioInner} />}
+        </View>
+        <Text style={styles.label}>
+          {value === 'fresher' ? 'Fresher' : 'Experience'}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <>
@@ -274,6 +308,32 @@ const CandidateScreen: React.FC = () => {
           ListFooterComponent={<View style={{height: 30}} />}
         />
       </View>
+      <Modal
+        animationType="slide"
+        visible={bottomSheet}
+        transparent
+        onRequestClose={() => setBottomSheet(false)}>
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={() => setBottomSheet(false)}>
+            <View style={styles.backdrop} />
+          </TouchableWithoutFeedback>
+          <View style={styles.modalContainer}>
+            <View style={styles.handle} />
+            <View style={{display:'flex', flexDirection:'row', gap:20}}>
+              <RadioButtonGroup
+                value="fresher"
+                selectedValue={selectedValue}
+                onValueChange={setSelectedValue}
+              />
+              <RadioButtonGroup
+                value="experience"
+                selectedValue={selectedValue}
+                onValueChange={setSelectedValue}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };
@@ -379,6 +439,59 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  modal: {
+    height: '40%',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContainer: {
+    width: '100%',
+    height: '40%',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    padding: 20,
+    paddingTop: 10,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  radioButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  radioOuter: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#2a84fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  radioInner: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+    backgroundColor: '#2a84fa',
+  },
+  label: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
