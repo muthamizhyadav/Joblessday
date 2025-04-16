@@ -42,15 +42,8 @@ import briefcase from '../assets/svg/briefcase.svg';
 import calendor from '../assets/svg/calendor.svg';
 import file from '../assets/svg/file.svg';
 import slot from '../assets/svg/slot.svg';
-
-
-
-
-
-
-
-
-
+import education from '../assets/svg/education.svg';
+import employment from '../assets/svg/employment.svg';
 
 const icons: Record<string, React.FC<SvgProps>> = {
   recruiter: Recruiter,
@@ -90,7 +83,9 @@ const icons: Record<string, React.FC<SvgProps>> = {
   briefcase,
   calendor,
   file,
-  slot
+  slot,
+  education,
+  employment
 };
 
 interface SvgIconProps {

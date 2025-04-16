@@ -91,3 +91,34 @@ export interface slotCreationResponse {
     createdAt: string,
     updatedAt: string
 }
+
+
+export interface Post {
+    _id: string;
+    step: number;
+    test: any[];
+    industry: string;
+    role: string;
+    department: string;
+    designation: string;
+    salaryfrom: number;
+    salaryto: number;
+    worklocation: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    active: boolean;
+}
+
+export interface fetchSlotResponse {
+    _id: string;
+    postId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    post: Post;
+
+}

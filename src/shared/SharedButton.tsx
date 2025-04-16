@@ -7,6 +7,7 @@ import {
   TextStyle,
   ActivityIndicator,
 } from 'react-native';
+import { AppColors } from '../constants/colors.config';
 
 interface ButtonProps {
   title: string;
@@ -41,7 +42,7 @@ const SharedButton: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#5b21b6',
+    backgroundColor: AppColors.headerBackground,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,

@@ -64,7 +64,13 @@ const SignupScreen: React.FC = () => {
         text2: 'Your account has been registered successfully.',
         position: 'top',
       });
-      navigation.navigate('singin');
+      if (id != '1') {
+        navigation.navigate('updateProfile', {
+          id:registerResponse?.data?._id
+        });
+      } else {
+        navigation.navigate('singin');
+      }
     } else if (registerResponse?.isError) {
       Toast.show({
         type: 'error',

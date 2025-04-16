@@ -88,16 +88,16 @@ export default DatePickerComponent;
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: 7,
   },
   label: {
     fontWeight: '600',
     marginBottom: 4,
   },
   dateButton: {
-    padding: 13,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: 'white',
     borderRadius: 6,
     backgroundColor: 'white',
   },

@@ -206,7 +206,7 @@ export const CandidateDashboard: React.FC = () => {
       </View>
 
       <View style={styles.container3}>
-        <Text style={styles.sectionTitle3}>Scheduled Interviews</Text>
+        <Text style={styles.sectionTitle3}>Scheduled Upcomming Interviews</Text>
         <ScrollView>
           {interviews.map(interview => (
             <View key={interview.id} style={styles.interviewItem}>
