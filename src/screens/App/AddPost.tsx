@@ -30,6 +30,11 @@ import RNFS from 'react-native-fs';
 import * as XLSX from 'xlsx';
 import RNFetchBlob from 'react-native-blob-util';
 import Radio from '../../shared/radio';
+import DatePickerComponent from '../../shared/dateTimePicker';
+import {useNavigation} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import moment from 'moment';
+import TextArea from '../../shared/textArea';
 
 const AddJobPostScreen: React.FC = () => {
   const [data] = useState(Industries);
@@ -38,8 +43,8 @@ const AddJobPostScreen: React.FC = () => {
     useCreateJobPostMutation();
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [postCreationData, setPostCreationData] = useState<any>();
-  const [questionTab, setQuestionTab] = useState(1);
-  const [questionTypes] = useState(['MCQ', 'True/False', 'Short Answer']);
+  const [questionTab, setQuestionTab] = useState(2);
+  const [questionTypes] = useState(['MCQ', 'Open Questions']);
   const [questionText, setQuestionText] = useState('');
   const [options, setOptions] = useState<any>([{id: 1, text: ''}]);
   const [marks, setMarks] = useState('');
@@ -50,6 +55,31 @@ const AddJobPostScreen: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<any>(null);
   const [validUploadData, setValidUploadData] = useState([]);
   const [errorUploadData, setErrorUploadData] = useState([]);
+  const [Openquestions, setOpenQuestions] = useState(['']);
+  const navigation = useNavigation<any>();
+  const {user, tokens} = useSelector((state: any) => state.app.data);
+  const [localStartTime, setLocalStartTime] = useState<Date | null>(null);
+  const [localEndTime, setLocalEndTime] = useState<Date | null>(null);
+
+  const experienceOptions = [
+    {label: 'Fresher', value: 'fresher'},
+    {label: '1-3 years', value: '1-3'},
+    {label: '3-5 years', value: '3-5'},
+    {label: '5-10 years', value: '5-10'},
+    {label: '10-15 years', value: '10-15'},
+    {label: '15+ years', value: '15+'},
+  ];
+
+  const handleChange = (text, index) => {
+    const updated = [...Openquestions];
+    updated[index] = text;
+    setOpenQuestions(updated);
+  };
+
+  const handleAddMore = () => {
+    setOpenQuestions([...Openquestions, '']);
+  };
+
   const [createQuestionsRequest, CreateQuestionResponse] =
     useCreateTestForJobPostMutation();
   const [selected, setSelected] = useState<string | null>(null);
@@ -91,8 +121,11 @@ const AddJobPostScreen: React.FC = () => {
   React.useEffect(() => {
     console.log(createJobPostResponse);
     if (createJobPostResponse?.isSuccess) {
-      setCurrentStep(createJobPostResponse?.data?.step ?? 0);
-      setPostCreationData(createJobPostResponse?.data);
+      navigation.navigate('MainApp', {
+        screen: 'Job Posts',
+        params: {new: true},
+      });
+
       Toast.show({
         type: 'success',
         text1: 'Job post has been created!',
@@ -104,10 +137,6 @@ const AddJobPostScreen: React.FC = () => {
       });
     }
   }, [createJobPostResponse?.isSuccess, createJobPostResponse?.isError]);
-
-  const changeQuestionTab = (selected: number) => {
-    setQuestionTab(selected);
-  };
 
   const addOption = () => {
     setOptions([...options, {id: options.length + 1, text: ''}]);
@@ -124,43 +153,10 @@ const AddJobPostScreen: React.FC = () => {
   };
 
   const Preview = () => {
-    const selectedOptions = options.filter((e: any) => e.text);
-
-    const datas = {
-      question: questionText,
-      options: selectedOptions,
-      marks: marks,
-      testTitle: testTitle,
-    };
-
-    if (!datas?.testTitle) {
-      Toast.show({
-        type: 'error',
-        text1: 'Enter Test Title',
-      });
-    } else if (!datas?.marks) {
-      Toast.show({
-        type: 'error',
-        text1: 'Enter total marks Title',
-      });
-    } else if (!questionText) {
-      Toast.show({
-        type: 'error',
-        text1: 'Enter Valid Question',
-      });
-    } else if (selectedOptions.length == 0) {
-      Toast.show({
-        type: 'error',
-        text1: 'Set Options',
-      });
+    if (selectedQuestionType == 'MCQ') {
     } else {
-      onPress();
     }
   };
-
-  React.useEffect(() => {
-    console.log(testTitle, 'testTitle');
-  }, [testTitle]);
 
   const downloadFile = async () => {
     try {
@@ -329,6 +325,19 @@ const AddJobPostScreen: React.FC = () => {
     console.log(data, 'fddata');
   };
 
+  const selectDateTime = (type: string, value: any) => {
+    console.log(type, value);
+    if (type == 'date') {
+      formik.setFieldValue('date', value);
+    } else if (type == 'startTime') {
+      formik.setFieldValue('startTime', value);
+      setLocalStartTime(value);
+    } else if (type == 'endTime') {
+      formik.setFieldValue('endTime', value);
+    }
+    console.log(formik.values);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -352,30 +361,30 @@ const AddJobPostScreen: React.FC = () => {
             Create Job Posts
           </Text>
           <TouchableOpacity style={{marginRight: 10, alignSelf: 'center'}}>
-            <Text
-              style={{
-                color: 'white',
-                fontSize: 18,
-                textDecorationLine: 'underline',
-              }}>
-              Skip
-            </Text>
+            {/* <Text
+                style={{
+                  color: 'white',
+                  fontSize: 18,
+                  textDecorationLine: 'underline',
+                }}>
+                Skip
+              </Text> */}
           </TouchableOpacity>
         </View>
       </View>
-      <Stepper
+      {/* <Stepper
         steps={steps}
         currentStep={currentStep}
         onNext={handleNext}
         onPrevious={handlePrevious}
-      />
+      /> */}
       <ScrollView>
         {currentStep == 0 ? (
           <ScrollView
             style={{
               width: '90%',
               margin: 'auto',
-              marginTop: 10,
+              marginTop: 25,
               display: 'flex',
               flexDirection: 'column',
               gap: 5,
@@ -429,6 +438,18 @@ const AddJobPostScreen: React.FC = () => {
                 value={formik.values.designation}
               />
             </View>
+            <View style={styles.forms}>
+              <Text>Select Experience :</Text>
+              <SharedDropdown
+                onChange={value => {
+                  formik.setFieldValue('experience', value),
+                    console.log(value, 'value');
+                }}
+                value={formik.values.experience}
+                data={experienceOptions}
+                searchOptions={false}
+              />
+            </View>
 
             <View
               style={{
@@ -458,7 +479,7 @@ const AddJobPostScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={styles.forms}>
+            <View>
               <Text>Work Locations :</Text>
               <SharedInput
                 inputType="text"
@@ -466,6 +487,71 @@ const AddJobPostScreen: React.FC = () => {
                 placeholder="Work location"
                 onChange={formik.handleChange('worklocation')}
                 value={formik.values.worklocation}
+              />
+            </View>
+            <View style={styles.forms}>
+              <Text>Openings :</Text>
+              <SharedInput
+                inputType="numeric"
+                name={'openings'}
+                placeholder="No of openings"
+                onChange={formik.handleChange('openings')}
+                value={formik.values.openings}
+              />
+            </View>
+            <View>
+              <Text>Slot date :</Text>
+              <DatePickerComponent
+                label="Pick a Date"
+                mode="date"
+                value={formik.values.date ? new Date(formik.values.date) : null}
+                onChange={(val: Date) =>
+                  selectDateTime('date', val.toISOString())
+                }
+                placeholder="Select Slot Date"
+              />
+            </View>
+
+            <View>
+              <Text>Slot start time :</Text>
+              <DatePickerComponent
+                mode="time"
+                value={
+                  formik.values.startTime
+                    ? moment(formik.values.startTime).toDate()
+                    : null
+                }
+                onChange={(val: Date) =>
+                  selectDateTime('startTime', val.toISOString())
+                }
+                placeholder="Select Start Time"
+              />
+            </View>
+
+            <View style={styles.forms}>
+              <Text>Slot end time :</Text>
+
+              <DatePickerComponent
+                mode="time"
+                value={
+                  formik.values.endTime
+                    ? moment(formik.values.endTime).toDate()
+                    : null
+                }
+                onChange={(val: Date) =>
+                  selectDateTime('endTime', val.toISOString())
+                }
+                placeholder="Select End Time"
+              />
+            </View>
+            <View style={styles.forms}>
+              <Text>Job Description :</Text>
+
+              <TextArea
+              onChangeText={formik.handleChange('description')}
+              value={formik.values.description}
+              numberOfLines={5}
+              placeholder='Write job description'
               />
             </View>
             <SharedButton
@@ -477,120 +563,120 @@ const AddJobPostScreen: React.FC = () => {
                 createJobPostResponse?.isLoading
               }
               onPress={() => formik.handleSubmit()}
+              style={{marginBottom: 10}}
             />
           </ScrollView>
-        ) : (
-          <View style={{width: '90%', alignSelf: 'center'}}>
-            <Text style={{fontSize: 24, marginBottom: 5}}>
-              Test Information :
-            </Text>
-            <View>
-              <Text>Test Title :</Text>
-              <SharedInput
-                name={'testTitle'}
-                inputType="text"
-                placeholder="Test Title"
-                onChange={setTestTitle}
-              />
-            </View>
-            <View>
-              <Text>Total Mark:</Text>
-              <SharedInput
-                name={'testTitle'}
-                inputType="numeric"
-                placeholder="Total mark"
-                onChange={setMarks}
-              />
-            </View>
-            <Text style={{fontSize: 24, marginBottom: 2}}>
-              Question Upload :
-            </Text>
-            <View style={styles.questionTab}>
-              <TouchableOpacity
-                onPress={() => changeQuestionTab(1)}
-                style={{
-                  width: '50%',
-                  backgroundColor:
-                    questionTab == 1
-                      ? AppColors.AppButtonBackground
-                      : AppColors.AppBackground,
-                  margin: questionTab == 1 ? 3 : 0,
-                  borderRadius: 10,
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                }}>
-                <SvgIcon
-                  name="plus"
-                  width={20}
-                  height={20}
-                  strokeColor={
-                    questionTab == 1
-                      ? AppColors.AppTextColor
-                      : AppColors.AppButtonBackground
-                  }
-                />
-                <Text
-                  style={{
-                    color:
-                      questionTab == 1
-                        ? AppColors.AppTextColor
-                        : AppColors.AppButtonBackground,
-                    fontSize: 16,
-                    fontWeight: questionTab == 1 ? 800 : 600,
-                  }}>
-                  Add Questions
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => changeQuestionTab(2)}
-                style={{
-                  width: '48.5%',
-                  backgroundColor:
-                    questionTab == 2
-                      ? AppColors.AppButtonBackground
-                      : AppColors.AppBackground,
-                  margin: questionTab == 2 ? 2 : 0,
-                  borderRadius: 10,
-                  display: 'flex',
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 4,
-                }}>
-                <SvgIcon
-                  name="upload"
-                  width={20}
-                  height={20}
-                  strokeColor={
-                    questionTab == 2
-                      ? AppColors.AppTextColor
-                      : AppColors.AppButtonBackground
-                  }
-                />
-                <Text
-                  style={{
-                    color:
-                      questionTab == 2
-                        ? AppColors.AppTextColor
-                        : AppColors.AppButtonBackground,
-                    fontSize: 16,
-                    fontWeight: questionTab == 2 ? 800 : 600,
-                  }}>
-                  Upload Questions
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-        {questionTab == 1 && currentStep == 1 ? (
+        ) : // <View style={{width: '90%', alignSelf: 'center'}}>
+        //   <Text style={{fontSize: 24, marginBottom: 5}}>
+        //     Test Information :
+        //   </Text>
+        //   <View>
+        //     <Text>Test Title :</Text>
+        //     <SharedInput
+        //       name={'testTitle'}
+        //       inputType="text"
+        //       placeholder="Test Title"
+        //       onChange={setTestTitle}
+        //     />
+        //   </View>
+        //   <View>
+        //     <Text>Total Mark:</Text>
+        //     <SharedInput
+        //       name={'testTitle'}
+        //       inputType="numeric"
+        //       placeholder="Total mark"
+        //       onChange={setMarks}
+        //     />
+        //   </View>
+        //   <Text style={{fontSize: 24, marginBottom: 2}}>
+        //     Question Upload :
+        //   </Text>
+        //   <View style={styles.questionTab}>
+        //     <TouchableOpacity
+        //       onPress={() => changeQuestionTab(1)}
+        //       style={{
+        //         width: '50%',
+        //         backgroundColor:
+        //           questionTab == 1
+        //             ? AppColors.AppButtonBackground
+        //             : AppColors.AppBackground,
+        //         margin: questionTab == 1 ? 3 : 0,
+        //         borderRadius: 10,
+        //         display: 'flex',
+        //         flexDirection: 'row',
+        //         alignItems: 'center',
+        //         justifyContent: 'center',
+        //         gap: 4,
+        //       }}>
+        //       <SvgIcon
+        //         name="plus"
+        //         width={20}
+        //         height={20}
+        //         strokeColor={
+        //           questionTab == 1
+        //             ? AppColors.AppTextColor
+        //             : AppColors.AppButtonBackground
+        //         }
+        //       />
+        //       <Text
+        //         style={{
+        //           color:
+        //             questionTab == 1
+        //               ? AppColors.AppTextColor
+        //               : AppColors.AppButtonBackground,
+        //           fontSize: 16,
+        //           fontWeight: questionTab == 1 ? 800 : 600,
+        //         }}>
+        //         Add Questions
+        //       </Text>
+        //     </TouchableOpacity>
+        //     <TouchableOpacity
+        //       onPress={() => changeQuestionTab(2)}
+        //       style={{
+        //         width: '48.5%',
+        //         backgroundColor:
+        //           questionTab == 2
+        //             ? AppColors.AppButtonBackground
+        //             : AppColors.AppBackground,
+        //         margin: questionTab == 2 ? 2 : 0,
+        //         borderRadius: 10,
+        //         display: 'flex',
+        //         flexDirection: 'row',
+        //         alignItems: 'center',
+        //         justifyContent: 'center',
+        //         gap: 4,
+        //       }}>
+        //       <SvgIcon
+        //         name="upload"
+        //         width={20}
+        //         height={20}
+        //         strokeColor={
+        //           questionTab == 2
+        //             ? AppColors.AppTextColor
+        //             : AppColors.AppButtonBackground
+        //         }
+        //       />
+        //       <Text
+        //         style={{
+        //           color:
+        //             questionTab == 2
+        //               ? AppColors.AppTextColor
+        //               : AppColors.AppButtonBackground,
+        //           fontSize: 16,
+        //           fontWeight: questionTab == 2 ? 800 : 600,
+        //         }}>
+        //         Upload Questions
+        //       </Text>
+        //     </TouchableOpacity>
+        //   </View>
+        // </View>
+        null}
+        {currentStep == 1 ? (
           <View style={{width: '90%', alignSelf: 'center', marginTop: 5}}>
-            <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 8}}>
+            {/* <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 8}}>
               Select Question Type:
-            </Text>
-            <View
+            </Text> */}
+            {/* <View
               style={{
                 display: 'flex',
                 flexDirection: 'row',
@@ -636,113 +722,132 @@ const AddJobPostScreen: React.FC = () => {
                     </Text>
                   </TouchableOpacity>
                 ))}
-            </View>
-            {selectedQuestionType && (
-              <>
-                <View>
-                  <Text style={{fontSize: 16, marginTop: 10}}>Question:</Text>
-                  <SharedInput
-                    placeholder="Enter question text"
-                    value={questionText}
-                    onChange={setQuestionText}
-                    inputType="text"
-                    name={'question'}
-                  />
-                  <Text style={{fontSize: 16}}>Options:</Text>
-                  {selectedQuestionType !== 'Short Answer'
-                    ? options.map((item: any, ind: any) => (
-                        <View
-                          key={ind}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            width: '100%',
-                            alignItems: 'center',
-                          }}>
-                          <SharedInput
-                            placeholder={`Option ${ind + 1}`}
-                            inputType="text"
-                            name={`option${ind + 1}`}
-                            value={item?.text}
-                            containerStyle={{width: '70%'}}
-                            onChange={(text: any) =>
-                              updateOption(item.id, text)
-                            }
-                          />
-                          {item.text ? (
-                            <>
-                              <TouchableOpacity
+            </View> */}
+            <>
+              {/* <View>
+                    <Text style={{fontSize: 16, marginTop: 10}}>Question:</Text>
+                    <SharedInput
+                      placeholder="Enter question text"
+                      value={questionText}
+                      onChange={setQuestionText}
+                      inputType="text"
+                      name={'question'}
+                    />
+                    <Text style={{fontSize: 16}}>Options:</Text>
+                    {options.map((item: any, ind: any) => (
+                      <View
+                        key={ind}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          width: '100%',
+                          alignItems: 'center',
+                        }}>
+                        <SharedInput
+                          placeholder={`Option ${ind + 1}`}
+                          inputType="text"
+                          name={`option${ind + 1}`}
+                          value={item?.text}
+                          containerStyle={{width: '70%'}}
+                          onChange={(text: any) => updateOption(item.id, text)}
+                        />
+                        {item.text ? (
+                          <>
+                            <TouchableOpacity
+                              style={{
+                                width: 50,
+                                height: 40,
+                              }}
+                              onPress={addOption}>
+                              <Text
                                 style={{
-                                  width: 50,
-                                  height: 40,
-                                }}
-                                onPress={addOption}>
-                                <Text
-                                  style={{
-                                    color: '#7e22ce',
-                                    fontWeight: 800,
-                                    paddingLeft: 10,
-                                  }}>
-                                  + Add
-                                </Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
+                                  color: '#7e22ce',
+                                  fontWeight: 800,
+                                  paddingLeft: 10,
+                                }}>
+                                + Add
+                              </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              style={{
+                                width: 50,
+                                height: 40,
+                                margin: 10,
+                              }}
+                              onPress={() => removeOption(item.id)}>
+                              <SvgIcon
+                                name="close"
+                                strokeColor={'red'}
+                                height={20}
+                                width={20}
+                              />
+                            </TouchableOpacity>
+                          </>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View> */}
+
+              {/* <View style={{width: '100%', marginTop: 10}}>
+                    {Openquestions.map((q, index) => (
+                      <TextInput
+                        key={index}
+                        value={q}
+                        onChangeText={text => handleChange(text, index)}
+                        placeholder={`Question ${index + 1}`}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#ccc',
+                          borderRadius: 5,
+                          padding: 10,
+                          marginBottom: 10,
+                        }}
+                      />
+                      <View
+                        style={{
+                          marginTop: 10,
+                          display: 'flex',
+                          // flexDirection: 'row',
+                          // alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}>
+                        <SharedInput
+                          key={index}
+                          placeholder="Enter question text"
+                          onChange={e => handleChange(e, index)}
+                          inputType="text"
+                          name={'question'}
+                        />
+                        {index === Openquestions.length - 1 &&
+                          q.trim() !== '' && (
+                            <TouchableOpacity
+                              style={{
+                                // width: '50%',
+                                height: 40,
+                              }}
+                              onPress={handleAddMore}>
+                              <Text
                                 style={{
-                                  width: 50,
-                                  height: 40,
-                                  margin: 10,
-                                }}
-                                onPress={() => removeOption(item.id)}>
-                                <SvgIcon
-                                  name="close"
-                                  strokeColor={'red'}
-                                  height={20}
-                                  width={20}
-                                />
-                              </TouchableOpacity>
-                            </>
-                          ) : null}
-                        </View>
-                      ))
-                    : null}
-                </View>
-                <SharedButton
-                  onPress={Preview}
-                  title="Preview and Submit"
-                  style={{marginBottom: 10}}
-                />
-              </>
-            )}
-          </View>
-        ) : currentStep == 1 ? (
-          <View style={{width: '90%', alignSelf: 'center', marginTop: 10}}>
-            <TouchableOpacity
-              style={styles.downloadText}
-              onPress={downloadFile}>
-              <SvgIcon
-                width={20}
-                height={20}
-                name="download"
-                strokeColor={AppColors.AppButtonBackground}
+                                  color: '#7e22ce',
+                                  fontWeight: 800,
+                                  paddingLeft: 10,
+                                }}>
+                                + Add
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                      </View>
+                    ))}
+                  </View> */}
+              <SharedButton
+                onPress={Preview}
+                title="Preview and Submit"
+                style={{marginBottom: 10}}
               />
-              <Text
-                style={{
-                  color: AppColors.AppButtonBackground,
-                  fontWeight: 'bold',
-                }}>
-                Click here to download sample file
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.uploadBox}
-              onPress={handleFileUpload}>
-              <Text style={styles.uploadText}>
-                {selectedFile
-                  ? `Selected: ${selectedFile.name}`
-                  : 'Tap to Upload File'}
-              </Text>
-            </TouchableOpacity>
+            </>
           </View>
+        ) : questionTab == 2 ? (
+          <View></View>
         ) : null}
       </ScrollView>
       <>
@@ -772,9 +877,6 @@ const AddJobPostScreen: React.FC = () => {
                 marginBottom: 10,
               }}>
               Options :
-            </Text>
-            <Text style={{fontSize: 16}}>
-              (Select any one as the correct answer.)
             </Text>
             {options &&
               options.map((item: any, ind: number) => (
@@ -806,11 +908,11 @@ const AddJobPostScreen: React.FC = () => {
                           : 'transparent',
                     }}
                     onPress={() => setCorrectAnswers(item.text)}>
-                    <Radio
+                    {/* <Radio
                       selected={item.text == correctAnswers}
                       borderColor="#64748b"
                       selectedColor={AppColors.AppButtonBackground}
-                    />
+                    /> */}
                     <Text
                       style={{
                         fontSize: 16,

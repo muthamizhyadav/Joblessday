@@ -20,9 +20,29 @@ import {DocumentPickerResponse} from 'react-native-document-picker';
 import SharedButton from '../../../shared/SharedButton';
 import StepIndicator from 'react-native-step-indicator';
 import {customStyles} from '../../../constants/datas';
+import {useFormik} from 'formik';
+import {
+  BasicDetailsInitValue,
+  EducationDetailsinitialValues,
+  EmployerDetailsinitialValues,
+} from '../../../validations/update.profile.initial';
+import {
+  BasicDetailSchema,
+  EducationDetailSchema,
+  EmploymentDetailSchema,
+} from '../../../validations/update.profile.schema';
+import {useSelector} from 'react-redux';
+import {
+  useUpdateCandidateProfileEducationMutation,
+  useUpdateCandidateProfileEmploymentMutation,
+  useUpdateCandidateProfileMutation,
+} from '../../../api/api';
+import Toast from 'react-native-toast-message';
+import {useNavigation} from '@react-navigation/native';
 
 type UpdateProfileRouteParams = {
   id: string;
+  stepper: string;
 };
 
 const UpdateProfileScreen: React.FC<{
@@ -30,20 +50,123 @@ const UpdateProfileScreen: React.FC<{
 }> = ({route}) => {
   const [skills, setSkills] = React.useState<any>([]);
   const [file, setFile] = React.useState<DocumentPickerResponse | null>(null);
+  const registrationData = useSelector((state: any) => state.app.data);
   const [currentPosition, setCurrentPosition] = React.useState(0);
+  const [createBasicDetailRequest, createBasicDetailResponse] =
+    useUpdateCandidateProfileMutation();
+  const [createEducationDetailRequest, createEducationDetailResponse] =
+    useUpdateCandidateProfileEducationMutation();
+  const [createEmploymentDetailRequest, createEmploymentDetailResponse] =
+    useUpdateCandidateProfileEmploymentMutation();
   const labels = ['Basic Details', 'Education', 'Employment'];
+  const navigation = useNavigation<any>();
 
   const handleFileSelect = (selectedFile: DocumentPickerResponse) => {
     setFile(selectedFile);
   };
-  function selectDateTime(arg0: string, arg1: string): void {
-    throw new Error('Function not implemented.');
-  }
+
+  console.log(route.params);
+
+  React.useEffect(() => {
+    if (route?.params?.stepper) {
+      setCurrentPosition(route?.params?.stepper);
+    }
+  }, [route]);
 
   const handleSkillsChange = (updatedSkills: string[]) => {
     setSkills(updatedSkills);
     console.log('Skills from child:', updatedSkills);
   };
+
+  const Basicformik = useFormik({
+    initialValues: BasicDetailsInitValue,
+    validationSchema: BasicDetailSchema,
+    onSubmit: values => {
+      createBasicDetailRequest({
+        stepper: 1,
+        address: values.address,
+        contact: values.contact,
+        DOB: values.DOB,
+        employmentType: values.employmentType,
+        fullName: values.fullName,
+        gender: values.gender,
+        id: route.params.id,
+      });
+    },
+  });
+
+  const Educationformik = useFormik({
+    initialValues: EducationDetailsinitialValues,
+    validationSchema: EducationDetailSchema,
+    onSubmit: values => {
+      let data = [];
+      data.push(values.educationDetails);
+      createEducationDetailRequest({
+        educationDetails: data,
+        id: route.params.id,
+        stepper: 2,
+      });
+    },
+  });
+
+  const Employmentformik = useFormik({
+    initialValues: EmployerDetailsinitialValues,
+    validationSchema: EmploymentDetailSchema,
+    onSubmit: values => {
+      let data = [];
+      data.push(values.employmentDetails);
+      createEmploymentDetailRequest({
+        employmentDetails: data,
+        id: route.params.id,
+        stepper: 3,
+      });
+    },
+  });
+
+  React.useEffect(() => {
+    Educationformik.setFieldValue('educationDetails.keySkill', skills);
+  }, [skills]);
+
+  React.useEffect(() => {
+    if (createBasicDetailResponse?.isSuccess) {
+      setCurrentPosition(createBasicDetailResponse?.data?.stepper);
+    } else if (createBasicDetailResponse?.isError) {
+      console.log(createBasicDetailResponse?.error, 'message');
+
+      Toast.show({
+        type: 'error',
+        text1: 'Basic Detail submit failed',
+        text2: createBasicDetailResponse?.error?.data?.message,
+      });
+    }
+  }, [createBasicDetailResponse]);
+
+  React.useEffect(() => {
+    if (createEducationDetailResponse?.isSuccess) {
+      setCurrentPosition(createEducationDetailResponse?.data?.stepper);
+    } else if (createEducationDetailResponse?.isError) {
+      console.log(createEducationDetailResponse?.error, 'message');
+      Toast.show({
+        type: 'error',
+        text1: 'Education Detail submit failed',
+        text2: createEducationDetailResponse?.error?.data?.message,
+      });
+    }
+  }, [createEducationDetailResponse]);
+
+  React.useEffect(() => {
+    if (createEmploymentDetailResponse?.isSuccess) {
+      setCurrentPosition(createEmploymentDetailResponse?.data?.stepper);
+      navigation.navigate('MainApp');
+    } else if (createEmploymentDetailResponse?.isError) {
+      console.log(createEmploymentDetailResponse?.error, 'message');
+      Toast.show({
+        type: 'error',
+        text1: 'Employment Detail submit failed',
+        text2: createEmploymentDetailResponse?.error?.data?.message,
+      });
+    }
+  }, [createEmploymentDetailResponse]);
 
   const BasicDetails = () => {
     return (
@@ -54,6 +177,8 @@ const UpdateProfileScreen: React.FC<{
             name={'fullName'}
             style={styles.input}
             placeholder="Enter Full Name"
+            value={Basicformik.values.fullName}
+            onChange={Basicformik.handleChange('fullName')}
           />
         </View>
         <View>
@@ -62,14 +187,20 @@ const UpdateProfileScreen: React.FC<{
             name={'contact'}
             style={styles.input}
             placeholder="Enter Contact number"
+            value={Basicformik.values.contact}
+            onChange={Basicformik.handleChange('contact')}
           />
         </View>
         <View>
           <DatePickerComponent
             label="Pick a Date"
             mode="date"
-            value={null}
-            onChange={(val: Date) => selectDateTime('date', val.toISOString())}
+            value={
+              Basicformik.values.DOB ? new Date(Basicformik.values.DOB) : null
+            }
+            onChange={(val: Date) =>
+              Basicformik.setFieldValue('DOB', val.toISOString())
+            }
             placeholder="Select Date Of Birth"
           />
         </View>
@@ -79,8 +210,10 @@ const UpdateProfileScreen: React.FC<{
           </Text>
           <RadioGroup
             label="Gender"
-            selectedValue={'male'}
-            onValueChange={(val: any) => console.log(val)}
+            selectedValue={Basicformik.values.gender}
+            onValueChange={(val: any) =>
+              Basicformik.setFieldValue('gender', val)
+            }
             options={[
               {label: 'Male', value: 'male'},
               {label: 'Female', value: 'female'},
@@ -92,9 +225,11 @@ const UpdateProfileScreen: React.FC<{
             Are you a Fresher or Experienced?:
           </Text>
           <RadioGroup
-            label="Gender"
-            selectedValue={'fresher'}
-            onValueChange={(val: any) => console.log(val)}
+            label="Emp Type"
+            selectedValue={Basicformik.values.employmentType}
+            onValueChange={(val: any) =>
+              Basicformik.setFieldValue('employmentType', val)
+            }
             options={[
               {label: 'Fresher', value: 'fresher'},
               {label: 'Experienced', value: 'experienced'},
@@ -104,8 +239,10 @@ const UpdateProfileScreen: React.FC<{
         <View>
           <TextArea
             label="Candidate Bio"
-            value={''}
-            onChangeText={(val: any) => console.log(val)}
+            value={Basicformik.values.address}
+            onChangeText={(val: any) =>
+              Basicformik.setFieldValue('address', val)
+            }
             placeholder="Enter Your Address"
             style={{backgroundColor: 'white', borderColor: 'white'}}
           />
@@ -113,9 +250,14 @@ const UpdateProfileScreen: React.FC<{
 
         <SharedButton
           title="Submit"
-          onPress={() => console.log('asd')}
-          disabled
+          onPress={Basicformik.handleSubmit}
+          disabled={
+            !Basicformik.isValid ||
+            !Basicformik.dirty ||
+            createBasicDetailResponse?.isLoading
+          }
           style={{marginBottom: 30}}
+          isLoading={createBasicDetailResponse?.isLoading}
         />
       </View>
     );
@@ -127,34 +269,55 @@ const UpdateProfileScreen: React.FC<{
         <View>
           <SharedInput
             inputType="text"
-            name={'degree'}
+            name={'educationDetails.degree'}
             style={styles.input}
-            placeholder="Enter Degree "
+            placeholder="Enter Degree"
+            value={Educationformik.values.educationDetails.degree}
+            onChange={(e: string) =>
+              Educationformik.setFieldValue('educationDetails.degree', e)
+            }
           />
         </View>
         <View>
           <SharedInput
             inputType="text"
-            name={'Institution'}
+            name={'educationDetails.institution'}
             style={styles.input}
             placeholder="Enter Institution Name"
+            value={Educationformik.values.educationDetails.institution}
+            onChange={(e: string) =>
+              Educationformik.setFieldValue('educationDetails.institution', e)
+            }
           />
         </View>
         <View>
           <SharedInput
             inputType="text"
-            name={'grade'}
+            name={'educationDetails.grade'}
             style={styles.input}
             placeholder="Enter Grade/Percentage"
+            value={Educationformik.values.educationDetails.grade}
+            onChange={(e: string) =>
+              Educationformik.setFieldValue('educationDetails.grade', e)
+            }
           />
         </View>
         <View>
           <DatePickerComponent
             label="Pick a Date"
             mode="date"
-            value={null}
-            onChange={(val: Date) => selectDateTime('date', val.toISOString())}
             placeholder="Year of passing"
+            value={
+              Educationformik.values.educationDetails.year
+                ? new Date(Educationformik.values.educationDetails.year)
+                : null
+            }
+            onChange={(val: Date) =>
+              Educationformik.setFieldValue(
+                'educationDetails.year',
+                val.toISOString(),
+              )
+            }
           />
         </View>
         <View>
@@ -170,9 +333,14 @@ const UpdateProfileScreen: React.FC<{
         </View>
         <SharedButton
           title="Submit"
-          onPress={() => console.log('asd')}
-          disabled
+          onPress={Educationformik.handleSubmit}
+          disabled={
+            !Educationformik.isValid ||
+            !Educationformik.dirty ||
+            createEducationDetailResponse?.isLoading
+          }
           style={{marginBottom: 30}}
+          isLoading={createEducationDetailResponse?.isLoading}
         />
       </View>
     );
@@ -187,6 +355,10 @@ const UpdateProfileScreen: React.FC<{
             name={'company'}
             style={styles.input}
             placeholder="Company Name"
+            value={Employmentformik.values.employmentDetails.company}
+            onChange={(e: string) =>
+              Employmentformik.setFieldValue('employmentDetails.company', e)
+            }
           />
         </View>
         <View>
@@ -195,14 +367,10 @@ const UpdateProfileScreen: React.FC<{
             name={'jobTitle'}
             style={styles.input}
             placeholder="Job Title"
-          />
-        </View>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'grade'}
-            style={styles.input}
-            placeholder="Enter Grade/Percentage"
+            value={Employmentformik.values.employmentDetails.jobTitle}
+            onChange={(e: string) =>
+              Employmentformik.setFieldValue('employmentDetails.jobTitle', e)
+            }
           />
         </View>
         <View
@@ -214,20 +382,36 @@ const UpdateProfileScreen: React.FC<{
             <DatePickerComponent
               label="Pick a Date"
               mode="date"
-              value={null}
-              onChange={(val: Date) =>
-                selectDateTime('date', val.toISOString())
-              }
               placeholder="Start Date"
+              value={
+                Employmentformik.values.employmentDetails.startDate
+                  ? new Date(
+                      Employmentformik.values.employmentDetails.startDate,
+                    )
+                  : null
+              }
+              onChange={(val: Date) =>
+                Employmentformik.setFieldValue(
+                  'employmentDetails.startDate',
+                  val.toISOString(),
+                )
+              }
             />
           </View>
           <View style={{width: '48%'}}>
             <DatePickerComponent
               label="Pick a Date"
               mode="date"
-              value={null}
+              value={
+                Employmentformik.values.employmentDetails.endDate
+                  ? new Date(Employmentformik.values.employmentDetails.endDate)
+                  : null
+              }
               onChange={(val: Date) =>
-                selectDateTime('date', val.toISOString())
+                Employmentformik.setFieldValue(
+                  'employmentDetails.endDate',
+                  val.toISOString(),
+                )
               }
               placeholder="End Date"
             />
@@ -236,17 +420,27 @@ const UpdateProfileScreen: React.FC<{
         <View>
           <TextArea
             label="Candidate Bio"
-            value={''}
-            onChangeText={(val: any) => console.log(val)}
+            value={Employmentformik.values.employmentDetails.responsibility}
+            onChangeText={(val: any) =>
+              Employmentformik.setFieldValue(
+                'employmentDetails.responsibility',
+                val,
+              )
+            }
             placeholder="Responsibilities"
             style={{backgroundColor: 'white', borderColor: 'white'}}
           />
         </View>
         <SharedButton
           title="Submit"
-          onPress={() => console.log('asd')}
-          disabled
+          onPress={Employmentformik.handleSubmit}
+          disabled={
+            !Employmentformik.isValid ||
+            !Employmentformik.dirty ||
+            createEducationDetailResponse?.isLoading
+          }
           style={{marginBottom: 30}}
+          isLoading={createEducationDetailResponse?.isLoading}
         />
       </View>
     );

@@ -49,13 +49,30 @@ const SigninScreen: React.FC = () => {
   React.useEffect(() => {
     if (loginResponse?.isSuccess) {
       console.log(loginResponse?.data);
-      
-      Toast.show({
-        type: 'success',
-        text1: 'Login successful! Redirecting to your dashboard...',
-      });
-      dispatch(setProfileData(loginResponse?.data));
-      navigation.navigate('MainApp');
+      if (
+        loginResponse?.data?.user?.role == 'candidate' &&
+        loginResponse?.data?.user?.stepper != 3
+      ) {
+        navigation.navigate('updateProfile', {
+          id: loginResponse?.data?.user?._id,
+          stepper: loginResponse?.data?.user?.stepper,
+        });
+      } else if (
+        loginResponse?.data?.user?.role == 'recruiter' &&
+        loginResponse?.data?.user?.stepper == 0
+      ) {
+        navigation.navigate('updateProfileRecruiter', {
+          id: loginResponse?.data?.user?._id,
+          stepper: loginResponse?.data?.user?.stepper,
+        });
+      } else {
+        Toast.show({
+          type: 'success',
+          text1: 'Login successful! Redirecting to your dashboard...',
+        });
+        dispatch(setProfileData(loginResponse?.data));
+        navigation.navigate('MainApp');
+      }
     } else if (loginResponse?.isError) {
       Toast.show({
         type: 'error',

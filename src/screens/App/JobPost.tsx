@@ -14,7 +14,7 @@ import {AppColors} from '../../constants/colors.config';
 import SearchBar from '../../shared/searchInput';
 import BottomSheetComponent from '../../shared/bottomSheet';
 import {useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {FlatList} from 'react-native-gesture-handler';
 import {useFetchJobPostMutation} from '../../api/api';
 import NumberFormatter from '../../shared/numberFormat';
@@ -37,7 +37,10 @@ const JobPostScreen: React.FC = () => {
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [posts, setPosts] = useState<JobPostCardProps>();
+  const route = useRoute();
+  const isNew = route.params
 
+  const [hasFetched, setHasFetched] = useState(false);
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
   };
@@ -51,7 +54,7 @@ const JobPostScreen: React.FC = () => {
 
   React.useEffect(() => {
     fetchJobPosts();
-  }, [pageNo]);
+  }, [pageNo,isNew]);
 
   React.useEffect(() => {
     console.log(fetchjobPostResponse, 'fetchjobPostResponse');

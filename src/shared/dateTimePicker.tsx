@@ -76,7 +76,7 @@ const DatePickerComponent: React.FC<DatePickerProps> = ({
             mode={mode === 'datetime' ? 'date' : mode}
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={handleChange}
-            is24Hour={true}
+            is24Hour={false}
           />
         </View>
       )}
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   dateButton: {
     padding: 12,
     borderWidth: 1,
-    borderColor: 'white',
+    borderColor: '#ccc',
     borderRadius: 6,
     backgroundColor: 'white',
   },

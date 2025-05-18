@@ -9,7 +9,9 @@ const AppSlice = createSlice({
         setProfileData(state, action) {
             state.data = action.payload;
         },
-
+        setRegistrationData(state, action) {
+            state.data = action.payload;
+        },
         clearProfileData(state) {
             state.data = null;
         },
@@ -17,5 +19,5 @@ const AppSlice = createSlice({
 });
 
 
-export const { setProfileData, clearProfileData } = AppSlice.actions;
+export const { setProfileData, clearProfileData, setRegistrationData } = AppSlice.actions;
 export default AppSlice.reducer;

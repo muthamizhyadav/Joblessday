@@ -26,7 +26,8 @@ interface InputProps extends TextInputProps {
   passwordIcon?: boolean;
   confiemPasswordIconChange?: () => void;
   confirmpasswordIcon?: boolean;
-  height?:number
+  height?: number;
+  inputStyle?: any;
 }
 
 const SharedInput: React.FC<InputProps> = ({
@@ -44,6 +45,7 @@ const SharedInput: React.FC<InputProps> = ({
   passwordIcon,
   confirmpasswordIcon,
   height,
+  inputStyle,
   ...rest
 }) => {
   const getInputProps = (): TextInputProps => {
@@ -73,7 +75,11 @@ const SharedInput: React.FC<InputProps> = ({
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <TextInput
-        style={[{...styles.input}, error ? styles.inputError : null]}
+        style={[
+          styles.input,
+          error && styles.inputError,
+          inputStyle || rest?.style,
+        ]}
         placeholderTextColor="#999"
         {...getInputProps()}
         {...rest}

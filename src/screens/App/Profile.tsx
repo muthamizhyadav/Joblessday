@@ -4,6 +4,10 @@ import {ScrollView} from 'react-native-gesture-handler';
 import {Image} from 'react-native';
 import SvgIcon from '../../shared/Svg';
 import {AppColors} from '../../constants/colors.config';
+import {useDispatch} from 'react-redux';
+import {clearProfileData} from '../../store/slice';
+import {useNavigation} from '@react-navigation/native';
+import { persistor } from '../../store/store';
 
 const ProfileScreen: React.FC = () => {
   const profileData = {
@@ -25,11 +29,13 @@ const ProfileScreen: React.FC = () => {
       'HR Analytics',
       'Talent Management',
     ],
-    activeJobsList: [
-      {id: 1, title: 'Senior React Developer', applicants: 45},
-      {id: 2, title: 'DevOps Engineer', applicants: 32},
-      {id: 3, title: 'Mobile Team Lead', applicants: 28},
-    ],
+  };
+  const dispatch = useDispatch();
+  const navigation = useNavigation<any>();
+
+  const Logout = async() => {
+    await persistor.purge();
+    navigation.navigate('singin');
   };
 
   return (
@@ -49,6 +55,12 @@ const ProfileScreen: React.FC = () => {
         <TouchableOpacity style={styles.editButton}>
           <SvgIcon name="edit" strokeColor="#fff" />
           <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={{position: 'absolute', right: 10, top: 10}}>
+        <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+          <SvgIcon name="power" strokeColor="red" width={14} height={14} />
+          <Text style={{color: 'red'}}>Logout</Text>
         </TouchableOpacity>
       </View>
 
@@ -112,7 +124,7 @@ const ProfileScreen: React.FC = () => {
       </View>
 
       {/* Active Jobs */}
-      <View style={styles.sectionContainer}>
+      {/* <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Active Job Postings</Text>
           <TouchableOpacity>
@@ -127,11 +139,11 @@ const ProfileScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </View> */}
 
-      <TouchableOpacity style={styles.postJobButton}>
+      {/* <TouchableOpacity style={styles.postJobButton}>
         <Text style={styles.postJobButtonText}>Post New Job</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </ScrollView>
   );
 };
@@ -146,6 +158,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     marginBottom: 10,
+    position: 'relative',
   },
   profileImage: {
     width: 120,
@@ -219,7 +232,7 @@ const styles = StyleSheet.create({
   editSectionText: {
     color: AppColors.AppButtonBackground,
     fontWeight: '500',
-    textDecorationLine:'underline'
+    textDecorationLine: 'underline',
   },
   contactItem: {
     flexDirection: 'row',
@@ -272,12 +285,23 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom:100
+    marginBottom: 100,
   },
   postJobButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  logoutButton: {
+    borderWidth: 1,
+    borderColor: 'red',
+    paddingHorizontal: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 5,
+    borderRadius: 25,
   },
 });
 

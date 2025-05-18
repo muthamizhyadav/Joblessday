@@ -20,6 +20,8 @@ import {useRoute} from '@react-navigation/native';
 import {useRegisterMutation} from '../../api/api';
 import {RegisterRequest} from '../../api/models';
 import Toast from 'react-native-toast-message';
+import {useDispatch} from 'react-redux';
+import {setRegistrationData} from '../../store/slice';
 
 const SignupScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -31,6 +33,7 @@ const SignupScreen: React.FC = () => {
   const [passwordIcon, setPasswordIcon] = React.useState(false);
   const [confirmpasswordIcon, setconfirmpasswordIcon] = React.useState(false);
   const [registerRequest, registerResponse] = useRegisterMutation();
+  const dispatch = useDispatch();
 
   const PasswordIconChange = () => {
     setPasswordIcon(!passwordIcon);
@@ -57,6 +60,8 @@ const SignupScreen: React.FC = () => {
   };
 
   React.useEffect(() => {
+    console.log(id, 'ID');
+
     if (registerResponse?.isSuccess) {
       Toast.show({
         type: 'success',
@@ -66,10 +71,12 @@ const SignupScreen: React.FC = () => {
       });
       if (id != '1') {
         navigation.navigate('updateProfile', {
-          id:registerResponse?.data?._id
+          id: registerResponse?.data?._id,
+          stepper: 0,
         });
       } else {
-        navigation.navigate('singin');
+        navigation.navigate('updateProfileRecruiter');
+        // navigation.navigate('singin');
       }
     } else if (registerResponse?.isError) {
       Toast.show({

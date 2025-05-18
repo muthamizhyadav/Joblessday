@@ -6,13 +6,16 @@ import {AddJobPost} from '../screens/App';
 import { Slotcreation } from '../screens/App/Slotcreation';
 import { JobdetailsScreen } from '../screens/App/canidate/jobDetails';
 import { UpdateProfile } from '../screens/App/canidate/update.profile';
+import { UpdateProfileRecruiter } from '../screens/App/updateProfileRecruiter';
+
+
 const Stack = createStackNavigator();
 
 const StackNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{headerShown: false}}
-      initialRouteName="updateProfile">
+      initialRouteName="singin">
       <Stack.Screen name="Onboard" component={Onboard} />
       <Stack.Screen name="singin" component={Signin} />
       <Stack.Screen name="Signup" component={Signup} />
@@ -24,10 +27,8 @@ const StackNavigator = () => {
       <Stack.Screen name="slotCreation" component={Slotcreation} />
       <Stack.Screen name="jobdetail" component={JobdetailsScreen} />
       <Stack.Screen name="updateProfile" component={UpdateProfile} />
+      <Stack.Screen name="updateProfileRecruiter" component={UpdateProfileRecruiter} />
 
-
-
-      
     </Stack.Navigator>
   );
 };

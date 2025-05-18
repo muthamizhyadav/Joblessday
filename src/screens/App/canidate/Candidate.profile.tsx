@@ -8,8 +8,22 @@ import {
 } from 'react-native';
 import {AppColors} from '../../../constants/colors.config';
 import SvgIcon from '../../../shared/Svg';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { clearProfileData } from '../../../store/slice';
+import { AsyncStorage } from 'react-native';
+import { persistor } from '../../../store/store';
 
 export const CandidateProfile: React.FC = () => {
+  const dispatch = useDispatch();
+  const navigation = useNavigation<any>();
+
+  const Logout = async () => {
+    await persistor.purge();
+    navigation.navigate('singin');
+  };
+  
   const profileData = {
     name: 'Sarah Johnson',
     position: 'Senior software engineer',
@@ -51,6 +65,13 @@ export const CandidateProfile: React.FC = () => {
         <TouchableOpacity style={styles.editButton}>
           <SvgIcon name="edit" strokeColor="#fff" />
           <Text style={styles.editButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{position: 'absolute', right: 10, top: 10}}>
+        <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+          <SvgIcon name="power" strokeColor="red" width={14} height={14} />
+          <Text style={{color: 'red'}}>Logout</Text>
         </TouchableOpacity>
       </View>
 
@@ -148,6 +169,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#fff',
     marginBottom: 10,
+    position: 'relative',
   },
   profileImage: {
     width: 120,
@@ -280,5 +302,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  logoutButton: {
+    borderWidth: 1,
+    borderColor: 'red',
+    paddingHorizontal: 10,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 5,
+    borderRadius: 25,
   },
 });

@@ -9,6 +9,12 @@ export const JobPostSchema = Yup.object().shape({
     salaryfrom: Yup.number().required("Salary From Required"),
     salaryto: Yup.number().required("Salary To Required"),
     worklocation: Yup.string().required("Work Location required"),
+    date: Yup.string().required("Date Required"),
+    startTime: Yup.string().required("Start Time Required"),
+    endTime: Yup.string().required("End Time Required"),
+    openings: Yup.number().required("Enter No of openings"),
+    experience: Yup.string().required("experience is required"),
+    description: Yup.string()
 });
 
 

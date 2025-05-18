@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { CreateJobPostRequest, CreateJobPostResponse, FetchPostRequest, fetchSlotResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, slotCreationRequest, slotCreationResponse, UpdateJobPostRequest } from './models';
+import { CreateJobPostRequest, CreateJobPostResponse, FetchPostRequest, fetchSlotResponse, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, slotCreationRequest, slotCreationResponse, updateCandidateBasicProfileRequest, updateCandidateEducationProfileRequest, updateCandidateEmploymentProfileRequest, UpdateJobPostRequest } from './models';
 
 
 export const Appapi = createApi({
@@ -70,8 +70,40 @@ export const Appapi = createApi({
             }),
         }),
 
+        updateCandidateProfile: build.mutation<any, updateCandidateBasicProfileRequest>({
+            query: (fetchData) => ({
+                url: 'v1/jobless/' + fetchData.id,
+                method: 'PUT',
+                body: fetchData
+            }),
+        }),
+        
+        updateCandidateProfileEducation: build.mutation<any, updateCandidateEducationProfileRequest>({
+            query: (fetchData) => ({
+                url: 'v1/jobless/' + fetchData.id,
+                method: 'PUT',
+                body: fetchData
+            }),
+        }),
+
+        updateCandidateProfileEmployment: build.mutation<any, updateCandidateEmploymentProfileRequest>({
+            query: (fetchData) => ({
+                url: 'v1/jobless/' + fetchData.id,
+                method: 'PUT',
+                body: fetchData
+            }),
+        }),
+
+        FetchActiveJobs: build.mutation<any, any>({
+            query: (fetchData) => ({
+                url: 'v1/jobless/post/fetch/current/activejobs',
+                method: 'POST',
+                body: fetchData
+            }),
+        }),
+
     }),
 });
 
 
-export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation, useCreateTestForJobPostMutation, useFetchJobPostMutation, useCreateSlotMutation, useFetchSlotsMutation } = Appapi 
+export const { useRegisterMutation, useLoginMutation, useCreateJobPostMutation, useCreateTestForJobPostMutation, useFetchJobPostMutation, useCreateSlotMutation, useFetchSlotsMutation, useUpdateCandidateProfileMutation, useUpdateCandidateProfileEducationMutation, useUpdateCandidateProfileEmploymentMutation,useFetchActiveJobsMutation } = Appapi 

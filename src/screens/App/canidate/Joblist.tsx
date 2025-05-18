@@ -5,18 +5,39 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import SearchBar from '../../../shared/searchInput';
 import {AppColors} from '../../../constants/colors.config';
 import SvgIcon from '../../../shared/Svg';
 import {useNavigation} from '@react-navigation/native';
 import {FlatList} from 'react-native-gesture-handler';
+import React, {useEffect, useState} from 'react';
+import {useFetchActiveJobsMutation} from '../../../api/api';
+import Amount from '../../../shared/amount';
+import TimeRange from '../../../shared/timeRange';
 
 export const CandidateJoblist: React.FC = () => {
   const navigation = useNavigation<any>();
+  const [jobsLists, setJobLists] = useState([]);
+
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
   };
+
+  const [fetchJobsRequest, fetchJobsResponse] = useFetchActiveJobsMutation();
+
+  useEffect(() => {
+    fetchJobsRequest({});
+  }, []);
+
+  useEffect(() => {
+    if (fetchJobsResponse?.isSuccess) {
+      setJobLists(fetchJobsResponse?.data);
+      console.log(fetchJobsResponse?.data, 'DATA');
+    }
+  }, [fetchJobsResponse]);
 
   const jobsData = [
     {
@@ -150,28 +171,33 @@ export const CandidateJoblist: React.FC = () => {
   const JobCard = ({item}) => (
     <View style={styles.card}>
       <View style={styles.row}>
-        <Text style={styles.title}>{'📁' + item.jobTitle}</Text>
-        <Text style={styles.salary}>{item.salary}</Text>
+        <Text style={styles.title}>{'📁' + item.role}</Text>
+        <Text style={styles.salary}>
+          <Amount value={item.salaryfrom} /> <Text>-</Text>{' '}
+          <Amount value={item.salaryto} />
+        </Text>
       </View>
 
       {/* New Experience and Job Type Row */}
       <View style={styles.row}>
         <Text style={styles.label}>
-          {'👤'} <Text style={styles.value}> {item.experience}</Text>
+          {'👤'} <Text style={styles.value}> {item.experience ?? '--'} Years</Text>
         </Text>
         <Text style={styles.label}>
-          {'⏰'}: <Text style={styles.value}>{item.jobType}</Text>
+          {'⏰'}:{' '}
+          <Text style={styles.value}>{item.jobType ?? 'Full Time'}</Text>
         </Text>
       </View>
 
       <View style={styles.row}>
         <Text style={styles.label}>
-          {'👥'} Openings: <Text style={styles.value}>{item.openings}</Text>
+          {'👥'} Openings:{' '}
+          <Text style={styles.value}>{item.openings ?? '--'}</Text>
         </Text>
         <Text style={styles.label}>
-          {'🗓️'}:{' '}
+          {'🗓️'}:
           <Text style={styles.value}>
-            {item.slotStart} - {item.slotEnd}
+            <TimeRange startTime={item?.startTime} endTime={item?.endTime} />
           </Text>
         </Text>
       </View>
@@ -197,7 +223,7 @@ export const CandidateJoblist: React.FC = () => {
           <SvgIcon name="candidate" width={20} height={20} strokeColor="gray" />
           <Text style={{color: 'gray'}}>Applications : 200</Text>
         </View>
-        {item.isUnlocked ? (
+        {item ? (
           <TouchableOpacity
             onPress={() => navigation.navigate('jobdetail')}
             style={{
@@ -292,13 +318,27 @@ export const CandidateJoblist: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <FlatList
-        data={jobsData}
-        keyExtractor={item => item.id}
-        renderItem={({item}) => <JobCard item={item} />}
-        contentContainerStyle={styles.listContainer}
-        ListFooterComponent={<View style={{height: 30}} />}
-      />
+      {fetchJobsResponse?.isLoading ? (
+        <ActivityIndicator size="large" color={AppColors.AppButtonBackground} />
+      ) : fetchJobsResponse?.isSuccess && jobsLists?.length > 0 ? (
+        <FlatList
+          data={jobsLists}
+          keyExtractor={item => item._id}
+          renderItem={({item}) => <JobCard item={item} />}
+          contentContainerStyle={styles.listContainer}
+          ListFooterComponent={<View style={{height: 30}} />}
+        />
+      ) : (
+        <View style={{margin: 'auto'}}>
+          <Image
+            source={require('../../../assets/images/Empty.png')}
+            style={{width: 250, height: 250}}
+          />
+          <Text style={{textAlign: 'center', fontSize: 16, fontWeight: '600'}}>
+            No job posts found. Please check back later.
+          </Text>
+        </View>
+      )}
     </View>
   );
 };

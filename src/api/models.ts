@@ -20,6 +20,7 @@ export interface LoginRequest {
 }
 
 interface User {
+    stepper: any;
     isEmailVerified: boolean;
     _id: string;
     name: string;
@@ -120,5 +121,26 @@ export interface fetchSlotResponse {
     createdAt: string;
     updatedAt: string;
     post: Post;
+}
 
+export interface updateCandidateBasicProfileRequest {
+    id: string;
+    stepper: number;
+    fullName: string;
+    contact: string;
+    DOB: string;
+    gender: string;
+    employmentType: string;
+    address: string;
+}
+export interface updateCandidateEducationProfileRequest {
+    id: string;
+    stepper: number;
+    educationDetails: any[]
+}
+
+export interface updateCandidateEmploymentProfileRequest {
+    id: string;
+    stepper: number;
+    employmentDetails: any[]
 }

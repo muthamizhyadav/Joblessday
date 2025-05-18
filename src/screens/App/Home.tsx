@@ -186,14 +186,15 @@ const HomeScreen: React.FC = () => {
           </View>
 
           <View style={styles.jobSummary}>
-            <View style={styles.summaryHeader}>
+            {/* <View style={styles.summaryHeader}>
               <Text style={styles.jobTitle}>Open Job Slots: 3</Text>
               <SvgIcon name="clock" strokeColor="#fff" height={20} width={20} />
             </View>
             <Text style={styles.jobTime}>⏳ 10:00 AM – 5:00 PM </Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, {width: '60%'}]} />
-            </View>
+            </View> */}
+            
           </View>
 
           <View style={styles.statsRow}>

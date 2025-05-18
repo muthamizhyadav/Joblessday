@@ -7,7 +7,7 @@ import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, R
 const persistConfig = {
   key: 'root',
   storage: AsyncStorage,
-  blacklist: [Appapi.reducerPath] // Prevent persisting the API cache
+  blacklist: [Appapi.reducerPath]
 };
 
 const persistedAppReducer = persistReducer(persistConfig, appReducer);
