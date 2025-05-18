@@ -11,6 +11,7 @@ export const jobPostinitValue = {
   endTime: '',
   openings: '',
   experience: '',
+  description:"",
 };
 
 export const SlotInitValue = {
