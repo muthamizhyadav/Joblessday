@@ -120,6 +120,9 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
     position: 'relative',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
   },
   label: {
     fontSize: 14,

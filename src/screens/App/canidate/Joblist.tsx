@@ -21,6 +21,7 @@ import TimeRange from '../../../shared/timeRange';
 export const CandidateJoblist: React.FC = () => {
   const navigation = useNavigation<any>();
   const [jobsLists, setJobLists] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
@@ -39,139 +40,20 @@ export const CandidateJoblist: React.FC = () => {
     }
   }, [fetchJobsResponse]);
 
-  const jobsData = [
-    {
-      id: '2',
-      jobTitle: 'Product Manager',
-      salary: '$100k - $130k',
-      openings: 2,
-      slotStart: '10:00 AM',
-      slotEnd: '6:00 PM',
-      experience: '2-5 years',
-      jobType: 'Full-time',
-      location: 'Remote',
-      isUnlocked: false,
-    },
-    {
-      id: '3',
-      jobTitle: 'Frontend Developer',
-      salary: '$70k - $90k',
-      openings: 3,
-      slotStart: '9:00 AM',
-      slotEnd: '5:00 PM',
-      experience: '1-3 years',
-      jobType: 'Full-time',
-      location: 'San Francisco, CA',
-      isUnlocked: true,
-    },
-    {
-      id: '4',
-      jobTitle: 'Backend Developer',
-      salary: '$80k - $100k',
-      openings: 2,
-      slotStart: '11:00 AM',
-      slotEnd: '7:00 PM',
-      experience: '3-5 years',
-      jobType: 'Full-time',
-      location: 'New York, NY',
-    },
-    {
-      id: '5',
-      jobTitle: 'UX/UI Designer',
-      salary: '$60k - $85k',
-      openings: 1,
-      slotStart: '10:00 AM',
-      slotEnd: '6:00 PM',
-      experience: '2-4 years',
-      jobType: 'Part-time',
-      location: 'Remote',
-    },
-    {
-      id: '6',
-      jobTitle: 'Data Scientist',
-      salary: '$110k - $140k',
-      openings: 2,
-      slotStart: '9:30 AM',
-      slotEnd: '5:30 PM',
-      experience: '4-6 years',
-      jobType: 'Full-time',
-      location: 'Austin, TX',
-    },
-    {
-      id: '7',
-      jobTitle: 'QA Engineer',
-      salary: '$65k - $90k',
-      openings: 2,
-      slotStart: '8:00 AM',
-      slotEnd: '4:00 PM',
-      experience: '2-5 years',
-      jobType: 'Full-time',
-      location: 'Remote',
-    },
-    {
-      id: '8',
-      jobTitle: 'DevOps Engineer',
-      salary: '$95k - $120k',
-      openings: 1,
-      slotStart: '10:00 AM',
-      slotEnd: '6:00 PM',
-      experience: '3-6 years',
-      jobType: 'Full-time',
-      location: 'Seattle, WA',
-    },
-    {
-      id: '9',
-      jobTitle: 'Mobile App Developer',
-      salary: '$75k - $100k',
-      openings: 2,
-      slotStart: '9:00 AM',
-      slotEnd: '5:00 PM',
-      experience: '2-4 years',
-      jobType: 'Contract',
-      location: 'Remote',
-    },
-    {
-      id: '10',
-      jobTitle: 'Technical Writer',
-      salary: '$50k - $70k',
-      openings: 1,
-      slotStart: '10:00 AM',
-      slotEnd: '4:00 PM',
-      experience: '1-3 years',
-      jobType: 'Part-time',
-      location: 'Remote',
-    },
-    {
-      id: '11',
-      jobTitle: 'HR Manager',
-      salary: '$80k - $105k',
-      openings: 1,
-      slotStart: '9:00 AM',
-      slotEnd: '5:00 PM',
-      experience: '5-8 years',
-      jobType: 'Full-time',
-      location: 'Chicago, IL',
-    },
-    {
-      id: '12',
-      jobTitle: 'Business Analyst',
-      salary: '$70k - $95k',
-      openings: 2,
-      slotStart: '10:00 AM',
-      slotEnd: '6:00 PM',
-      experience: '3-5 years',
-      jobType: 'Full-time',
-      location: 'Remote',
-    },
-  ];
   const handlePurchase = (jobId: any) => {
     console.log('Purchase slot for job:', jobId);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setRefreshing(false);
+    console.log('ASASAS');
   };
 
   const JobCard = ({item}) => (
     <View style={styles.card}>
       <View style={styles.row}>
-        <Text style={styles.title}>{'📁' + item.role}</Text>
+        <Text style={styles.title}>{'📁' + item.designation}</Text>
         <Text style={styles.salary}>
           <Amount value={item.salaryfrom} /> <Text>-</Text>{' '}
           <Amount value={item.salaryto} />
@@ -181,7 +63,8 @@ export const CandidateJoblist: React.FC = () => {
       {/* New Experience and Job Type Row */}
       <View style={styles.row}>
         <Text style={styles.label}>
-          {'👤'} <Text style={styles.value}> {item.experience ?? '--'} Years</Text>
+          {'👤'}{' '}
+          <Text style={styles.value}> {item.experience ?? '--'} Years</Text>
         </Text>
         <Text style={styles.label}>
           {'⏰'}:{' '}
@@ -221,21 +104,36 @@ export const CandidateJoblist: React.FC = () => {
             marginTop: 5,
           }}>
           <SvgIcon name="candidate" width={20} height={20} strokeColor="gray" />
-          <Text style={{color: 'gray'}}>Applications : 200</Text>
+          <Text style={{color: 'gray'}}>
+            Applications : {item?.applicationCount}
+          </Text>
         </View>
         {item ? (
           <TouchableOpacity
-            onPress={() => navigation.navigate('jobdetail')}
+            onPress={() => navigation.navigate('jobdetail', {id: item?._id})}
             style={{
-              backgroundColor: '#d1fae5',
+              backgroundColor:
+                item?.status != null ? '#d1fae5' : AppColors.headerBackground,
               marginTop: 5,
               borderRadius: 5,
               paddingVertical: 5,
               paddingHorizontal: 10,
-            }}>
-            <Text style={{color: '#065f46', fontWeight: '800'}}>
-              View & Apply
-            </Text>
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 2,
+              alignItems: 'center',
+            }}
+            disabled={item?.status !== null}>
+            <SvgIcon name="dick" strokeColor="#065f46" width={14} height={14} />
+            {item?.status == null ? (
+              <Text style={{color: '#FFFF', fontWeight: '800'}}>
+                View & Apply
+              </Text>
+            ) : (
+              <Text style={{color: '#065f46', fontWeight: '800'}}>
+                {item?.status?.charAt(0).toUpperCase() + item?.status?.slice(1)}
+              </Text>
+            )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -327,6 +225,8 @@ export const CandidateJoblist: React.FC = () => {
           renderItem={({item}) => <JobCard item={item} />}
           contentContainerStyle={styles.listContainer}
           ListFooterComponent={<View style={{height: 30}} />}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
         />
       ) : (
         <View style={{margin: 'auto'}}>

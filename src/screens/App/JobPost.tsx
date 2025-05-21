@@ -18,6 +18,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {FlatList} from 'react-native-gesture-handler';
 import {useFetchJobPostMutation} from '../../api/api';
 import NumberFormatter from '../../shared/numberFormat';
+import {Image} from 'react-native';
 
 interface JobPostCardProps {
   industry: string;
@@ -38,7 +39,7 @@ const JobPostScreen: React.FC = () => {
   const [pageSize, setPageSize] = useState(20);
   const [posts, setPosts] = useState<JobPostCardProps>();
   const route = useRoute();
-  const isNew = route.params
+  const isNew = route.params;
 
   const [hasFetched, setHasFetched] = useState(false);
   const handleSearch = (term: string) => {
@@ -54,7 +55,7 @@ const JobPostScreen: React.FC = () => {
 
   React.useEffect(() => {
     fetchJobPosts();
-  }, [pageNo,isNew]);
+  }, [pageNo, isNew]);
 
   React.useEffect(() => {
     console.log(fetchjobPostResponse, 'fetchjobPostResponse');
@@ -254,13 +255,33 @@ const JobPostScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <FlatList
-          data={posts && posts?.length > 0 ? posts : []}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={{padding: 16}}
-          ListFooterComponent={renderFooter}
-        />
+        {posts?.length > 0 ? (
+          <FlatList
+            data={posts && posts?.length > 0 ? posts : []}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{padding: 16}}
+            ListFooterComponent={renderFooter}
+          />
+        ) : (
+          <View style={{margin: 'auto'}}>
+            <Image
+              source={require('../../assets/images/Empty.png')}
+              style={{width: 250, height: 250}}
+            />
+            <TouchableOpacity onPress={() => navigation.navigate('Addpost')} style={{borderWidth:1, borderColor:AppColors.headerBackground, paddingVertical:5,borderRadius:25,backgroundColor:AppColors.headerBackground}}>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color:"white"
+                }}>
+                  + Create Job post
+                </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       <Modal
         animationType="slide"

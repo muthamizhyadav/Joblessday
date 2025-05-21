@@ -7,6 +7,9 @@ export const BasicDetailSchema = Yup.object().shape({
     gender: Yup.string().required("gender required"),
     employmentType: Yup.string().required("employment Type required"),
     address: Yup.string().required("address Type required"),
+    headline: Yup.string().required("headline required"),
+    state: Yup.string().required("State Required"),
+    city: Yup.string().required("city required")
 });
 
 

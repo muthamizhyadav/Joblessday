@@ -45,6 +45,8 @@ import slot from '../assets/svg/slot.svg';
 import education from '../assets/svg/education.svg';
 import employment from '../assets/svg/employment.svg';
 import power from '../assets/svg/power.svg';
+import dick from '../assets/svg/dick.svg';
+
 
 
 const icons: Record<string, React.FC<SvgProps>> = {
@@ -88,7 +90,8 @@ const icons: Record<string, React.FC<SvgProps>> = {
   slot,
   education,
   employment,
-  power
+  power,
+  dick
 };
 
 interface SvgIconProps {

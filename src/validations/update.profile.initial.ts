@@ -7,6 +7,9 @@ export const BasicDetailsInitValue = {
     gender: '',
     employmentType: '',
     address: '',
+    headline: '',
+    state: '',
+    city: ''
 };
 
 export const EducationDetailsinitialValues = {
@@ -40,5 +43,5 @@ export const companyDetailinitValue = {
     companysiteURL: '',
     recruiterName: '',
     recruiterDesignation: '',
-    stepper:1
+    stepper: 1
 }

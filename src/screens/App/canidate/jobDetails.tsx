@@ -1,11 +1,32 @@
 import * as React from 'react';
-import {Linking, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
 import {Text, View} from 'react-native';
 import {AppColors} from '../../../constants/colors.config';
 import SvgIcon from '../../../shared/Svg';
 import {ScrollView} from 'react-native-gesture-handler';
+import {
+  useApplicationActionMutation,
+  useGetJobDetailMutation,
+} from '../../../api/api';
+import {useRoute} from '@react-navigation/native';
+import {useSelector} from 'react-redux';
+import Toast from 'react-native-toast-message';
+import {useNavigation} from '@react-navigation/native';
 
 export const JobdetailsScreen: React.FC = () => {
+  const [getJobRequest, GetJobResponse] = useGetJobDetailMutation();
+  const [jobDetail, setJobDetail] = React.useState<any>(null);
+  const [applyJoobRequest, applyJoobResponse] = useApplicationActionMutation();
+  const {user} = useSelector((state: any) => state.app.data);
+  const route = useRoute<any>();
+  const {id} = route.params;
+  const navigation = useNavigation<any>();
+
   const job = {
     title: 'Senior React Native Developer',
     company: 'Tech Corp Inc.',
@@ -29,6 +50,41 @@ export const JobdetailsScreen: React.FC = () => {
     companyLogo: 'https://example.com/logo.png', // Replace with actual image URL
   };
 
+  React.useEffect(() => {
+    if (id) {
+      getJobRequest({
+        id,
+      });
+    }
+  }, [id]);
+
+  React.useEffect(() => {
+    if (GetJobResponse?.isSuccess) {
+      setJobDetail(GetJobResponse?.data[0]);
+    }
+  }, [GetJobResponse]);
+
+  const applyJob = () => {
+    applyJoobRequest({
+      candidateId: user?._id,
+      jobId: jobDetail?._id,
+      recruiterId: jobDetail?.userId,
+      status: 'applied',
+    });
+  };
+
+  React.useEffect(() => {
+    if (applyJoobResponse?.isSuccess) {
+      Toast.show({
+        type: 'success',
+        text1: 'Applied successfully.',
+      });
+      navigation.navigate('MainApp', {
+        screen: 'Job Posts',
+      });
+    }
+  }, [applyJoobResponse]);
+
   const Section = ({title, content}) => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -37,92 +93,131 @@ export const JobdetailsScreen: React.FC = () => {
   );
 
   return (
-    <View>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={{backgroundColor: 'white', margin: 10, borderRadius: 5}}>
-            <SvgIcon
-              name="back"
-              width={30}
-              height={30}
-              strokeColor={AppColors.AppButtonBackground}
-            />
-          </TouchableOpacity>
-          <Text
-            style={{
-              margin: 10,
-              fontSize: 20,
-              color: 'white',
-              fontWeight: 600,
-              height: '100%',
-              marginTop: 10,
-            }}>
-            Job Details
-          </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: 'white',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 2,
-              margin: 10,
-              borderRadius: 5,
-            }}></TouchableOpacity>
-        </View>
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Header Section */}
-        <View style={styles.header1}>
-          <Text style={styles.title}>{job.title}</Text>
-          <Text style={styles.company}>{job.company}</Text>
-          <Text style={styles.location}>{job.location}</Text>
-        </View>
-
-        {/* Company Info */}
-        <View style={styles.companyContainer}>
-          {/* <Image source={{uri: job.companyLogo}} style={styles.logo} /> */}
-          <View style={styles.companyInfo}>
-            <Text style={styles.companyName}>{job.company}</Text>
-            <Text style={styles.jobType}>{job.type}</Text>
+    <>
+      {GetJobResponse?.isLoading ? (
+        <ActivityIndicator size="large" color={AppColors.AppButtonBackground} />
+      ) : (
+        <View>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity
+                style={{backgroundColor: 'white', margin: 10, borderRadius: 5}}>
+                <SvgIcon
+                  name="back"
+                  width={30}
+                  height={30}
+                  strokeColor={AppColors.AppButtonBackground}
+                />
+              </TouchableOpacity>
+              <Text
+                style={{
+                  margin: 10,
+                  fontSize: 20,
+                  color: 'white',
+                  fontWeight: 600,
+                  height: '100%',
+                  marginTop: 10,
+                }}>
+                Job Details
+              </Text>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: 'white',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 2,
+                  margin: 10,
+                  borderRadius: 5,
+                }}></TouchableOpacity>
+            </View>
           </View>
-        </View>
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            {/* Header Section */}
+            <View style={styles.header1}>
+              <Text style={styles.title}>{jobDetail?.designation ?? '--'}</Text>
+              <Text style={styles.company}>
+                {jobDetail?.Job?.employmentDetails[0]?.companyName}
+              </Text>
+              <Text
+                style={
+                  styles.location
+                }>{`${jobDetail?.Job?.employmentDetails[0]?.city}, ${jobDetail?.Job?.employmentDetails[0]?.state}`}</Text>
+            </View>
 
-        {/* Job Details Sections */}
-        <Section title="Job Description" content={job.description} />
+            {/* Company Info */}
+            <View style={styles.companyContainer}>
+              {/* <Image source={{uri: job.companyLogo}} style={styles.logo} /> */}
+              <View style={styles.companyInfo}>
+                <Text style={styles.companyName}>
+                  {jobDetail?.Job?.employmentDetails[0]?.companyName}
+                </Text>
+                <Text style={styles.jobType}>{'Full-time'}</Text>
+              </View>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Requirements</Text>
-          {job.requirements?.map((req, index) => (
-            <Text key={index} style={styles.listItem}>
-              • {req}
-            </Text>
-          ))}
-        </View>
+            {/* Job Details Sections */}
+            <Section
+              title="Job Description"
+              content={
+                jobDetail?.description?.length > 0
+                  ? jobDetail?.description
+                  : 'N/A'
+              }
+            />
 
-        <Section title="Salary Range" content={job.salary} />
-        <Section title="How to Apply" content={job.applicationInstructions} />
+            {/* <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Requirements</Text>
+              {job.requirements?.map((req, index) => (
+                <Text key={index} style={styles.listItem}>
+                  • {req}
+                </Text>
+              ))}
+            </View> */}
 
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-          <TouchableOpacity
-            onPress={() => Linking.openURL(`mailto:${job.contactEmail}`)}>
-            <Text style={styles.link}>Email: {job.contactEmail}</Text>
+            <Section
+              title="Salary Range"
+              content={`₹${jobDetail?.salaryfrom} - ₹${jobDetail?.salaryto} Per month`}
+            />
+
+            <Section
+              title="Experience"
+              content={`${jobDetail?.experience} Years`}
+            />
+
+            <Section
+              title="No of openings"
+              content={`${jobDetail?.openings}`}
+            />
+
+            <Section
+              title="How to Apply"
+              content={`Click the "Apply Now" button to submit your application. Make sure your resume is uploaded to your profile before applying. Include "${jobDetail?.designation}" in your application subject.`}
+            />
+
+            {/* Contact Information */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Recruiter Details</Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`mailto:${job.contactEmail}`)}>
+                <Text style={styles.link}>Email: {job.contactEmail}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(`tel:${job.contactPhone}`)}>
+                <Text style={styles.link}>Phone: {job.contactPhone}</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+          <TouchableOpacity style={styles.applyButton} onPress={applyJob}>
+            {applyJoobResponse?.isLoading ? (
+              <ActivityIndicator size={'small'} color={'#FFFF'} />
+            ) : (
+              <Text style={styles.applyButtonText}>Apply Now</Text>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => Linking.openURL(`tel:${job.contactPhone}`)}>
-            <Text style={styles.link}>Phone: {job.contactPhone}</Text>
-          </TouchableOpacity>
         </View>
-      </ScrollView>
-      <TouchableOpacity
-        style={styles.applyButton}
-        onPress={() => Linking.openURL(job.applyLink)}>
-        <Text style={styles.applyButtonText}>Apply Now</Text>
-      </TouchableOpacity>
-    </View>
+      )}
+    </>
   );
 };
 

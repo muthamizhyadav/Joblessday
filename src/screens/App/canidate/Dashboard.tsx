@@ -25,7 +25,7 @@ interface JobPost {
 export const CandidateDashboard: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState('');
   const {user, tokens} = useSelector((state: any) => state.app.data);
-  console.log(user, 'user');
+  console.log(tokens, 'user');
   useEffect(() => {
     const calculateTimeRemaining = () => {
       const now = new Date();

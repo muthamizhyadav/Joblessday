@@ -546,12 +546,11 @@ const AddJobPostScreen: React.FC = () => {
             </View>
             <View style={styles.forms}>
               <Text>Job Description :</Text>
-
               <TextArea
-              onChangeText={formik.handleChange('description')}
-              value={formik.values.description}
-              numberOfLines={5}
-              placeholder='Write job description'
+                onChangeText={formik.handleChange('description')}
+                value={formik.values.description}
+                numberOfLines={5}
+                placeholder="Write job description"
               />
             </View>
             <SharedButton

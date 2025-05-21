@@ -54,7 +54,7 @@ const HomeScreen: React.FC = () => {
 
   const slotCreationNavigation = () => {
     console.log('DD');
-    navigation.navigate('slotCreation');
+    navigation.navigate('Addpost');
   };
 
   const interviews: Interview[] = [
@@ -173,7 +173,7 @@ const HomeScreen: React.FC = () => {
                   right: 15,
                 }}></Text>
             </TouchableOpacity>
-          </View>
+          </View> 
         </View>
       </View>
       <ScrollView style={styles.container}>
@@ -194,7 +194,6 @@ const HomeScreen: React.FC = () => {
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, {width: '60%'}]} />
             </View> */}
-            
           </View>
 
           <View style={styles.statsRow}>

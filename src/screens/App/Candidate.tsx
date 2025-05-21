@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  ActivityIndicator,
   Modal,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import SvgIcon from '../../shared/Svg';
 import {useNavigation} from '@react-navigation/native';
 import {AppColors} from '../../constants/colors.config';
 import {FlatList} from 'react-native-gesture-handler';
+import {useAppliedCandidatesMutation} from '../../api/api';
 
 interface CandidateCardProps {
   name: string;
@@ -29,138 +31,30 @@ interface RadioButtonProps {
   onValueChange: (value: 'fresher' | 'experience') => void;
 }
 
-const candidates = [
-  {
-    name: 'Michael Chen',
-    title: 'Lead UX Designer',
-    location: 'San Francisco, CA',
-    experience: '10 years',
-    skills: ['Sketch', 'User Flows', 'Interaction Design', 'HTML/CSS'],
-    status: 'Open to opportunities',
-    match: '95%',
-  },
-  {
-    name: 'Emma Wilson',
-    title: 'UX Researcher',
-    location: 'Austin, TX',
-    experience: '6 years',
-    skills: [
-      'User Interviews',
-      'Data Analysis',
-      'Usability Testing',
-      'Survey Design',
-    ],
-    status: 'Actively looking',
-    match: '89%',
-  },
-  {
-    name: 'James Rodriguez',
-    title: 'Product Designer',
-    location: 'Chicago, IL',
-    experience: '7 years',
-    skills: ['Adobe XD', 'Design Systems', 'Motion Design', 'Frontend Basics'],
-    status: 'Open to opportunities',
-    match: '91%',
-  },
-  {
-    name: 'Priya Patel',
-    title: 'UI/UX Developer',
-    location: 'Seattle, WA',
-    experience: '9 years',
-    skills: ['React', 'JavaScript', 'Responsive Design', 'Accessibility'],
-    status: 'Not looking',
-    match: '87%',
-  },
-  {
-    name: 'David Kim',
-    title: 'Interaction Designer',
-    location: 'Boston, MA',
-    experience: '5 years',
-    skills: [
-      'After Effects',
-      'Microinteractions',
-      'Wireframing',
-      'User Testing',
-    ],
-    status: 'Actively looking',
-    match: '93%',
-  },
-  {
-    name: 'Linda Martinez',
-    title: 'UX Strategist',
-    location: 'Los Angeles, CA',
-    experience: '12 years',
-    skills: [
-      'Service Design',
-      'CX Strategy',
-      'Workshop Facilitation',
-      'Journey Mapping',
-    ],
-    status: 'Open to opportunities',
-    match: '96%',
-  },
-  {
-    name: 'Ahmed Ali',
-    title: 'Visual Designer',
-    location: 'Miami, FL',
-    experience: '4 years',
-    skills: ['Branding', 'Illustration', 'Typography', 'Adobe Creative Suite'],
-    status: 'Actively looking',
-    match: '85%',
-  },
-  {
-    name: 'Sophia Lee',
-    title: 'UX Content Specialist',
-    location: 'Denver, CO',
-    experience: '5 years',
-    skills: [
-      'Content Strategy',
-      'Copywriting',
-      'Information Architecture',
-      'SEO',
-    ],
-    status: 'Not looking',
-    match: '88%',
-  },
-  {
-    name: 'Daniel Nguyen',
-    title: 'Mobile App Designer',
-    location: 'Atlanta, GA',
-    experience: '6 years',
-    skills: [
-      'iOS/Android Design',
-      'Flutter',
-      'UI Animation',
-      'User-Centered Design',
-    ],
-    status: 'Actively looking',
-    match: '94%',
-  },
-  {
-    name: 'Olivia Smith',
-    title: 'UX/UI Instructor',
-    location: 'Remote',
-    experience: '10 years',
-    skills: [
-      'Mentoring',
-      'Curriculum Development',
-      'Design Thinking',
-      'Portfolio Reviews',
-    ],
-    status: 'Open to opportunities',
-    match: '90%',
-  },
-];
-
 const CandidateScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [bottomSheet, setBottomSheet] = React.useState(false);
+  const [candidatesRequest, candidatesResponse] =
+    useAppliedCandidatesMutation();
+  const [candidates, setCandidates] = React.useState([]);
   const handleSearch = (term: string) => {
     console.log('Search term:', term);
   };
   const [selectedValue, setSelectedValue] = React.useState<string>('');
 
-  const CandidateCard: React.FC<CandidateCardProps> = ({
+  React.useEffect(() => {
+    candidatesRequest({});
+  }, []);
+
+  React.useEffect(() => {
+    if (candidatesResponse?.isSuccess) {
+      console.log(candidatesResponse?.data, 'Candidat');
+
+      setCandidates(candidatesResponse?.data);
+    }
+  }, [candidatesResponse]);
+
+  const CandidateCard: React.FC<any> = ({
     name,
     match,
     title,
@@ -168,20 +62,36 @@ const CandidateScreen: React.FC = () => {
     experience,
     skills,
     status,
+    candidateId,
+    jobId,
+    recruiterId,
   }) => {
     return (
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() =>
+          navigation.navigate('candidatedetail', {
+            id: candidateId,
+            status: status,
+            jobId: jobId,
+            recruiterId: recruiterId,
+          })
+        }>
         {/* Header Row */}
         <View style={styles.Cardheader}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.match}>{match} Matches</Text>
+          <Text style={styles.match}>
+            {match.charAt(0).toUpperCase() + match?.slice(1)}
+          </Text>
         </View>
 
         {/* Position Details */}
         <Text style={styles.title}>{title}</Text>
         <View style={styles.metaRow}>
           <Text style={styles.location}>📍 {location}</Text>
-          <Text style={styles.experience}>⏳ {experience}</Text>
+          <Text style={styles.experience}>
+            ⏳ {experience == 'fresher' ? experience : `${experience} Years`}
+          </Text>
         </View>
 
         {/* Skills Chips */}
@@ -207,19 +117,22 @@ const CandidateScreen: React.FC = () => {
         {status}
       </Text>
     </View> */}
-      </View>
+      </TouchableOpacity>
     );
   };
 
   const renderItem = ({item}) => (
     <CandidateCard
-      name={item.name}
-      match={item.match}
-      title={item.title}
-      location={item.location}
+      name={item?.candidateName ?? '--'}
+      match={item?.status ?? '-'}
+      title={item?.headLine}
+      location={`${item?.city},${item?.state}`}
       experience={item.experience}
-      skills={item.skills}
+      skills={item.skills[0]?.keySkill}
       status={item.status}
+      candidateId={item?.candidateId}
+      jobId={item?.jobId}
+      recruiterId={item?.recruiterId}
     />
   );
 
@@ -300,13 +213,20 @@ const CandidateScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <FlatList
-          data={candidates}
-          renderItem={renderItem}
-          keyExtractor={item => item.name}
-          contentContainerStyle={{padding: 16}}
-          ListFooterComponent={<View style={{height: 30}} />}
-        />
+        {candidatesResponse?.isLoading ? (
+          <ActivityIndicator
+            size="large"
+            color={AppColors.AppButtonBackground}
+          />
+        ) : (
+          <FlatList
+            data={candidates}
+            renderItem={renderItem}
+            keyExtractor={item => item.name}
+            contentContainerStyle={{padding: 16}}
+            ListFooterComponent={<View style={{height: 30}} />}
+          />
+        )}
       </View>
       <Modal
         animationType="slide"
@@ -319,7 +239,7 @@ const CandidateScreen: React.FC = () => {
           </TouchableWithoutFeedback>
           <View style={styles.modalContainer}>
             <View style={styles.handle} />
-            <View style={{display:'flex', flexDirection:'row', gap:20}}>
+            <View style={{display: 'flex', flexDirection: 'row', gap: 20}}>
               <RadioButtonGroup
                 value="fresher"
                 selectedValue={selectedValue}

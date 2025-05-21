@@ -7,6 +7,7 @@ import { Slotcreation } from '../screens/App/Slotcreation';
 import { JobdetailsScreen } from '../screens/App/canidate/jobDetails';
 import { UpdateProfile } from '../screens/App/canidate/update.profile';
 import { UpdateProfileRecruiter } from '../screens/App/updateProfileRecruiter';
+import { CandidatedetailsScreen } from '../screens/App/candidate.detail';
 
 
 const Stack = createStackNavigator();
@@ -26,6 +27,7 @@ const StackNavigator = () => {
       <Stack.Screen name="Addpost" component={AddJobPost} />
       <Stack.Screen name="slotCreation" component={Slotcreation} />
       <Stack.Screen name="jobdetail" component={JobdetailsScreen} />
+      <Stack.Screen name="candidatedetail" component={CandidatedetailsScreen} />
       <Stack.Screen name="updateProfile" component={UpdateProfile} />
       <Stack.Screen name="updateProfileRecruiter" component={UpdateProfileRecruiter} />
 

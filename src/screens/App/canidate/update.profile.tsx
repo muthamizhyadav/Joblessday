@@ -39,12 +39,25 @@ import {
 } from '../../../api/api';
 import Toast from 'react-native-toast-message';
 import {useNavigation} from '@react-navigation/native';
+import SharedDropdown from '../../../shared/dropDownWithSearch';
+import {Country, State, City} from 'country-state-city';
 
 type UpdateProfileRouteParams = {
   id: string;
   stepper: string;
 };
-
+const experienceOptions = [
+  {label: 'Fresher', value: 'fresher'},
+  {label: '1 years', value: '1'},
+  {label: '2 years', value: '2'},
+  {label: '3 years', value: '3'},
+  {label: '5 years', value: '5'},
+  {label: '6 years', value: '6'},
+  {label: '7 years', value: '7'},
+  {label: '8 years', value: '8'},
+  {label: '9 years', value: '9'},
+  {label: '10 years', value: '10'},
+];
 const UpdateProfileScreen: React.FC<{
   route: {params: UpdateProfileRouteParams};
 }> = ({route}) => {
@@ -58,7 +71,11 @@ const UpdateProfileScreen: React.FC<{
     useUpdateCandidateProfileEducationMutation();
   const [createEmploymentDetailRequest, createEmploymentDetailResponse] =
     useUpdateCandidateProfileEmploymentMutation();
-  const labels = ['Basic Details', 'Education', 'Employment'];
+  const labels = ['Basic Details', 'Education'];
+  const indianStates = State.getStatesOfCountry('IN');
+  const [cities, setCities] = React.useState<any>([]);
+  const [selectedState, setSelectedState] = React.useState('');
+  const [States, setStates] = React.useState<any>([]);
   const navigation = useNavigation<any>();
 
   const handleFileSelect = (selectedFile: DocumentPickerResponse) => {
@@ -66,12 +83,38 @@ const UpdateProfileScreen: React.FC<{
   };
 
   console.log(route.params);
-
+  React.useEffect(() => {
+    const States = indianStates.map((state, index) => ({
+      id: index + 1,
+      value: state.isoCode,
+      label: state.name,
+    }));
+    setStates(States);
+  }, []);
   React.useEffect(() => {
     if (route?.params?.stepper) {
       setCurrentPosition(route?.params?.stepper);
     }
   }, [route]);
+
+  const handleChangeState = (stateValue: string) => {
+    const selectedStateFull = States.find(key => key.value === stateValue);
+    if (!selectedStateFull) return;
+    Basicformik.setFieldValue('state', selectedStateFull.label);
+    setSelectedState(selectedStateFull.value);
+    const citiesOfState = City.getCitiesOfState('IN', stateValue);
+    const formattedCities = citiesOfState.map((city, index) => ({
+      id: index + 1,
+      value: city.name,
+      label: city.name,
+    }));
+    setCities(formattedCities);
+  };
+
+  const handleChangeCity = (city: string) => {
+    const selectedCityFullName = cities.find(key => key.value === city)?.label;
+    Basicformik.setFieldValue('city', selectedCityFullName);
+  };
 
   const handleSkillsChange = (updatedSkills: string[]) => {
     setSkills(updatedSkills);
@@ -91,6 +134,9 @@ const UpdateProfileScreen: React.FC<{
         fullName: values.fullName,
         gender: values.gender,
         id: route.params.id,
+        city: values.city,
+        headline: values.headline,
+        state: values.state,
       });
     },
   });
@@ -144,6 +190,7 @@ const UpdateProfileScreen: React.FC<{
   React.useEffect(() => {
     if (createEducationDetailResponse?.isSuccess) {
       setCurrentPosition(createEducationDetailResponse?.data?.stepper);
+      navigation.navigate('MainApp');
     } else if (createEducationDetailResponse?.isError) {
       console.log(createEducationDetailResponse?.error, 'message');
       Toast.show({
@@ -157,7 +204,6 @@ const UpdateProfileScreen: React.FC<{
   React.useEffect(() => {
     if (createEmploymentDetailResponse?.isSuccess) {
       setCurrentPosition(createEmploymentDetailResponse?.data?.stepper);
-      navigation.navigate('MainApp');
     } else if (createEmploymentDetailResponse?.isError) {
       console.log(createEmploymentDetailResponse?.error, 'message');
       Toast.show({
@@ -172,6 +218,9 @@ const UpdateProfileScreen: React.FC<{
     return (
       <View style={styles.basicFormStyle}>
         <View>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Full Name:
+          </Text>
           <SharedInput
             inputType="text"
             name={'fullName'}
@@ -182,6 +231,22 @@ const UpdateProfileScreen: React.FC<{
           />
         </View>
         <View>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Profile Headline:
+          </Text>
+          <SharedInput
+            inputType="text"
+            name={'headline'}
+            style={styles.input}
+            placeholder="ex: software engineer"
+            value={Basicformik.values.headline}
+            onChange={Basicformik.handleChange('headline')}
+          />
+        </View>
+        <View>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Your Contact:
+          </Text>
           <SharedInput
             inputType="numeric"
             name={'contact'}
@@ -192,6 +257,9 @@ const UpdateProfileScreen: React.FC<{
           />
         </View>
         <View>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Date Of birth:
+          </Text>
           <DatePickerComponent
             label="Pick a Date"
             mode="date"
@@ -205,7 +273,33 @@ const UpdateProfileScreen: React.FC<{
           />
         </View>
         <View>
-          <Text style={{fontSize: 14, fontWeight: '600', paddingLeft: 10}}>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Select your state:
+          </Text>
+          <SharedDropdown
+            onChange={value => handleChangeState(value)}
+            value={selectedState}
+            data={States}
+            placeholder="select State"
+            searchOptions={false}
+            searchPlaceHolder="Search state"
+          />
+        </View>
+        <View style={{marginTop: 10, marginBottom: 10}}>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Select your City:
+          </Text>
+          <SharedDropdown
+            onChange={value => handleChangeCity(value)}
+            value={Basicformik.values.city}
+            data={cities}
+            placeholder="select city"
+            searchOptions={false}
+            searchPlaceHolder="Search city"
+          />
+        </View>
+        <View style={{marginBottom: 10}}>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
             Select Gender:
           </Text>
           <RadioGroup
@@ -220,25 +314,23 @@ const UpdateProfileScreen: React.FC<{
             ]}
           />
         </View>
-        <View style={{marginTop: 20, marginBottom: 20}}>
-          <Text style={{fontSize: 14, fontWeight: '600', paddingLeft: 10}}>
-            Are you a Fresher or Experienced?:
+        <View>
+          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
+            Experience:
           </Text>
-          <RadioGroup
-            label="Emp Type"
-            selectedValue={Basicformik.values.employmentType}
-            onValueChange={(val: any) =>
-              Basicformik.setFieldValue('employmentType', val)
-            }
-            options={[
-              {label: 'Fresher', value: 'fresher'},
-              {label: 'Experienced', value: 'experienced'},
-            ]}
+          <SharedDropdown
+            onChange={value => {
+              Basicformik.setFieldValue('employmentType', value),
+                console.log(value, 'value');
+            }}
+            value={Basicformik.values.employmentType}
+            data={experienceOptions}
+            searchOptions={false}
           />
         </View>
+
         <View>
           <TextArea
-            label="Candidate Bio"
             value={Basicformik.values.address}
             onChangeText={(val: any) =>
               Basicformik.setFieldValue('address', val)
@@ -579,6 +671,7 @@ const styles = StyleSheet.create({
   },
   basicFormStyle: {
     width: '100%',
+    paddingBottom: 125,
   },
   header1: {
     marginBottom: 20,

@@ -51,7 +51,7 @@ const SigninScreen: React.FC = () => {
       console.log(loginResponse?.data);
       if (
         loginResponse?.data?.user?.role == 'candidate' &&
-        loginResponse?.data?.user?.stepper != 3
+        loginResponse?.data?.user?.stepper != 2
       ) {
         navigation.navigate('updateProfile', {
           id: loginResponse?.data?.user?._id,

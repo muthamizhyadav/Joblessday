@@ -132,6 +132,9 @@ export interface updateCandidateBasicProfileRequest {
     gender: string;
     employmentType: string;
     address: string;
+    headline: String,
+    state: String,
+    city: String
 }
 export interface updateCandidateEducationProfileRequest {
     id: string;
@@ -143,4 +146,15 @@ export interface updateCandidateEmploymentProfileRequest {
     id: string;
     stepper: number;
     employmentDetails: any[]
+}
+
+export interface JobDetailsRequest {
+    id: string;
+}
+
+export interface JobApplyRequest {
+    jobId: string;
+    recruiterId: string;
+    candidateId: string;
+    status: string
 }
