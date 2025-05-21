@@ -214,8 +214,20 @@ export const CandidatedetailsScreen: React.FC = () => {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TouchableOpacity style={styles.shortlistedButton}>
-                  <Text style={styles.applyButtonText}>{status}</Text>
+                <TouchableOpacity
+                  style={
+                    status == 'shortlisted'
+                      ? styles.shortlistedButton
+                      : styles.rejectedButton
+                  }>
+                  <Text
+                    style={
+                      status == 'shortlisted'
+                        ? styles.shortlistedButtonText
+                        : styles.rejectedButtonText
+                    }>
+                    {status}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -357,8 +369,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'green',
   },
+  rejectedButton: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    elevation: 0,
+    borderWidth: 1,
+    borderColor: 'red',
+  },
   shortlistedButtonText: {
     color: 'Green',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  rejectedButtonText: {
+    color: 'red',
     fontSize: 18,
     fontWeight: 'bold',
   },
