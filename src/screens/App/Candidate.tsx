@@ -54,6 +54,19 @@ const CandidateScreen: React.FC = () => {
     }
   }, [candidatesResponse]);
 
+  const getStatusColor = status => {
+    switch (status?.toLowerCase()) {
+      case 'Pending':
+        return '#f97316';
+      case 'rejected':
+        return '#dc2626';
+      case 'shortlisted':
+        return '#16a34a';
+      default:
+        return '#64748b';
+    }
+  };
+
   const CandidateCard: React.FC<any> = ({
     name,
     match,
@@ -80,7 +93,7 @@ const CandidateScreen: React.FC = () => {
         {/* Header Row */}
         <View style={styles.Cardheader}>
           <Text style={styles.name}>{name}</Text>
-          <Text style={styles.match}>
+          <Text style={[styles.match, {color: getStatusColor(match)}]}>
             {match.charAt(0).toUpperCase() + match?.slice(1)}
           </Text>
         </View>
@@ -124,7 +137,7 @@ const CandidateScreen: React.FC = () => {
   const renderItem = ({item}) => (
     <CandidateCard
       name={item?.candidateName ?? '--'}
-      match={item?.status ?? '-'}
+      match={item?.status == "applied" ? 'Pending':item?.status ?? '-'}
       title={item?.headLine}
       location={`${item?.city},${item?.state}`}
       experience={item.experience}

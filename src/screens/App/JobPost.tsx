@@ -269,16 +269,24 @@ const JobPostScreen: React.FC = () => {
               source={require('../../assets/images/Empty.png')}
               style={{width: 250, height: 250}}
             />
-            <TouchableOpacity onPress={() => navigation.navigate('Addpost')} style={{borderWidth:1, borderColor:AppColors.headerBackground, paddingVertical:5,borderRadius:25,backgroundColor:AppColors.headerBackground}}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Addpost')}
+              style={{
+                borderWidth: 1,
+                borderColor: AppColors.headerBackground,
+                paddingVertical: 5,
+                borderRadius: 25,
+                backgroundColor: AppColors.headerBackground,
+              }}>
               <Text
                 style={{
                   textAlign: 'center',
                   fontSize: 16,
                   fontWeight: '600',
-                  color:"white"
+                  color: 'white',
                 }}>
-                  + Create Job post
-                </Text>
+                + Create Job post
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -343,7 +351,9 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 0,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
   },
   label: {
     fontSize: 14,

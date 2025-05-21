@@ -226,7 +226,7 @@ export const CandidatedetailsScreen: React.FC = () => {
                         ? styles.shortlistedButtonText
                         : styles.rejectedButtonText
                     }>
-                    {status}
+                   {`${status === 'rejected' ? '❌' : '✔'} ${status}`}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     borderColor: 'red',
   },
   shortlistedButtonText: {
-    color: 'Green',
+    color: 'green',
     fontSize: 18,
     fontWeight: 'bold',
   },
