@@ -8,22 +8,204 @@ import {
 } from 'react-native';
 import {AppColors} from '../../../constants/colors.config';
 import SvgIcon from '../../../shared/Svg';
-import React from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
-import { clearProfileData } from '../../../store/slice';
-import { AsyncStorage } from 'react-native';
-import { persistor } from '../../../store/store';
+import React, {useState} from 'react';
+import {useSelector} from 'react-redux';
+import {useNavigation} from '@react-navigation/native';
+import {persistor} from '../../../store/store';
+import {useFormik} from 'formik';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {
+  CandidateProfileDetailSchema,
+  ProfilebioSchema,
+} from '../../../validations/update.profile.schema';
+import SharedInput from '../../../shared/input';
+import SharedButton from '../../../shared/SharedButton';
+import Popup from '../../../shared/popup';
+import TextArea from '../../../shared/textArea';
+import KeySkillsInput from '../../../shared/keySkillInput';
+
+const EditUploadComponents = () => {
+  const {user} = useSelector((state: any) => state.app.data);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const UpdateProfileFormik = useFormik({
+    initialValues: {
+      name: user?.name ?? '',
+      headline: user?.headline ?? '',
+      contact: user?.contact ?? '',
+      email: user?.email ?? '',
+      city: user?.city ?? '',
+      state: user?.state ?? '',
+    },
+    validationSchema: CandidateProfileDetailSchema,
+    onSubmit: values => {
+      console.log(values);
+    },
+  });
+  const pickImage = () => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        selectionLimit: 1,
+      },
+      response => {
+        if (response.didCancel) {
+          console.log('User cancelled image picker');
+        } else if (response.errorCode) {
+          console.log('ImagePicker Error: ', response.errorMessage);
+        } else if (response.assets && response.assets.length > 0) {
+          setImageUri(response.assets[0].uri || null);
+        }
+      },
+    );
+  };
+
+  return (
+    <View>
+      <TouchableOpacity style={styles.squareBox} onPress={pickImage}>
+        {imageUri ? (
+          <Image source={{uri: imageUri}} style={styles.image} />
+        ) : (
+          <View style={styles.placeholder}>
+            <SvgIcon
+              name="upload"
+              width={24}
+              height={24}
+              strokeColor={AppColors.headerBackground}
+            />
+            <Text style={styles.label}>Upload Image</Text>
+          </View>
+        )}
+      </TouchableOpacity>
+      <View style={{marginTop: 10}}>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Name:</Text>
+        <SharedInput
+          inputType="default"
+          name={'name'}
+          value={UpdateProfileFormik.values.name}
+          onChange={UpdateProfileFormik.handleChange('name')}
+        />
+      </View>
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Headline:</Text>
+        <SharedInput
+          inputType="default"
+          name={'headline'}
+          value={UpdateProfileFormik.values.headline}
+          onChange={UpdateProfileFormik.handleChange('headline')}
+        />
+      </View>
+
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Contact:</Text>
+        <SharedInput
+          inputType="default"
+          name={'contact'}
+          value={UpdateProfileFormik?.values.contact}
+          onChange={UpdateProfileFormik.handleChange('contact')}
+        />
+      </View>
+
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Email:</Text>
+        <SharedInput
+          inputType="default"
+          name={'email'}
+          value={UpdateProfileFormik?.values.email}
+          onChange={UpdateProfileFormik.handleChange('email')}
+        />
+      </View>
+
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>State:</Text>
+        <SharedInput
+          inputType="default"
+          name={'state'}
+          value={UpdateProfileFormik?.values.state}
+          onChange={UpdateProfileFormik.handleChange('state')}
+        />
+      </View>
+
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>city:</Text>
+        <SharedInput
+          inputType="default"
+          name={'city'}
+          value={UpdateProfileFormik?.values.city}
+          onChange={UpdateProfileFormik.handleChange('city')}
+        />
+      </View>
+
+      <View>
+        <SharedButton
+          onPress={UpdateProfileFormik.handleSubmit}
+          title="Submit"
+        />
+      </View>
+    </View>
+  );
+};
+
+const UpdateBio = () => {
+  const {user} = useSelector((state: any) => state.app.data);
+  const UpdateBioFormik = useFormik({
+    initialValues: {
+      bio: user?.bio ?? '',
+    },
+    validationSchema: ProfilebioSchema,
+    onSubmit: values => {
+      console.log(values);
+    },
+  });
+
+  return (
+    <View>
+      <View>
+        <TextArea
+          onChangeText={UpdateBioFormik.handleChange('bio')}
+          numberOfLines={5}
+          value={UpdateBioFormik.values.bio}
+          placeholder="Describe about you"
+        />
+      </View>
+      <View>
+        <SharedButton onPress={UpdateBioFormik.handleSubmit} title="Submit" />
+      </View>
+    </View>
+  );
+};
+
+const UpdateExpertise = () => {
+  const {user} = useSelector((state: any) => state.app.data);
+  const [skills, setSkills] = React.useState<any>(user.educationDetails[0].keySkill ?? []);
+  const handleSkillsChange = (updatedSkills: string[]) => {
+    setSkills(updatedSkills);
+  };
+
+  return (
+    <View>
+      <KeySkillsInput
+        onSkillsChange={handleSkillsChange}
+        style={{borderColor: 'gray'}}
+      />
+      <View style={{marginTop: 10}}>
+        <SharedButton onPress={() => console.log('CLICKED')} title="Submit" />
+      </View>
+    </View>
+  );
+};
 
 export const CandidateProfile: React.FC = () => {
-  const dispatch = useDispatch();
   const navigation = useNavigation<any>();
+  const {user} = useSelector((state: any) => state.app.data);
+  const [popupVisibleBio, setPopupVisibleBio] = useState(false);
+  const [popupVisibleExpertise, setPopupVisibleExpertise] = useState(false);
+  const [popupVisibleProfile, setPopupVisibleProfile] = useState(false);
 
   const Logout = async () => {
     await persistor.purge();
     navigation.navigate('singin');
   };
-  
+
   const profileData = {
     name: 'Sarah Johnson',
     position: 'Senior software engineer',
@@ -48,6 +230,7 @@ export const CandidateProfile: React.FC = () => {
       {id: 3, title: 'Mobile Team Lead', applicants: 28},
     ],
   };
+  console.log(user.educationDetails[0].keySkill, 'user.educationDetails[0]');
 
   return (
     <ScrollView style={styles.container}>
@@ -59,10 +242,12 @@ export const CandidateProfile: React.FC = () => {
           }}
           style={styles.profileImage}
         />
-        <Text style={styles.name}>{profileData.name}</Text>
-        <Text style={styles.position}>{profileData.position}</Text>
+        <Text style={styles.name}>{user.name}</Text>
+        <Text style={styles.position}>{user.headline ?? 'N / A'}</Text>
 
-        <TouchableOpacity style={styles.editButton}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => setPopupVisibleProfile(true)}>
           <SvgIcon name="edit" strokeColor="#fff" />
           <Text style={styles.editButtonText}>Edit Profile</Text>
         </TouchableOpacity>
@@ -95,42 +280,91 @@ export const CandidateProfile: React.FC = () => {
       <View style={styles.sectionContainer}>
         <View style={styles.contactItem}>
           <SvgIcon name="email" strokeColor="#666" />
-          <Text style={styles.contactText}>{profileData.email}</Text>
+          <Text style={styles.contactText}>{user.email ?? 'N/A'}</Text>
         </View>
         <View style={styles.contactItem}>
           <SvgIcon name="phone" strokeColor="#666" />
-          <Text style={styles.contactText}>{profileData.phone}</Text>
+          <Text style={styles.contactText}>{user.contact ?? 'N/A'}</Text>
         </View>
         <View style={styles.contactItem}>
           <SvgIcon name="location" strokeColor="#666" />
-          <Text style={styles.contactText}>{profileData.location}</Text>
+          <Text
+            style={styles.contactText}>{`${user.city} , ${user.state}`}</Text>
         </View>
-        {/* <View style={styles.contactItem}>
-        <SvgIcon name="link" strokeColor="#666" />
-        <Text style={styles.contactText}>{profileData.linkedin}</Text>
-      </View> */}
       </View>
 
       {/* Bio Section */}
       <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>About Me</Text>
-          <TouchableOpacity>
-            <Text style={styles.editSectionText}>Edit Bio</Text>
+
+          <TouchableOpacity onPress={() => setPopupVisibleBio(true)}>
+            <Text style={styles.editSectionText}>{`${
+              user?.bio ? 'Edit Bio' : ''
+            }`}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.bioText}>{profileData.bio}</Text>
+        {user?.bio ? (
+          <Text style={styles.bioText}>{user.bio}</Text>
+        ) : (
+          <TouchableOpacity onPress={() => setPopupVisibleBio(true)}>
+            <Text
+              style={{
+                color: AppColors.AppButtonBackground,
+                fontWeight: '500',
+                textAlign: 'center',
+                fontSize: 18,
+              }}>
+              + Add Your Bio
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Skills Section */}
       <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Skills</Text>
+        <View
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            flexDirection: 'row',
+          }}>
+          <Text style={styles.sectionTitle}>Skills</Text>
+          {user.educationDetails?.length > 0 &&
+          user.educationDetails?.[0].keySkill?.length > 0 ? (
+            <TouchableOpacity onPress={() => setPopupVisibleExpertise(true)}>
+              <SvgIcon
+                name="edit"
+                strokeColor={AppColors.headerBackground}
+                width={20}
+                height={20}
+              />
+            </TouchableOpacity>
+          ) : null}
+        </View>
         <View style={styles.skillsContainer}>
-          {profileData.skills.map((skill, index) => (
-            <View key={index} style={styles.skillTag}>
-              <Text style={styles.skillText}>{skill}</Text>
-            </View>
-          ))}
+          {user.educationDetails?.length > 0 &&
+          user.educationDetails?.[0].keySkill?.length > 0 ? (
+            user.educationDetails[0].keySkill.map((skill, index) => (
+              <View key={index} style={styles.skillTag}>
+                <Text style={styles.skillText}>{skill}</Text>
+              </View>
+            ))
+          ) : (
+            <TouchableOpacity
+              style={{margin: 'auto'}}
+              onPress={() => setPopupVisibleExpertise(true)}>
+              <Text
+                style={{
+                  color: AppColors.AppButtonBackground,
+                  fontWeight: '500',
+                  textAlign: 'center',
+                  fontSize: 18,
+                }}>
+                + Add Expertise
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -155,6 +389,27 @@ export const CandidateProfile: React.FC = () => {
       <TouchableOpacity style={styles.postJobButton}>
         <Text style={styles.postJobButtonText}>Apply New Jobs</Text>
       </TouchableOpacity>
+
+      <Popup
+        visible={popupVisibleProfile}
+        onClose={() => setPopupVisibleProfile(false)}
+        title="Update Your Profile">
+        <EditUploadComponents />
+      </Popup>
+
+      <Popup
+        visible={popupVisibleBio}
+        onClose={() => setPopupVisibleBio(false)}
+        title="Update Your Bio Data">
+        <UpdateBio />
+      </Popup>
+
+      <Popup
+        visible={popupVisibleExpertise}
+        onClose={() => setPopupVisibleExpertise(false)}
+        title="Update Your Key Skills">
+        <UpdateExpertise />
+      </Popup>
     </ScrollView>
   );
 };
@@ -313,5 +568,36 @@ const styles = StyleSheet.create({
     gap: 5,
     paddingVertical: 5,
     borderRadius: 25,
+  },
+  squareBox: {
+    width: '100%',
+    height: 80,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    margin: 'auto',
+  },
+  label: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#555',
+  },
+  fileName: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#333',
+    textAlign: 'center',
+  },
+  placeholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
 });

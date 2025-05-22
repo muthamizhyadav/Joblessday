@@ -60,3 +60,12 @@ export const ProfileDetailSchema = Yup.object().shape({
 export const ProfilebioSchema = Yup.object().shape({
     bio: Yup.string().required('bio is required'),
 });
+
+export const CandidateProfileDetailSchema = Yup.object().shape({
+    name: Yup.string().required('companyName is required'),
+    headline: Yup.string().required('This field is required'),
+    contact: Yup.string().required('This field is required'),
+    email: Yup.string().required('This field is required'),
+    city: Yup.string().required('This field is required'),
+    state: Yup.string().required('This field is required'),
+});
