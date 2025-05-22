@@ -13,6 +13,7 @@ import {
   slotCreationRequest,
   slotCreationResponse,
   updateCandidateBasicProfileRequest,
+  updateCandidateBioRequest,
   updateCandidateEducationProfileRequest,
   updateCandidateEmploymentProfileRequest,
   UpdateJobPostRequest,
@@ -157,7 +158,16 @@ export const Appapi = createApi({
       }),
     }),
 
-
+    updateCandidateProfileBio: build.mutation<
+      any,
+      updateCandidateBioRequest
+    >({
+      query: fetchData => ({
+        url: 'v1/jobless/' + fetchData.id,
+        method: 'PUT',
+        body: fetchData,
+      }),
+    }),
   }),
 });
 
@@ -176,5 +186,6 @@ export const {
   useGetJobDetailMutation,
   useApplicationActionMutation,
   useAppliedCandidatesMutation,
-  useGetCandidateDetailMutation
+  useGetCandidateDetailMutation,
+  useUpdateCandidateProfileBioMutation
 } = Appapi;

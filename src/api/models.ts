@@ -142,6 +142,11 @@ export interface updateCandidateEducationProfileRequest {
     educationDetails: any[]
 }
 
+export interface updateCandidateBioRequest {
+    id: string;
+    bio:string;
+}
+
 export interface updateCandidateEmploymentProfileRequest {
     id: string;
     stepper: number;
