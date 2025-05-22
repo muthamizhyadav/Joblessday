@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     position: 'relative',
     borderColor: '#ccc',
-    borderWidth: 1,
+    // borderWidth: 1,
     borderRadius: 5,
   },
   label: {

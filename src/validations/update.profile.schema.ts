@@ -46,3 +46,17 @@ export const companyDetailSchema = Yup.object().shape({
     recruiterDesignation: Yup.string().required('recruiterDesignation is required'),
     stepper: Yup.number()
 });
+
+export const ProfileDetailSchema = Yup.object().shape({
+    name: Yup.string().required('companyName is required'),
+    recruiterDesignation: Yup.string().required('This field is required'),
+    companyName: Yup.string().required('This field is required'),
+    contact: Yup.string().required('This field is required'),
+    email: Yup.string().required('This field is required'),
+    city: Yup.string().required('This field is required'),
+    state: Yup.string().required('This field is required'),
+});
+
+export const ProfilebioSchema = Yup.object().shape({
+    bio: Yup.string().required('bio is required'),
+});

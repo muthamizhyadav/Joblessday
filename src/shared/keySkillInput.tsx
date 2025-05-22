@@ -12,9 +12,10 @@ import SvgIcon from './Svg';
 
 interface KeySkillsInputProps {
   onSkillsChange?: (skills: string[]) => void;
+  style?:any
 }
 
-const KeySkillsInput: React.FC<KeySkillsInputProps> = ({onSkillsChange}) => {
+const KeySkillsInput: React.FC<KeySkillsInputProps> = ({onSkillsChange,style}) => {
   const [input, setInput] = useState<string>('');
   const [skills, setSkills] = useState<string[]>([]);
 
@@ -41,7 +42,7 @@ const KeySkillsInput: React.FC<KeySkillsInputProps> = ({onSkillsChange}) => {
     <View style={styles.container}>
       <View style={styles.inputRow}>
         <TextInput
-          style={styles.input}
+         style={[styles.input, style]}
           placeholder="Enter key skill"
           value={input}
           onChangeText={setInput}

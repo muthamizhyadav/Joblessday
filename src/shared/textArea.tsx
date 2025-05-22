@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   container: {
     marginVertical: 10,
     borderColor: '#ccc',
-    borderWidth: 1,
+    // borderWidth: 1,
     borderRadius: 5,
   },
   label: {
