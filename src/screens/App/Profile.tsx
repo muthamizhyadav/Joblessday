@@ -19,10 +19,13 @@ import {
 } from '../../validations/update.profile.schema';
 import TextArea from '../../shared/textArea';
 import KeySkillsInput from '../../shared/keySkillInput';
+import {useUpdateCandidateProfileDetailMutation} from '../../api/api';
 
 const EditUploadComponents = () => {
   const {user} = useSelector((state: any) => state.app.data);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [request, response] = useUpdateCandidateProfileDetailMutation();
+  
   const UpdateProfileFormik = useFormik({
     initialValues: {
       name: user?.name ?? '',
@@ -36,7 +39,27 @@ const EditUploadComponents = () => {
     },
     validationSchema: ProfileDetailSchema,
     onSubmit: values => {
-      console.log(values);
+      const formData = new FormData();
+      formData.append('id', user?._id);
+      formData.append('name', values.name);
+      formData.append('recruiterDesignation', values.recruiterDesignation);
+      formData.append('companyName', values.companyName);
+      formData.append('contact', values.contact);
+      formData.append('email', values.email);
+      formData.append('city', values.city);
+      formData.append('state', values.state);
+
+      if (imageUri) {
+        const filename = imageUri.split('/').pop() || `photo.jpg`;
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+        formData.append('image', {
+          uri: imageUri,
+          name: filename,
+          type,
+        } as any);
+      }
+      request({id: user?._id, formData});
     },
   });
   const pickImage = () => {
@@ -56,6 +79,7 @@ const EditUploadComponents = () => {
       },
     );
   };
+  1;
 
   return (
     <View>
@@ -146,6 +170,7 @@ const EditUploadComponents = () => {
       <View>
         <SharedButton
           onPress={UpdateProfileFormik.handleSubmit}
+          isLoading={response?.isLoading}
           title="Submit"
         />
       </View>
@@ -194,8 +219,8 @@ const UpdateExpertise = () => {
         onSkillsChange={handleSkillsChange}
         style={{borderColor: 'gray'}}
       />
-      <View style={{marginTop:10}}>
-        <SharedButton onPress={()=>console.log("CLICKED")} title="Submit" />
+      <View style={{marginTop: 10}}>
+        <SharedButton onPress={() => console.log('CLICKED')} title="Submit" />
       </View>
     </View>
   );

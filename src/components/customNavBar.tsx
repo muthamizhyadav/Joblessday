@@ -8,8 +8,7 @@ import Animated, {
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import SvgIcon from '../shared/Svg';
 
-const AnimatedTouchableOpacity =
-  Animated.createAnimatedComponent(TouchableOpacity);
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const PRIMARY_COLOR = '#6d28d9';
 const SECONDARY_COLOR = '#fff';

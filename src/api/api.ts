@@ -14,8 +14,11 @@ import {
   slotCreationResponse,
   updateCandidateBasicProfileRequest,
   updateCandidateBioRequest,
+  updateCandidateDetailRequest,
   updateCandidateEducationProfileRequest,
   updateCandidateEmploymentProfileRequest,
+  updateCandidateExperienceRequest,
+  updateCandidateSkillRequest,
   UpdateJobPostRequest,
 } from './models';
 
@@ -168,6 +171,40 @@ export const Appapi = createApi({
         body: fetchData,
       }),
     }),
+
+    updateCandidateProfileDetail: build.mutation<
+      any,
+      any
+    >({
+      query: fetchData => ({
+        url: 'v1/jobless/' + fetchData.id,
+        method: 'PUT',
+        body: fetchData,
+      }),
+    }),
+
+    updateCandidateSkills: build.mutation<
+      any,
+      updateCandidateSkillRequest
+    >({
+      query: fetchData => ({
+        url: 'v1/jobless/' + fetchData.id,
+        method: 'PUT',
+        body: fetchData,
+      }),
+    }),
+
+    updateCandidateExperince: build.mutation<
+      any,
+      updateCandidateExperienceRequest
+    >({
+      query: fetchData => ({
+        url: 'v1/jobless/' + fetchData.id,
+        method: 'PUT',
+        body: fetchData,
+      }),
+    }),
+
   }),
 });
 
@@ -187,5 +224,8 @@ export const {
   useApplicationActionMutation,
   useAppliedCandidatesMutation,
   useGetCandidateDetailMutation,
-  useUpdateCandidateProfileBioMutation
+  useUpdateCandidateProfileBioMutation,
+  useUpdateCandidateProfileDetailMutation,
+  useUpdateCandidateSkillsMutation,
+  useUpdateCandidateExperinceMutation
 } = Appapi;

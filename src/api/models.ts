@@ -144,7 +144,7 @@ export interface updateCandidateEducationProfileRequest {
 
 export interface updateCandidateBioRequest {
     id: string;
-    bio:string;
+    bio: string;
 }
 
 export interface updateCandidateEmploymentProfileRequest {
@@ -162,4 +162,24 @@ export interface JobApplyRequest {
     recruiterId: string;
     candidateId: string;
     status: string
+}
+
+export interface updateCandidateDetailRequest {
+    id: string;
+    name: string;
+    contact: string;
+    state: string;
+    city: string;
+    headline: string
+
+}
+
+export interface updateCandidateSkillRequest {
+    id: string;
+    educationDetails: any
+}
+
+export interface updateCandidateExperienceRequest {
+    id: string;
+    employmentDetails: any
 }

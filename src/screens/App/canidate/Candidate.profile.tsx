@@ -16,6 +16,7 @@ import {persistor} from '../../../store/store';
 import {useFormik} from 'formik';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {
+  CandidateExperienceSchema,
   CandidateProfileDetailSchema,
   ProfilebioSchema,
 } from '../../../validations/update.profile.schema';
@@ -26,13 +27,18 @@ import TextArea from '../../../shared/textArea';
 import KeySkillsInput from '../../../shared/keySkillInput';
 import {
   useGetCandidateDetailMutation,
+  useUpdateCandidateExperinceMutation,
   useUpdateCandidateProfileBioMutation,
+  useUpdateCandidateProfileDetailMutation,
+  useUpdateCandidateSkillsMutation,
 } from '../../../api/api';
-import {setProfileData} from '../../../store/slice';
+import DatePickerComponent from '../../../shared/dateTimePicker';
+import moment from 'moment';
 
-const EditUploadComponents = () => {
+const EditUploadComponents = ({onClose}) => {
   const {user} = useSelector((state: any) => state.app.data);
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [request, response] = useUpdateCandidateProfileDetailMutation();
   const UpdateProfileFormik = useFormik({
     initialValues: {
       name: user?.name ?? '',
@@ -44,9 +50,37 @@ const EditUploadComponents = () => {
     },
     validationSchema: CandidateProfileDetailSchema,
     onSubmit: values => {
-      console.log(values);
+      const formData = new FormData();
+      formData.append('id', user?._id);
+      formData.append('name', values.name);
+      formData.append('city', values.city);
+      formData.append('state', values.state);
+      formData.append('headline', values.headline);
+      formData.append('contact', values.contact);
+
+      console.log(formData, 'ID, And aother details');
+
+      if (imageUri) {
+        const filename = imageUri.split('/').pop() || `photo.jpg`;
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : `image`;
+
+        formData.append('image', {
+          uri: imageUri,
+          name: filename,
+          type: type,
+        } as any);
+      }
+      request(formData);
     },
   });
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+  }, [response?.isSuccess]);
+
   const pickImage = () => {
     launchImageLibrary(
       {
@@ -145,13 +179,14 @@ const EditUploadComponents = () => {
         <SharedButton
           onPress={UpdateProfileFormik.handleSubmit}
           title="Submit"
+          isLoading={response?.isLoading}
         />
       </View>
     </View>
   );
 };
 
-const UpdateBio = () => {
+const UpdateBio = ({onClose}) => {
   const {user, token} = useSelector((state: any) => state.app.data);
   const [request, response] = useUpdateCandidateProfileBioMutation();
   const UpdateBioFormik = useFormik({
@@ -166,6 +201,13 @@ const UpdateBio = () => {
       });
     },
   });
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+  }, [response?.isSuccess]);
+
   return (
     <View>
       <View>
@@ -187,14 +229,41 @@ const UpdateBio = () => {
   );
 };
 
-const UpdateExpertise = () => {
-  const {user} = useSelector((state: any) => state.app.data);
+const UpdateExpertise = ({onClose, user}) => {
+  const [existingSkill, setExistingSkills] = useState<any[]>(
+    user.educationDetails[0].keySkill ?? [],
+  );
+  const [request, response] = useUpdateCandidateSkillsMutation();
+
   const [skills, setSkills] = React.useState<any>(
     user.educationDetails[0].keySkill ?? [],
   );
   const handleSkillsChange = (updatedSkills: string[]) => {
     setSkills(updatedSkills);
   };
+
+  const handleSubmit = () => {
+    const combinedSkills = Array.from(new Set([...existingSkill, ...skills]));
+    const updatedEducationDetails = user.educationDetails.map((edu, index) => {
+      if (index === 0) {
+        return {
+          ...edu,
+          keySkill: combinedSkills,
+        };
+      }
+      return edu;
+    });
+    request({
+      id: user?._id,
+      educationDetails: updatedEducationDetails,
+    });
+  };
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+  }, [response?.isSuccess]);
 
   return (
     <View>
@@ -203,7 +272,128 @@ const UpdateExpertise = () => {
         style={{borderColor: 'gray'}}
       />
       <View style={{marginTop: 10}}>
-        <SharedButton onPress={() => console.log('CLICKED')} title="Submit" />
+        <SharedButton
+          onPress={handleSubmit}
+          title="Submit"
+          isLoading={response?.isLoading}
+        />
+      </View>
+    </View>
+  );
+};
+
+const AddExperience = ({onClose, user}) => {
+  const [existingExperience, setExistingExperience] = useState<any[]>(
+    user.employmentDetails ?? [],
+  );
+  const [request, response] = useUpdateCandidateExperinceMutation();
+
+  const UpdateExperienceFormik = useFormik({
+    initialValues: {
+      CompanyName: '',
+      role: '',
+      fromDate: '',
+      toDate: '',
+    },
+    validationSchema: CandidateExperienceSchema,
+    onSubmit: values => {
+      const from = moment(values.fromDate);
+      const to = moment(values.toDate);
+      const months = to.diff(from, 'months', true);
+      const years = months / 12;
+      const experience = Number(years.toFixed(1));
+
+      const newExperience = {
+        CompanyName: values.CompanyName,
+        role: values.role,
+        fromDate: values.fromDate,
+        toDate: values.toDate,
+        experience: experience,
+      };
+      const updatedExperience = [...existingExperience, newExperience];
+      request({
+        id: user?._id,
+        employmentDetails: updatedExperience,
+      });
+    },
+  });
+
+  const selectDateTime = (type: string, value: any) => {
+    console.log(type, value);
+    if (type == 'fromDate') {
+      UpdateExperienceFormik.setFieldValue('fromDate', value);
+    } else if (type == 'toDate') {
+      UpdateExperienceFormik.setFieldValue('toDate', value);
+    }
+  };
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+  }, [response?.isSuccess]);
+
+  return (
+    <View>
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Company Name:</Text>
+        <SharedInput
+          inputType="default"
+          name={'CompanyName'}
+          value={UpdateExperienceFormik?.values.CompanyName}
+          onChange={UpdateExperienceFormik.handleChange('CompanyName')}
+          placeholder="Company name"
+        />
+      </View>
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Role:</Text>
+        <SharedInput
+          inputType="default"
+          name={'role'}
+          value={UpdateExperienceFormik?.values.role}
+          onChange={UpdateExperienceFormik.handleChange('role')}
+          placeholder="Role"
+        />
+      </View>
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>Start Date:</Text>
+        <DatePickerComponent
+          label="Pick a Date"
+          mode="date"
+          value={
+            UpdateExperienceFormik.values.fromDate
+              ? new Date(UpdateExperienceFormik.values.fromDate)
+              : null
+          }
+          onChange={(val: Date) =>
+            selectDateTime('fromDate', val.toISOString())
+          }
+          placeholder="Select Slot Date"
+        />
+      </View>
+      <View>
+        <Text style={{paddingLeft: 5, color: '#6b7280'}}>End Date:</Text>
+        <DatePickerComponent
+          label="Pick a Date"
+          mode="date"
+          value={
+            UpdateExperienceFormik.values.toDate
+              ? new Date(UpdateExperienceFormik.values.toDate)
+              : null
+          }
+          onChange={(val: Date) => selectDateTime('toDate', val.toISOString())}
+          placeholder="Select Slot Date"
+        />
+      </View>
+      <View style={{marginTop: 10}}>
+        <SharedButton
+          onPress={UpdateExperienceFormik?.handleSubmit}
+          title="Submit"
+          isLoading={response?.isLoading}
+          disabled={
+            !UpdateExperienceFormik.isValid || !UpdateExperienceFormik.dirty
+          }
+        />
       </View>
     </View>
   );
@@ -215,6 +405,8 @@ export const CandidateProfile: React.FC = () => {
   const [popupVisibleBio, setPopupVisibleBio] = useState(false);
   const [popupVisibleExpertise, setPopupVisibleExpertise] = useState(false);
   const [popupVisibleProfile, setPopupVisibleProfile] = useState(false);
+  const [popupVisibleExperience, setPopupVisibleExperience] = useState(false);
+
   const [candidateRequest, candidateResponse] = useGetCandidateDetailMutation();
   const [id, setId] = useState(CandidateDetails?.user?._id);
   const [user, setUser] = useState<any>(null);
@@ -238,43 +430,23 @@ export const CandidateProfile: React.FC = () => {
   }, [candidateResponse]);
 
   useEffect(() => {
-    if (readyToReload && !popupVisibleBio) {
-      candidateRequest({id});
-    } else if (readyToReload && !popupVisibleExpertise) {
-      candidateRequest({id});
-    } else if (readyToReload && !popupVisibleProfile) {
+    if (
+      readyToReload &&
+      !popupVisibleBio &&
+      !popupVisibleExpertise &&
+      !popupVisibleProfile &&
+      !popupVisibleExperience
+    ) {
       candidateRequest({id});
     }
   }, [
-    popupVisibleBio && readyToReload,
-    popupVisibleExpertise && readyToReload,
-    popupVisibleProfile && readyToReload,
+    popupVisibleBio,
+    popupVisibleExpertise,
+    popupVisibleProfile,
+    readyToReload,
+    popupVisibleExperience,
   ]);
 
-  const profileData = {
-    name: 'Sarah Johnson',
-    position: 'Senior software engineer',
-    candidates: 245,
-    activeJobs: 18,
-    hired: 132,
-    email: 'sarah.j@techcorp.com',
-    phone: '+1 555-123-4567',
-    location: 'New York, USA',
-    linkedin: 'linkedin.com/in/sarahjohnson',
-    bio: 'Experienced technical recruiter specializing in software engineering roles. Passionate about connecting top talent with innovative companies.',
-    skills: [
-      'Tech Recruitment',
-      'Candidate Sourcing',
-      'Interview Coaching',
-      'HR Analytics',
-      'Talent Management',
-    ],
-    activeJobsList: [
-      {id: 1, title: 'Senior React Developer', applicants: 45},
-      {id: 2, title: 'DevOps Engineer', applicants: 32},
-      {id: 3, title: 'Mobile Team Lead', applicants: 28},
-    ],
-  };
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
@@ -367,14 +539,19 @@ export const CandidateProfile: React.FC = () => {
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>About Me</Text>
 
-                  <TouchableOpacity
-                    onPress={() => {
-                      setPopupVisibleBio(true), SetreadyToReload(true);
-                    }}>
-                    <Text style={styles.editSectionText}>{`${
-                      user?.bio ? 'Edit Bio' : ''
-                    }`}</Text>
-                  </TouchableOpacity>
+                  {user?.bio && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPopupVisibleBio(true), SetreadyToReload(true);
+                      }}>
+                      <SvgIcon
+                        name="edit"
+                        strokeColor={AppColors.headerBackground}
+                        width={20}
+                        height={20}
+                      />
+                    </TouchableOpacity>
+                  )}
                 </View>
                 {user?.bio ? (
                   <Text style={styles.bioText}>{user.bio}</Text>
@@ -452,18 +629,45 @@ export const CandidateProfile: React.FC = () => {
               <View style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
                   <Text style={styles.sectionTitle}>Experience</Text>
-                  <TouchableOpacity>
-                    <Text style={styles.editSectionText}>View All</Text>
-                  </TouchableOpacity>
-                </View>
-                {profileData.activeJobsList.map(job => (
-                  <TouchableOpacity key={job.id} style={styles.jobCard}>
-                    <Text style={styles.jobTitle}>{job.title}</Text>
-                    <Text style={styles.applicantsText}>
-                      {job.applicants} Applicants
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPopupVisibleExperience(true), SetreadyToReload(true);
+                    }}>
+                    <Text
+                      style={{
+                        display: 'flex',
+                        fontSize: 16,
+                        color: AppColors.headerBackground,
+                        fontWeight: '600',
+                        flexDirection: 'row',
+                        textAlign: 'center',
+                      }}>
+                      + Add
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </View>
+                {user?.employmentDetails &&
+                user.employmentDetails?.length > 0 ? (
+                  user.employmentDetails.map(job => (
+                    <TouchableOpacity key={job.id} style={styles.jobCard}>
+                      <Text style={styles.jobTitle} key={job.fromDate}>
+                        {job.CompanyName}
+                      </Text>
+                      <Text style={styles.applicantsText}>
+                        {job.experience} Years
+                      </Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                      fontWeight: '500',
+                      color: AppColors.headerBackground,
+                    }}>
+                    Click add to add Experiences
+                  </Text>
+                )}
               </View>
             </View>
           )
@@ -473,21 +677,34 @@ export const CandidateProfile: React.FC = () => {
         visible={popupVisibleProfile}
         onClose={() => setPopupVisibleProfile(false)}
         title="Update Your Profile">
-        <EditUploadComponents />
+        <EditUploadComponents onClose={() => setPopupVisibleProfile(false)} />
       </Popup>
 
       <Popup
         visible={popupVisibleBio}
         onClose={() => setPopupVisibleBio(false)}
         title="Update Your Bio Data">
-        <UpdateBio />
+        <UpdateBio onClose={() => setPopupVisibleBio(false)} />
       </Popup>
 
       <Popup
         visible={popupVisibleExpertise}
         onClose={() => setPopupVisibleExpertise(false)}
         title="Update Your Key Skills">
-        <UpdateExpertise />
+        <UpdateExpertise
+          onClose={() => setPopupVisibleExpertise(false)}
+          user={user}
+        />
+      </Popup>
+
+      <Popup
+        visible={popupVisibleExperience}
+        onClose={() => setPopupVisibleExperience(false)}
+        title="Add Your Experience">
+        <AddExperience
+          onClose={() => setPopupVisibleExperience(false)}
+          user={user}
+        />
       </Popup>
     </ScrollView>
   );
@@ -680,6 +897,3 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
 });
-function dispatch(arg0: {payload: any; type: 'app/setProfileData'}) {
-  throw new Error('Function not implemented.');
-}
