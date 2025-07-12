@@ -75,7 +75,10 @@ const SignupScreen: React.FC = () => {
           stepper: 0,
         });
       } else {
-        navigation.navigate('updateProfileRecruiter');
+        navigation.navigate('updateProfileRecruiter', {
+          id: registerResponse?.data?._id,
+          stepper: 0,
+        });
         // navigation.navigate('singin');
       }
     } else if (registerResponse?.isError) {

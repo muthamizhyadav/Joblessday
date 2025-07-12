@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+  ActivityIndicator,
   PermissionsAndroid,
   Platform,
   ScrollView,
@@ -19,9 +20,12 @@ import Stepper from '../../shared/stepper';
 import {jobPostinitValue} from '../../validations/job.initialValues';
 import {JobPostSchema} from '../../validations';
 import {useFormik} from 'formik';
+import {useRoute} from '@react-navigation/native';
 import {
   useCreateJobPostMutation,
   useCreateTestForJobPostMutation,
+  usePostblindFetchMutation,
+  useUpdateJobPostMutation,
 } from '../../api/api';
 import Toast from 'react-native-toast-message';
 import BottomSheet, {BottomSheetRefProps} from './../../shared/bottomSheet';
@@ -35,7 +39,10 @@ import {useNavigation} from '@react-navigation/native';
 import {useSelector} from 'react-redux';
 import moment from 'moment';
 import TextArea from '../../shared/textArea';
-
+interface RouteParams {
+  id?: any;
+  isEdit?: any;
+}
 const AddJobPostScreen: React.FC = () => {
   const [data] = useState(Industries);
   const steps = ['Post creation', 'Test creation'];
@@ -60,7 +67,13 @@ const AddJobPostScreen: React.FC = () => {
   const {user, tokens} = useSelector((state: any) => state.app.data);
   const [localStartTime, setLocalStartTime] = useState<Date | null>(null);
   const [localEndTime, setLocalEndTime] = useState<Date | null>(null);
+  const [blindfetchRequest, blindfetchResponse] = usePostblindFetchMutation();
+  const [existData, setExistData] = useState<any>(null);
 
+  const route = useRoute();
+  const id = route?.params?.id ?? null;
+  const isEdit = route?.params?.isEdit ?? false;
+  const [updateRequest, updateResponse] = useUpdateJobPostMutation();
   const experienceOptions = [
     {label: 'Fresher', value: 'fresher'},
     {label: '1-3 years', value: '1-3'},
@@ -69,6 +82,43 @@ const AddJobPostScreen: React.FC = () => {
     {label: '10-15 years', value: '10-15'},
     {label: '15+ years', value: '15+'},
   ];
+
+  React.useEffect(() => {
+    if (isEdit && id) {
+      blindfetchRequest({
+        id: id,
+      });
+    }
+  }, [isEdit]);
+
+  React.useEffect(() => {
+    if (blindfetchResponse?.isSuccess) {
+      setExistData(blindfetchResponse.data);
+      console.log(blindfetchResponse.data, 'blindfetch');
+      formik.setFieldValue('department', blindfetchResponse.data.department);
+      formik.setFieldValue('role', blindfetchResponse.data.role);
+      formik.setFieldValue('industry', blindfetchResponse.data.industry);
+      formik.setFieldValue(
+        'worklocation',
+        blindfetchResponse.data.worklocation,
+      );
+      formik.setFieldValue('designation', blindfetchResponse.data.designation);
+      formik.setFieldValue(
+        'salaryfrom',
+        blindfetchResponse.data.salaryfrom.toString(),
+      );
+      formik.setFieldValue(
+        'salaryto',
+        blindfetchResponse.data.salaryto.toString(),
+      );
+      formik.setFieldValue(
+        'openings',
+        blindfetchResponse.data.openings.toString(),
+      );
+      formik.setFieldValue('experience', blindfetchResponse.data.experience);
+      formik.setFieldValue('description', blindfetchResponse.data.description);
+    }
+  }, [blindfetchResponse]);
 
   const handleChange = (text, index) => {
     const updated = [...Openquestions];
@@ -115,7 +165,11 @@ const AddJobPostScreen: React.FC = () => {
 
   const submit = (data: any) => {
     console.log(data);
-    createJobPostRequest(data);
+    if (isEdit) {
+      updateRequest({data: data, id: id});
+    } else {
+      createJobPostRequest(data);
+    }
   };
 
   React.useEffect(() => {
@@ -137,6 +191,26 @@ const AddJobPostScreen: React.FC = () => {
       });
     }
   }, [createJobPostResponse?.isSuccess, createJobPostResponse?.isError]);
+
+  React.useEffect(() => {
+    console.log(updateResponse, 'updateResponse');
+    if (updateResponse?.isSuccess) {
+      navigation.navigate('MainApp', {
+        screen: 'Job Posts',
+        params: {new: true},
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Job post has been created!',
+      });
+    } else if (updateResponse?.isError) {
+      Toast.show({
+        type: 'error',
+        text1: 'Job post creation failed try again',
+      });
+    }
+  }, [updateResponse?.isSuccess, updateResponse?.isError]);
 
   const addOption = () => {
     setOptions([...options, {id: options.length + 1, text: ''}]);
@@ -358,7 +432,7 @@ const AddJobPostScreen: React.FC = () => {
               color: 'white',
               fontWeight: 600,
             }}>
-            Create Job Posts
+            {isEdit ? 'Edit Job Posts' : 'Create Job Posts'}
           </Text>
           <TouchableOpacity style={{marginRight: 10, alignSelf: 'center'}}>
             {/* <Text
@@ -380,191 +454,208 @@ const AddJobPostScreen: React.FC = () => {
       /> */}
       <ScrollView>
         {currentStep == 0 ? (
-          <ScrollView
-            style={{
-              width: '90%',
-              margin: 'auto',
-              marginTop: 25,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 5,
-            }}>
-            <View style={styles.forms}>
-              <Text>Select Industries :</Text>
-              <SharedDropdown
-                onChange={value => {
-                  formik.setFieldValue('industry', value),
-                    console.log(value, 'value');
-                }}
-                value={formik.values.industry}
-                data={data}
-                placeholder="Select Industries"
-                searchOptions={true}
-                searchPlaceHolder="Search Industries"
+          <>
+            {blindfetchResponse?.isLoading ? (
+              <ActivityIndicator
+                size={'large'}
+                color={AppColors.headerBackground}
               />
-            </View>
+            ) : (
+              <ScrollView
+                style={{
+                  width: '90%',
+                  margin: 'auto',
+                  marginTop: 25,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 5,
+                }}>
+                <View style={styles.forms}>
+                  <Text>Select Industries :</Text>
+                  <SharedDropdown
+                    onChange={value => {
+                      formik.setFieldValue('industry', value),
+                        console.log(value, 'value');
+                    }}
+                    value={formik.values.industry}
+                    data={data}
+                    placeholder="Select Industries"
+                    searchOptions={true}
+                    searchPlaceHolder="Search Industries"
+                  />
+                </View>
 
-            <View style={styles.forms}>
-              <Text>Select Role :</Text>
-              <SharedDropdown
-                onChange={value => formik.setFieldValue('role', value)}
-                value={formik.values.role}
-                data={Roles}
-                placeholder="Select Role"
-                searchOptions={true}
-                searchPlaceHolder="Search Roles"
-              />
-            </View>
+                <View style={styles.forms}>
+                  <Text>Select Role :</Text>
+                  <SharedDropdown
+                    onChange={value => formik.setFieldValue('role', value)}
+                    value={formik.values.role}
+                    data={Roles}
+                    placeholder="Select Role"
+                    searchOptions={true}
+                    searchPlaceHolder="Search Roles"
+                  />
+                </View>
 
-            <View style={styles.forms}>
-              <Text>Select Department :</Text>
-              <SharedDropdown
-                onChange={value => formik.setFieldValue('department', value)}
-                value={formik.values.department}
-                data={Department}
-                placeholder="Select Department"
-                searchOptions={true}
-                searchPlaceHolder="Search Department"
-              />
-            </View>
+                <View style={styles.forms}>
+                  <Text>Select Department :</Text>
+                  <SharedDropdown
+                    onChange={value =>
+                      formik.setFieldValue('department', value)
+                    }
+                    value={formik.values.department}
+                    data={Department}
+                    placeholder="Select Department"
+                    searchOptions={true}
+                    searchPlaceHolder="Search Department"
+                  />
+                </View>
 
-            <View style={styles.forms}>
-              <Text>Designation :</Text>
-              <SharedInput
-                inputType="text"
-                name={'designation'}
-                placeholder="Designations"
-                onChange={formik.handleChange('designation')}
-                value={formik.values.designation}
-              />
-            </View>
-            <View style={styles.forms}>
-              <Text>Select Experience :</Text>
-              <SharedDropdown
-                onChange={value => {
-                  formik.setFieldValue('experience', value),
-                    console.log(value, 'value');
-                }}
-                value={formik.values.experience}
-                data={experienceOptions}
-                searchOptions={false}
-              />
-            </View>
+                <View style={styles.forms}>
+                  <Text>Designation :</Text>
+                  <SharedInput
+                    inputType="text"
+                    name={'designation'}
+                    placeholder="Designations"
+                    onChange={formik.handleChange('designation')}
+                    value={formik.values.designation}
+                  />
+                </View>
+                <View style={styles.forms}>
+                  <Text>Select Experience :</Text>
+                  <SharedDropdown
+                    onChange={value => {
+                      formik.setFieldValue('experience', value),
+                        console.log(value, 'value');
+                    }}
+                    value={formik.values.experience}
+                    data={experienceOptions}
+                    searchOptions={false}
+                  />
+                </View>
 
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-              }}>
-              <View style={{width: '46%'}}>
-                <Text>Salary from :</Text>
-                <SharedInput
-                  inputType="numeric"
-                  name={'salaryfrom'}
-                  placeholder="From salary"
-                  onChange={formik.handleChange('salaryfrom')}
-                  value={formik.values.salaryfrom}
+                <View
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}>
+                  <View style={{width: '46%'}}>
+                    <Text>Salary from :</Text>
+                    <SharedInput
+                      inputType="numeric"
+                      name={'salaryfrom'}
+                      placeholder="From salary"
+                      onChange={formik.handleChange('salaryfrom')}
+                      value={formik.values.salaryfrom}
+                    />
+                  </View>
+                  <View style={{width: '46%'}}>
+                    <Text>salary to :</Text>
+                    <SharedInput
+                      inputType="numeric"
+                      name={'salaryto'}
+                      placeholder="To salary"
+                      onChange={formik.handleChange('salaryto')}
+                      value={formik.values.salaryto}
+                    />
+                  </View>
+                </View>
+
+                <View>
+                  <Text>Work Locations :</Text>
+                  <SharedInput
+                    inputType="text"
+                    name={'worklocation'}
+                    placeholder="Work location"
+                    onChange={formik.handleChange('worklocation')}
+                    value={formik.values.worklocation}
+                  />
+                </View>
+                <View style={styles.forms}>
+                  <Text>Openings :</Text>
+                  <SharedInput
+                    inputType="numeric"
+                    name={'openings'}
+                    placeholder="No of openings"
+                    onChange={formik.handleChange('openings')}
+                    value={formik.values.openings}
+                  />
+                </View>
+                <View>
+                  <Text>Slot date :</Text>
+                  <DatePickerComponent
+                    label="Pick a Date"
+                    mode="date"
+                    value={
+                      formik.values.date ? new Date(formik.values.date) : null
+                    }
+                    onChange={(val: Date) =>
+                      selectDateTime('date', val.toISOString())
+                    }
+                    placeholder="Select Slot Date"
+                  />
+                </View>
+
+                <View>
+                  <Text>Slot start time :</Text>
+                  <DatePickerComponent
+                    mode="time"
+                    value={
+                      formik.values.startTime
+                        ? moment(formik.values.startTime).toDate()
+                        : null
+                    }
+                    onChange={(val: Date) =>
+                      selectDateTime('startTime', val.toISOString())
+                    }
+                    placeholder="Select Start Time"
+                  />
+                </View>
+
+                <View style={styles.forms}>
+                  <Text>Slot end time :</Text>
+
+                  <DatePickerComponent
+                    mode="time"
+                    value={
+                      formik.values.endTime
+                        ? moment(formik.values.endTime).toDate()
+                        : null
+                    }
+                    onChange={(val: Date) =>
+                      selectDateTime('endTime', val.toISOString())
+                    }
+                    placeholder="Select End Time"
+                  />
+                </View>
+                <View style={styles.forms}>
+                  <Text>Job Description :</Text>
+                  <TextArea
+                    onChangeText={formik.handleChange('description')}
+                    value={formik.values.description}
+                    numberOfLines={5}
+                    placeholder="Write job description"
+                  />
+                </View>
+                <SharedButton
+                  title="Submit"
+                  isLoading={
+                    createJobPostResponse?.isLoading ||
+                    updateResponse?.isLoading
+                  }
+                  disabled={
+                    !formik.isValid ||
+                    !formik.dirty ||
+                    createJobPostResponse?.isLoading ||
+                    updateResponse?.isLoading
+                  }
+                  onPress={() => formik.handleSubmit()}
+                  style={{marginBottom: 10}}
                 />
-              </View>
-              <View style={{width: '46%'}}>
-                <Text>salary to :</Text>
-                <SharedInput
-                  inputType="numeric"
-                  name={'salaryto'}
-                  placeholder="To salary"
-                  onChange={formik.handleChange('salaryto')}
-                  value={formik.values.salaryto}
-                />
-              </View>
-            </View>
-
-            <View>
-              <Text>Work Locations :</Text>
-              <SharedInput
-                inputType="text"
-                name={'worklocation'}
-                placeholder="Work location"
-                onChange={formik.handleChange('worklocation')}
-                value={formik.values.worklocation}
-              />
-            </View>
-            <View style={styles.forms}>
-              <Text>Openings :</Text>
-              <SharedInput
-                inputType="numeric"
-                name={'openings'}
-                placeholder="No of openings"
-                onChange={formik.handleChange('openings')}
-                value={formik.values.openings}
-              />
-            </View>
-            <View>
-              <Text>Slot date :</Text>
-              <DatePickerComponent
-                label="Pick a Date"
-                mode="date"
-                value={formik.values.date ? new Date(formik.values.date) : null}
-                onChange={(val: Date) =>
-                  selectDateTime('date', val.toISOString())
-                }
-                placeholder="Select Slot Date"
-              />
-            </View>
-
-            <View>
-              <Text>Slot start time :</Text>
-              <DatePickerComponent
-                mode="time"
-                value={
-                  formik.values.startTime
-                    ? moment(formik.values.startTime).toDate()
-                    : null
-                }
-                onChange={(val: Date) =>
-                  selectDateTime('startTime', val.toISOString())
-                }
-                placeholder="Select Start Time"
-              />
-            </View>
-
-            <View style={styles.forms}>
-              <Text>Slot end time :</Text>
-
-              <DatePickerComponent
-                mode="time"
-                value={
-                  formik.values.endTime
-                    ? moment(formik.values.endTime).toDate()
-                    : null
-                }
-                onChange={(val: Date) =>
-                  selectDateTime('endTime', val.toISOString())
-                }
-                placeholder="Select End Time"
-              />
-            </View>
-            <View style={styles.forms}>
-              <Text>Job Description :</Text>
-              <TextArea
-                onChangeText={formik.handleChange('description')}
-                value={formik.values.description}
-                numberOfLines={5}
-                placeholder="Write job description"
-              />
-            </View>
-            <SharedButton
-              title="Submit"
-              isLoading={createJobPostResponse?.isLoading}
-              disabled={
-                !formik.isValid ||
-                !formik.dirty ||
-                createJobPostResponse?.isLoading
-              }
-              onPress={() => formik.handleSubmit()}
-              style={{marginBottom: 10}}
-            />
-          </ScrollView>
+              </ScrollView>
+            )}
+          </>
         ) : // <View style={{width: '90%', alignSelf: 'center'}}>
         //   <Text style={{fontSize: 24, marginBottom: 5}}>
         //     Test Information :

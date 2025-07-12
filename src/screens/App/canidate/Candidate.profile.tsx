@@ -58,8 +58,6 @@ const EditUploadComponents = ({onClose}) => {
       formData.append('headline', values.headline);
       formData.append('contact', values.contact);
 
-      console.log(formData, 'ID, And aother details');
-
       if (imageUri) {
         const filename = imageUri.split('/').pop() || `photo.jpg`;
         const match = /\.(\w+)$/.exec(filename);
@@ -71,7 +69,9 @@ const EditUploadComponents = ({onClose}) => {
           type: type,
         } as any);
       }
-      request(formData);
+      console.log(formData, 'LPLP');
+
+      request({id:user._id, formData});
     },
   });
 
@@ -426,6 +426,7 @@ export const CandidateProfile: React.FC = () => {
   useEffect(() => {
     if (candidateResponse?.isSuccess) {
       setUser(candidateResponse?.data);
+      console.log(candidateResponse?.data);
     }
   }, [candidateResponse]);
 
@@ -463,10 +464,13 @@ export const CandidateProfile: React.FC = () => {
             <View style={{marginBottom: 50}}>
               <View style={styles.header}>
                 <Image
-                  source={{
-                    uri: 'https://images.unsplash.com/photo-1598257006458-087169a1f08d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                  }}
+                  source={
+                    user?.profileImage
+                      ? {uri: user.profileImage}
+                      : require('../../../assets/images/person.jpg')
+                  }
                   style={styles.profileImage}
+                  resizeMode="cover"
                 />
                 <Text style={styles.name}>{user.name}</Text>
                 <Text style={styles.position}>{user.headline ?? 'N / A'}</Text>

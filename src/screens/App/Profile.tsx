@@ -1,5 +1,11 @@
 import * as React from 'react';
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {ScrollView} from 'react-native-gesture-handler';
 import {Image} from 'react-native';
 import SvgIcon from '../../shared/Svg';
@@ -7,7 +13,7 @@ import {AppColors} from '../../constants/colors.config';
 import {useDispatch, useSelector} from 'react-redux';
 import {useNavigation} from '@react-navigation/native';
 import {persistor} from '../../store/store';
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import Popup from '../../shared/popup';
 import {launchImageLibrary} from 'react-native-image-picker';
 import SharedInput from '../../shared/input';
@@ -19,49 +25,76 @@ import {
 } from '../../validations/update.profile.schema';
 import TextArea from '../../shared/textArea';
 import KeySkillsInput from '../../shared/keySkillInput';
-import {useUpdateCandidateProfileDetailMutation} from '../../api/api';
+import {
+  useGetCandidateDetailMutation,
+  useUpdateCandidateProfileBioMutation,
+  useUpdateCandidateProfileDetailMutation,
+  useUpdateCandidateSkillsMutation,
+} from '../../api/api';
+import ImageResizer from 'react-native-image-resizer';
 
-const EditUploadComponents = () => {
+const EditUploadComponents = ({onClose}) => {
   const {user} = useSelector((state: any) => state.app.data);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [request, response] = useUpdateCandidateProfileDetailMutation();
-  
+
   const UpdateProfileFormik = useFormik({
     initialValues: {
       name: user?.name ?? '',
-      recruiterDesignation:
-        user?.employmentDetails?.[0]?.recruiterDesignation ?? '',
-      companyName: user?.employmentDetails?.[0]?.companyName ?? '',
+      recruiterDesignation: user?.headline ?? '',
+      companyName: user.companyName ?? '',
       contact: user?.contact ?? '',
       email: user?.email ?? '',
-      city: user?.employmentDetails?.[0]?.city ?? '',
-      state: user?.employmentDetails?.[0]?.state ?? '',
+      city: user?.city ?? '',
+      state: user?.state ?? '',
     },
     validationSchema: ProfileDetailSchema,
-    onSubmit: values => {
-      const formData = new FormData();
-      formData.append('id', user?._id);
-      formData.append('name', values.name);
-      formData.append('recruiterDesignation', values.recruiterDesignation);
-      formData.append('companyName', values.companyName);
-      formData.append('contact', values.contact);
-      formData.append('email', values.email);
-      formData.append('city', values.city);
-      formData.append('state', values.state);
+    onSubmit: async values => {
+      const data = {
+        name: values.name,
+        recruiterDesignation: values.recruiterDesignation,
+        companyName: values.companyName,
+        contact: values.contact,
+        email: values.email,
+        city: values.city,
+        state: values.state,
+        image: {uri: '', name: '', type: ''},
+      };
 
       if (imageUri) {
-        const filename = imageUri.split('/').pop() || `photo.jpg`;
+        const filename = imageUri.split('/').pop() || 'photo.jpg';
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : `image`;
-        formData.append('image', {
-          uri: imageUri,
-          name: filename,
-          type,
-        } as any);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+
+        try {
+          const resizedImage = await ImageResizer.createResizedImage(
+            imageUri,
+            800,
+            800,
+            'JPEG',
+            70,
+          );
+          data.image = {
+            uri: resizedImage.uri,
+            name: filename,
+            type: type,
+          };
+        } catch (error) {
+          console.error('Image compression error:', error);
+        }
       }
-      request({id: user?._id, formData});
+
+      request({id: user._id, data});
     },
   });
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+    console.log(response);
+  }, [response]);
+
   const pickImage = () => {
     launchImageLibrary(
       {
@@ -79,7 +112,6 @@ const EditUploadComponents = () => {
       },
     );
   };
-  1;
 
   return (
     <View>
@@ -178,17 +210,30 @@ const EditUploadComponents = () => {
   );
 };
 
-const UpdateBio = () => {
+const UpdateBio = ({onClose}) => {
   const {user} = useSelector((state: any) => state.app.data);
+  const [request, response] = useUpdateCandidateProfileBioMutation();
+
   const UpdateBioFormik = useFormik({
     initialValues: {
       bio: user?.bio ?? '',
     },
     validationSchema: ProfilebioSchema,
     onSubmit: values => {
-      console.log(values);
+      request({
+        id: user._id,
+        bio: values.bio,
+      });
     },
   });
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+    console.log(response);
+  }, [response]);
+
   return (
     <View>
       <View>
@@ -200,18 +245,40 @@ const UpdateBio = () => {
         />
       </View>
       <View>
-        <SharedButton onPress={UpdateBioFormik.handleSubmit} title="Submit" />
+        <SharedButton
+          onPress={UpdateBioFormik.handleSubmit}
+          title="Submit"
+          isLoading={response?.isLoading}
+        />
       </View>
     </View>
   );
 };
 
-const UpdateExpertise = () => {
-  const {user} = useSelector((state: any) => state.app.data);
-  const [skills, setSkills] = React.useState<any>([]);
+const UpdateExpertise = ({onClose, user}) => {
+  const [existingSkill, setExistingSkills] = useState<any[]>(
+    user?.expertise ?? [],
+  );
+  const [request, response] = useUpdateCandidateSkillsMutation();
+
+  const [skills, setSkills] = React.useState<any>(user.expertise ?? []);
   const handleSkillsChange = (updatedSkills: string[]) => {
     setSkills(updatedSkills);
   };
+
+  const handleSubmit = () => {
+    const combinedSkills = Array.from(new Set([...existingSkill, ...skills]));
+    request({
+      id: user?._id,
+      expertise: combinedSkills,
+    });
+  };
+
+  useEffect(() => {
+    if (response?.isSuccess) {
+      onClose();
+    }
+  }, [response]);
 
   return (
     <View>
@@ -220,39 +287,58 @@ const UpdateExpertise = () => {
         style={{borderColor: 'gray'}}
       />
       <View style={{marginTop: 10}}>
-        <SharedButton onPress={() => console.log('CLICKED')} title="Submit" />
+        <SharedButton
+          onPress={handleSubmit}
+          title="Submit"
+          isLoading={response?.isLoading}
+        />
       </View>
     </View>
   );
 };
 
 const ProfileScreen: React.FC = () => {
-  const {user} = useSelector((state: any) => state.app.data);
   const [popupVisibleProfile, setPopupVisibleProfile] = useState(false);
   const [popupVisibleBio, setPopupVisibleBio] = useState(false);
   const [popupVisibleExpertise, setPopupVisibleExpertise] = useState(false);
+  const [popupVisibleExperience, setPopupVisibleExperience] = useState(false);
+  const [candidateRequest, candidateResponse] = useGetCandidateDetailMutation();
+  const CandidateDetails = useSelector((state: any) => state.app.data);
+  const [id, setId] = useState(CandidateDetails?.user?._id);
+  const [user, setUser] = useState<any>(null);
+  const [readyToReload, SetreadyToReload] = useState(false);
 
-  const profileData = {
-    name: 'Sarah Johnson',
-    position: 'Senior Talent Acquisition Specialist',
-    company: 'Tech Corp Inc.',
-    candidates: 245,
-    activeJobs: 18,
-    hired: 132,
-    email: 'sarah.j@techcorp.com',
-    phone: '+1 555-123-4567',
-    location: 'New York, USA',
-    linkedin: 'linkedin.com/in/sarahjohnson',
-    bio: 'Experienced technical recruiter specializing in software engineering roles. Passionate about connecting top talent with innovative companies.',
-    skills: [
-      'Tech Recruitment',
-      'Candidate Sourcing',
-      'Interview Coaching',
-      'HR Analytics',
-      'Talent Management',
-    ],
-  };
-  const dispatch = useDispatch();
+  useEffect(() => {
+    if (id) {
+      candidateRequest({id});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (candidateResponse?.isSuccess) {
+      setUser(candidateResponse?.data);
+      console.log(candidateResponse?.data, 'DATA');
+    }
+  }, [candidateResponse]);
+
+  useEffect(() => {
+    if (
+      readyToReload &&
+      !popupVisibleBio &&
+      !popupVisibleExpertise &&
+      !popupVisibleProfile &&
+      !popupVisibleExperience
+    ) {
+      candidateRequest({id});
+    }
+  }, [
+    popupVisibleBio,
+    popupVisibleExpertise,
+    popupVisibleProfile,
+    readyToReload,
+    popupVisibleExperience,
+  ]);
+
   const navigation = useNavigation<any>();
 
   const Logout = async () => {
@@ -263,160 +349,215 @@ const ProfileScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
-      <View style={styles.header}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1598257006458-087169a1f08d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-          }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.name}>
-          {user.name.charAt(0).toUpperCase() + user.name.slice(1)}
-        </Text>
-        <Text style={styles.position}>
-          {user?.employmentDetails?.[0]?.recruiterDesignation
-            ? user.employmentDetails[0].recruiterDesignation
-                .charAt(0)
-                .toUpperCase() +
-              user.employmentDetails[0].recruiterDesignation.slice(1)
-            : ''}
-        </Text>
-        <Text style={styles.company}>
-          {user?.employmentDetails?.[0]?.companyName
-            ? user.employmentDetails[0].companyName.charAt(0).toUpperCase() +
-              user.employmentDetails[0].companyName.slice(1)
-            : ''}
-        </Text>
-
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => setPopupVisibleProfile(true)}>
-          <SvgIcon name="edit" strokeColor="#fff" />
-          <Text style={styles.editButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{position: 'absolute', right: 10, top: 10}}>
-        <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
-          <SvgIcon name="power" strokeColor="red" width={14} height={14} />
-          <Text style={{color: 'red'}}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Stats Section */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{profileData.candidates}</Text>
-          <Text style={styles.statLabel}>Candidates</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{profileData.activeJobs}</Text>
-          <Text style={styles.statLabel}>Active Jobs</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{profileData.hired}</Text>
-          <Text style={styles.statLabel}>Hired</Text>
-        </View>
-      </View>
-
-      {/* Contact Info */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.contactItem}>
-          <SvgIcon name="email" strokeColor="#666" />
-          <Text style={styles.contactText}>{user.email}</Text>
-        </View>
-        <View style={styles.contactItem}>
-          <SvgIcon name="phone" strokeColor="#666" />
-          <Text style={styles.contactText}>
-            {user.contact ? user.contact : 'N/A'}
-          </Text>
-        </View>
-        <View style={styles.contactItem}>
-          <SvgIcon name="location" strokeColor="#666" />
-          <Text style={styles.contactText}>
-            {`${user?.employmentDetails?.[0]?.city} , ${user?.employmentDetails?.[0]?.state}`}
-          </Text>
-        </View>
-        {/* <View style={styles.contactItem}>
-          <SvgIcon name="link" strokeColor="#666" />
-          <Text style={styles.contactText}>{profileData.linkedin}</Text>
-        </View> */}
-      </View>
-
-      {/* Bio Section */}
-      <View style={styles.sectionContainer}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>About Me</Text>
-
-          <TouchableOpacity onPress={() => setPopupVisibleBio(true)}>
-            <Text style={styles.editSectionText}>{`${
-              user?.bio ? 'Edit Bio' : ''
-            }`}</Text>
-          </TouchableOpacity>
-        </View>
-        {user?.bio ? (
-          <Text style={styles.bioText}>{user.bio}</Text>
+      <View style={{flex: 1}}>
+        {candidateResponse.isLoading ? (
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <ActivityIndicator
+              size="large"
+              color={AppColors.headerBackground}
+            />
+          </View>
         ) : (
-          <TouchableOpacity onPress={() => setPopupVisibleBio(true)}>
-            <Text
-              style={{
-                color: AppColors.AppButtonBackground,
-                fontWeight: '500',
-                textAlign: 'center',
-                fontSize: 18,
-              }}>
-              + Add Bio
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          user && (
+            <>
+              <View style={styles.header}>
+                <Image
+                  source={
+                    user?.profileImage
+                      ? {uri: user.profileImage}
+                      : require('../../assets/images/person.jpg')
+                  }
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+                <Text style={styles.name}>
+                  {user?.name?.charAt(0).toUpperCase() + user?.name?.slice(1)}
+                </Text>
+                <Text style={styles.position}>
+                  {user?.headline
+                    ? user.headline.charAt(0).toUpperCase() +
+                      user.headline.slice(1)
+                    : ''}
+                </Text>
+                <Text style={styles.company}>
+                  {user?.companyName
+                    ? user.companyName.charAt(0).toUpperCase() +
+                      user.companyName.slice(1)
+                    : ''}
+                </Text>
 
-      {/* Skills Section */}
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>Areas of Expertise</Text>
-        <View style={styles.skillsContainer}>
-          {user.expertise && user.expertise.length > 0 ? (
-            user.expertise.map((skill, index) => (
-              <View key={index} style={styles.skillTag}>
-                <Text style={styles.skillText}>{skill}</Text>
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => {
+                    setPopupVisibleProfile(true), SetreadyToReload(true);
+                  }}>
+                  <SvgIcon name="edit" strokeColor="#fff" />
+                  <Text style={styles.editButtonText}>Edit Profile</Text>
+                </TouchableOpacity>
               </View>
-            ))
-          ) : (
-            <TouchableOpacity
-              style={{margin: 'auto'}}
-              onPress={() => setPopupVisibleExpertise(true)}>
-              <Text
-                style={{
-                  color: AppColors.AppButtonBackground,
-                  fontWeight: '500',
-                  textAlign: 'center',
-                  fontSize: 18,
-                }}>
-                + Add Expertise
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
+
+              <View style={{position: 'absolute', right: 10, top: 10}}>
+                <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+                  <SvgIcon
+                    name="power"
+                    strokeColor="red"
+                    width={14}
+                    height={14}
+                  />
+                  <Text style={{color: 'red'}}>Logout</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Stats Section */}
+              {/* <View style={styles.statsContainer}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>
+                    {profileData.candidates}
+                  </Text>
+                  <Text style={styles.statLabel}>Candidates</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>
+                    {profileData.activeJobs}
+                  </Text>
+                  <Text style={styles.statLabel}>Active Jobs</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{profileData.hired}</Text>
+                  <Text style={styles.statLabel}>Hired</Text>
+                </View>
+              </View> */}
+
+              {/* Contact Info */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.contactItem}>
+                  <SvgIcon name="email" strokeColor="#666" />
+                  <Text style={styles.contactText}>{user?.email}</Text>
+                </View>
+                <View style={styles.contactItem}>
+                  <SvgIcon name="phone" strokeColor="#666" />
+                  <Text style={styles.contactText}>
+                    {user?.contact || 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.contactItem}>
+                  <SvgIcon name="location" strokeColor="#666" />
+                  <Text style={styles.contactText}>
+                    {`${user?.city || ''} , ${user?.state || ''}`}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Bio Section */}
+              <View style={styles.sectionContainer}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>About Me</Text>
+                  {user?.bio && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPopupVisibleBio(true), SetreadyToReload(true);
+                      }}>
+                      <Text style={styles.editSectionText}>Edit Bio</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {user?.bio ? (
+                  <Text style={styles.bioText}>{user.bio}</Text>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPopupVisibleBio(true), SetreadyToReload(true);
+                    }}>
+                    <Text
+                      style={{
+                        color: AppColors.AppButtonBackground,
+                        fontWeight: '500',
+                        textAlign: 'center',
+                        fontSize: 18,
+                      }}>
+                      + Add Bio
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Skills Section */}
+              <View style={styles.sectionContainer}>
+                <View
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexDirection: 'row',
+                  }}>
+                  <Text style={styles.sectionTitle}>Areas of Expertise</Text>
+                  {user?.expertise?.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setPopupVisibleExpertise(true), SetreadyToReload(true);
+                      }}>
+                      <SvgIcon
+                        name="edit"
+                        strokeColor={AppColors.headerBackground}
+                        width={20}
+                        height={20}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={styles.skillsContainer}>
+                  {user?.expertise?.length > 0 ? (
+                    user.expertise.map((skill, index) => (
+                      <View key={index} style={styles.skillTag}>
+                        <Text style={styles.skillText}>{skill}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <TouchableOpacity
+                      style={{width: '100%'}}
+                      onPress={() => {
+                        setPopupVisibleExpertise(true), SetreadyToReload(true);
+                      }}>
+                      <Text
+                        style={{
+                          color: AppColors.AppButtonBackground,
+                          fontWeight: '500',
+                          textAlign: 'center',
+                          fontSize: 18,
+                        }}>
+                        + Add Expertise
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </>
+          )
+        )}
       </View>
 
       <Popup
         visible={popupVisibleProfile}
         onClose={() => setPopupVisibleProfile(false)}
         title="Update Your Profile">
-        <EditUploadComponents />
+        <EditUploadComponents onClose={() => setPopupVisibleProfile(false)} />
       </Popup>
 
       <Popup
         visible={popupVisibleBio}
         onClose={() => setPopupVisibleBio(false)}
         title="Update Your Bio Data">
-        <UpdateBio />
+        <UpdateBio onClose={() => setPopupVisibleBio(false)} />
       </Popup>
 
       <Popup
         visible={popupVisibleExpertise}
         onClose={() => setPopupVisibleExpertise(false)}
-        title="Update Your Bio Data">
-        <UpdateExpertise />
+        title="Update Your Expertise">
+        <UpdateExpertise
+          onClose={() => setPopupVisibleExpertise(false)}
+          user={user}
+        />
       </Popup>
     </ScrollView>
   );

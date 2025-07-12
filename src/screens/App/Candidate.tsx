@@ -14,6 +14,7 @@ import {useNavigation} from '@react-navigation/native';
 import {AppColors} from '../../constants/colors.config';
 import {FlatList} from 'react-native-gesture-handler';
 import {useAppliedCandidatesMutation} from '../../api/api';
+import {Image} from 'react-native';
 
 interface CandidateCardProps {
   name: string;
@@ -115,21 +116,6 @@ const CandidateScreen: React.FC = () => {
             </View>
           ))}
         </View>
-
-        {/* Status Indicator */}
-        {/* <View
-      style={[
-        styles.status,
-        {backgroundColor: statusColor[status]?.bg},
-      ]}>
-      <Text
-        style={[
-          styles.statusText,
-          {color: statusColor[status]?.text},
-        ]}>
-        {status}
-      </Text>
-    </View> */}
       </TouchableOpacity>
     );
   };
@@ -137,7 +123,7 @@ const CandidateScreen: React.FC = () => {
   const renderItem = ({item}) => (
     <CandidateCard
       name={item?.candidateName ?? '--'}
-      match={item?.status == "applied" ? 'Pending':item?.status ?? '-'}
+      match={item?.status == 'applied' ? 'Pending' : item?.status ?? '-'}
       title={item?.headLine}
       location={`${item?.city},${item?.state}`}
       experience={item.experience}
@@ -231,7 +217,7 @@ const CandidateScreen: React.FC = () => {
             size="large"
             color={AppColors.AppButtonBackground}
           />
-        ) : (
+        ) : candidates?.length > 0 ? (
           <FlatList
             data={candidates}
             renderItem={renderItem}
@@ -239,6 +225,22 @@ const CandidateScreen: React.FC = () => {
             contentContainerStyle={{padding: 16}}
             ListFooterComponent={<View style={{height: 30}} />}
           />
+        ) : (
+          <View style={{margin: 'auto'}}>
+            <Image
+              source={require('../../assets/images/Empty.png')}
+              style={{width: 250, height: 250}}
+            />
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 16,
+                fontWeight: '700',
+                color: AppColors.headerBackground,
+              }}>
+              Candidate not available
+            </Text>
+          </View>
         )}
       </View>
       <Modal

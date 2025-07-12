@@ -150,7 +150,15 @@ export interface updateCandidateBioRequest {
 export interface updateCandidateEmploymentProfileRequest {
     id: string;
     stepper: number;
-    employmentDetails: any[]
+    headline: string;
+    state: string;
+    city: string;
+    gst: string;
+    employeeCount: string;
+    recruiterName: string;
+    industry?: string;
+    companysiteURL?: string;
+    companyName: string;
 }
 
 export interface JobDetailsRequest {
@@ -176,10 +184,16 @@ export interface updateCandidateDetailRequest {
 
 export interface updateCandidateSkillRequest {
     id: string;
-    educationDetails: any
+    educationDetails?: any
+    expertise?: any
 }
 
 export interface updateCandidateExperienceRequest {
     id: string;
     employmentDetails: any
+}
+
+export interface UpdatePostRequest {
+    id: string;
+    data:any
 }

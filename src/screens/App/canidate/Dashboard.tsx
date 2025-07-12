@@ -12,6 +12,7 @@ import SvgIcon from '../../../shared/Svg';
 import {useSelector} from 'react-redux';
 import {AppColors} from '../../../constants/colors.config';
 import {FeaturedJobListings} from '../../../components/candidates/featuredJoblisting';
+import SkeletonLoader from '../../../shared/SkeletonLoader';
 
 interface JobPost {
   id: string;
@@ -172,23 +173,21 @@ export const CandidateDashboard: React.FC = () => {
           />
         </View>
       </View>
-
-      <View style={styles.bannerContainer}>
-        <View style={styles.contentContainer}>
-          <Text style={styles.bannerText}>
-            🚀 Live Job Application Session: Apply Now! (9 AM–12 PM)
-          </Text>
-
-          <View style={styles.timerContainer}>
-            <Text style={styles.timerText}>{timeRemaining}</Text>
-            <Text style={styles.timerLabel}>Time Remaining</Text>
-          </View>
+      <View style={styles.walletCard}>
+        <View style={styles.walletHeader}>
+          <Text style={styles.walletTitle}>💼 My Wallet</Text>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.addButtonText}>＋ Add</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.jobsLink}>
-          <Text style={styles.linkText}>Jump to Open Jobs ➔</Text>
-        </TouchableOpacity>
+        <View style={styles.walletBalanceContainer}>
+          <Text style={styles.balanceLabel}>Current Balance</Text>
+          <Text style={styles.balanceAmount}>₹ 2,500</Text>
+        </View>
       </View>
+      {/* <SkeletonLoader width={'90%'} height={100} rows={1} columns={1} /> */}
+
       {/* <FeaturedJobListings isLoggedIn={true} /> */}
 
       <View style={styles.container2}>
@@ -202,6 +201,7 @@ export const CandidateDashboard: React.FC = () => {
               icon={stat.icon}
             />
           ))}
+          {/* <SkeletonLoader width={'48%'} height={100} rows={2} columns={2} /> */}
         </View>
       </View>
 
@@ -214,7 +214,7 @@ export const CandidateDashboard: React.FC = () => {
                 <Text style={styles.candidateName}>
                   {interview.candidateName}
                 </Text>
-                <Text style={styles.jobTitle}>{interview.jobTitle}</Text>
+                <Text style={styles.jobTitle2}>{interview.jobTitle}</Text>
                 <View style={styles.timeStatusContainer}>
                   <SvgIcon
                     name="clock"
@@ -446,5 +446,50 @@ const styles = StyleSheet.create({
     color: AppColors.White,
     fontSize: 12,
     fontWeight: '600',
+  },
+  walletCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 5,
+    padding: 16,
+    margin: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: {width: 0, height: 2},
+    shadowRadius: 4,
+    elevation: 0,
+  },
+  walletHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  walletTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  walletBalanceContainer: {
+    marginTop: 16,
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: '#888',
+  },
+  balanceAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+    marginTop: 4,
   },
 });

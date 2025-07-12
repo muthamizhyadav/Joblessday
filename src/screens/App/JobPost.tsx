@@ -16,9 +16,11 @@ import BottomSheetComponent from '../../shared/bottomSheet';
 import {useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {FlatList} from 'react-native-gesture-handler';
-import {useFetchJobPostMutation} from '../../api/api';
+import {useDeleteJobPostMutation, useFetchJobPostMutation} from '../../api/api';
 import NumberFormatter from '../../shared/numberFormat';
 import {Image} from 'react-native';
+import Popup from '../../shared/popup';
+import {Button} from 'react-native';
 
 interface JobPostCardProps {
   industry: string;
@@ -35,9 +37,12 @@ const JobPostScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [bottomSheet, setBottomSheet] = useState(false);
   const [fetchJobPostRequest, fetchjobPostResponse] = useFetchJobPostMutation();
+  const [deletePostRequest, deletePostResponse] = useDeleteJobPostMutation();
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [posts, setPosts] = useState<JobPostCardProps>();
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [deleteId, setDeleteId] = useState('');
   const route = useRoute();
   const isNew = route.params;
 
@@ -74,6 +79,59 @@ const JobPostScreen: React.FC = () => {
       </View>
     );
   };
+
+  const handleEditChange = (id: string) => {
+    navigation.navigate('Addpost', {id, isEdit: true});
+  };
+
+  const handleCancel = () => {
+    setPopupVisible(false);
+  };
+
+  const handleDelete = () => {
+    deletePostRequest({
+      id: deleteId,
+    });
+  };
+
+  const DeleteWarning = () => {
+    return (
+      <View style={{width: '100%'}}>
+        <View style={{margin: 'auto'}}>
+          <SvgIcon name="warning" strokeColor="orange" width={80} height={80} />
+        </View>
+        <Text
+          style={{
+            textAlign: 'center',
+            color: AppColors.headerBackground,
+            fontWeight: '700',
+            fontSize: 20,
+          }}>
+          Are you sure you want to delete this post?
+        </Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <Text style={styles.cancelText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+            {deletePostResponse?.isLoading ? (
+              <ActivityIndicator size={'small'} color={'white'} />
+            ) : (
+              <Text style={styles.deleteText}>Delete</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
+  React.useEffect(() => {
+    if (deletePostResponse?.isSuccess) {
+      setPopupVisible(false);
+      fetchJobPosts();
+    }
+  }, [deletePostResponse]);
 
   const JobPostCard: React.FC<JobPostCardProps> = ({
     industry,
@@ -145,10 +203,11 @@ const JobPostScreen: React.FC = () => {
           <Text style={styles.applicationText}>Applications : 1000</Text>
         </View>
         <View style={{display: 'flex', flexDirection: 'row', gap: 5}}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => handleEditChange(_id)}>
             <SvgIcon name="edit" strokeColor="gray" />
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => (setPopupVisible(true), setDeleteId(_id))}>
             <SvgIcon name="delet" strokeColor="red" />
           </TouchableOpacity>
         </View>
@@ -167,7 +226,7 @@ const JobPostScreen: React.FC = () => {
       salaryto={item.salaryto}
       designation={item.designation}
       active={item.active}
-      _id={''}
+      _id={item?._id}
     />
   );
 
@@ -224,17 +283,18 @@ const JobPostScreen: React.FC = () => {
           </View>
           <View
             style={{
-              width: '90%',
+              width: '95%',
               display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
+              margin: 'auto',
             }}>
             <SearchBar
               onSearch={handleSearch}
-              style={{width: '91%'}}
+              style={{width: '100%', margin: 'auto'}}
               placeholder="search job post"
             />
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => setBottomSheet(true)}
               style={{
                 backgroundColor: 'white',
@@ -252,7 +312,7 @@ const JobPostScreen: React.FC = () => {
                 height={30}
                 strokeColor={AppColors.AppButtonBackground}
               />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
         {posts?.length > 0 ? (
@@ -306,6 +366,12 @@ const JobPostScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      <Popup
+        visible={popupVisible}
+        onClose={() => setPopupVisible(false)}
+        title="Warning">
+        <DeleteWarning />
+      </Popup>
     </>
   );
 };
@@ -461,6 +527,33 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#ccc',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: '#d9534f',
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 8,
+    marginLeft: 10,
+  },
+  cancelText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  deleteText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

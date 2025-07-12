@@ -20,6 +20,7 @@ import {
   updateCandidateExperienceRequest,
   updateCandidateSkillRequest,
   UpdateJobPostRequest,
+  UpdatePostRequest,
 } from './models';
 
 export const Appapi = createApi({
@@ -174,13 +175,28 @@ export const Appapi = createApi({
 
     updateCandidateProfileDetail: build.mutation<
       any,
-      any
+      { id: string; data: FormData }
     >({
-      query: fetchData => ({
-        url: 'v1/jobless/' + fetchData.id,
-        method: 'PUT',
-        body: fetchData,
-      }),
+      query: ({ id, data }) => {
+        const formData = new FormData();
+
+        if (data.image) {
+          formData.append('image', data.image as any);
+        }
+
+        // Append other fields to FormData
+        for (const [key, value] of Object.entries(data)) {
+          if (key !== 'image' && value !== undefined) {
+            formData.append(key, value);
+          }
+        }
+
+        return {
+          url: `v1/jobless/${id}`,
+          method: 'PUT',
+          body: formData,
+        };
+      },
     }),
 
     updateCandidateSkills: build.mutation<
@@ -202,6 +218,28 @@ export const Appapi = createApi({
         url: 'v1/jobless/' + fetchData.id,
         method: 'PUT',
         body: fetchData,
+      }),
+    }),
+
+    postblindFetch: build.mutation<any, JobDetailsRequest>({
+      query: fetchData => ({
+        url: 'v1/jobless/post/blind/fetch/' + fetchData?.id,
+        method: 'GET',
+      }),
+    }),
+
+    updateJobPost: build.mutation<any, UpdatePostRequest>({
+      query: fetchData => ({
+        url: 'v1/jobless/post/' + fetchData.id,
+        method: 'PUT',
+        body: fetchData.data
+      }),
+    }),
+
+    deleteJobPost: build.mutation<any, JobDetailsRequest>({
+      query: fetchData => ({
+        url: 'v1/jobless/post/' + fetchData.id,
+        method: 'DELETE',
       }),
     }),
 
@@ -227,5 +265,8 @@ export const {
   useUpdateCandidateProfileBioMutation,
   useUpdateCandidateProfileDetailMutation,
   useUpdateCandidateSkillsMutation,
-  useUpdateCandidateExperinceMutation
+  useUpdateCandidateExperinceMutation,
+  usePostblindFetchMutation,
+  useUpdateJobPostMutation,
+  useDeleteJobPostMutation
 } = Appapi;

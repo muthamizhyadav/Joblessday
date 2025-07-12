@@ -35,8 +35,8 @@ export const EmployerDetailsinitialValues = {
 
 export const companyDetailinitValue = {
     companyName: '',
-    state: [],
-    city: [],
+    state: '',
+    city: '',
     employeeCount: '',
     industry: '',
     gst: '',

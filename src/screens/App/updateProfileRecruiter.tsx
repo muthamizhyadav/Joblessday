@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {TouchableOpacity, View} from 'react-native';
+import {Alert, TouchableOpacity, View} from 'react-native';
 import {StyleSheet} from 'react-native';
 import {AppColors} from '../../constants/colors.config';
 import SvgIcon from '../../shared/Svg';
@@ -50,9 +50,17 @@ const UpdateCompanyScreen: React.FC = () => {
 
   const submitCompanyDetails = (value: any) => {
     createEmploymentDetailRequest({
-      employmentDetails: value,
       id: id,
       stepper: 1,
+      city:value.city,
+      employeeCount:value.employeeCount,
+      gst:value.gst,
+      headline:value.recruiterDesignation,
+      recruiterName:value.recruiterName,
+      industry:value.industry,
+      state:value.state,
+      companysiteURL:value.companysiteURL,
+      companyName:value.companyName
     });
   };
 

@@ -50,12 +50,12 @@ const SharedInput: React.FC<InputProps> = ({
 }) => {
   const getInputProps = (): TextInputProps => {
     switch (inputType) {
-      case 'password':
-        return {
-          secureTextEntry: true,
-          autoCapitalize: 'none',
-          keyboardType: 'default',
-        };
+      // case 'password':
+      //   return {
+      //     secureTextEntry: true,
+      //     autoCapitalize: 'none',
+      //     keyboardType: 'default',
+      //   };
       case 'email':
         return {
           autoCapitalize: 'none',
