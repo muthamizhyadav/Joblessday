@@ -169,7 +169,9 @@ export interface JobApplyRequest {
     jobId: string;
     recruiterId: string;
     candidateId: string;
-    status: string
+    status: string;
+    date?: string;
+    time?: string;
 }
 
 export interface updateCandidateDetailRequest {
@@ -195,5 +197,5 @@ export interface updateCandidateExperienceRequest {
 
 export interface UpdatePostRequest {
     id: string;
-    data:any
+    data: any
 }

@@ -2,6 +2,7 @@ import * as React from 'react';
 import {
   ActivityIndicator,
   Modal,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -43,6 +44,8 @@ const JobPostScreen: React.FC = () => {
   const [posts, setPosts] = useState<JobPostCardProps>();
   const [popupVisible, setPopupVisible] = useState(false);
   const [deleteId, setDeleteId] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+
   const route = useRoute();
   const isNew = route.params;
 
@@ -57,7 +60,14 @@ const JobPostScreen: React.FC = () => {
       pageSize,
     });
   };
-
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchJobPosts();
+    } finally {
+      setRefreshing(false);
+    }
+  };
   React.useEffect(() => {
     fetchJobPosts();
   }, [pageNo, isNew]);
@@ -322,6 +332,14 @@ const JobPostScreen: React.FC = () => {
             keyExtractor={item => item.id}
             contentContainerStyle={{padding: 16}}
             ListFooterComponent={renderFooter}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[AppColors.AppButtonBackground]}
+                tintColor={AppColors.AppButtonBackground}
+              />
+            }
           />
         ) : (
           <View style={{margin: 'auto'}}>

@@ -55,7 +55,7 @@ const OnboardScreen = () => {
               borderRadius: 5,
               borderWidth: selected == 1 ? 2 : 0,
             }}
-            onPress={() => OnSelect(1)}>
+            onPress={() => navigation.navigate('Signup', {id: 1})}>
             <SvgIcon
               name="recruiter"
               height={'80%'}
@@ -81,7 +81,7 @@ const OnboardScreen = () => {
               borderRadius: 5,
               borderWidth: selected == 2 ? 2 : 0,
             }}
-            onPress={() => OnSelect(2)}>
+            onPress={() => navigation.navigate('Signup', {id: 2})}>
             <SvgIcon
               name="jobseaker"
               height={'80%'}
@@ -99,12 +99,38 @@ const OnboardScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-      <SharedButton
+      {/* <SharedButton
         title="Continue"
         disabled={selected == 0}
-        onPress={() => navigation.navigate('Signup',{id:selected})}
+        onPress={() => navigation.navigate('Signup', {id: selected})}
         style={{position: 'absolute', bottom: 30, width: '90%', height: 50}}
-      />
+      /> */}
+
+      <View
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          position: 'absolute',
+          alignItems: 'center',
+          bottom: 30,
+          width: '90%',
+          height: 50,
+        }}>
+        <Text style={{fontSize: 16}}>Already have an account?</Text>
+        <TouchableOpacity
+          style={{paddingLeft: 5}}
+          onPress={() => navigation.navigate('singin')}>
+          <Text
+            style={{
+              fontSize: 18,
+              color: AppColors.AppButtonBackground,
+              fontWeight: 800,
+            }}>
+            Sign in
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };

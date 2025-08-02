@@ -100,7 +100,7 @@ const EditUploadComponents = ({onClose}) => {
   };
 
   return (
-    <View>
+    <View style={{minWidth:'100%'}}>
       <TouchableOpacity style={styles.squareBox} onPress={pickImage}>
         {imageUri ? (
           <Image source={{uri: imageUri}} style={styles.image} />
@@ -718,6 +718,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    minWidth:'100%'
   },
   header: {
     alignItems: 'center',
@@ -818,6 +819,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 10,
+    minWidth:'90%'
   },
   skillTag: {
     backgroundColor: AppColors.AppBackground,

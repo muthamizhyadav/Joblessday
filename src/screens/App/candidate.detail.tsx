@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Text} from 'react-native';
+import {Button, Modal, Platform, Text} from 'react-native';
 import {
   ActivityIndicator,
   Linking,
@@ -17,6 +17,11 @@ import {ScrollView} from 'react-native';
 import {useRoute} from '@react-navigation/native';
 import {useNavigation} from '@react-navigation/native';
 import moment from 'moment';
+import {useState} from 'react';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import SharedButton from '../../shared/SharedButton';
 
 export const CandidatedetailsScreen: React.FC = () => {
   const [candidateRequest, candidateResponse] = useGetCandidateDetailMutation();
@@ -26,7 +31,6 @@ export const CandidatedetailsScreen: React.FC = () => {
   const route = useRoute<any>();
   const {id, status, jobId, recruiterId} = route.params;
   const navigation = useNavigation<any>();
-  console.log(status);
 
   React.useEffect(() => {
     if (id) {
@@ -79,6 +83,62 @@ export const CandidatedetailsScreen: React.FC = () => {
       });
     }
   }, [applicationActionResponse]);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [isDateSelected, setIsDateSelected] = useState(false);
+  const [isTimeSelected, setIsTimeSelected] = useState(false);
+
+  const handleDateChange = (event: DateTimePickerEvent, date?: Date) => {
+    if (date) {
+      setSelectedDate(prev => {
+        const newDate = new Date(date);
+        newDate.setHours(prev.getHours(), prev.getMinutes());
+        return newDate;
+      });
+    }
+    setIsDateSelected(true);
+    setShowDatePicker(false);
+  };
+
+  const handleTimeChange = (event: DateTimePickerEvent, time?: Date) => {
+    if (time) {
+      setSelectedDate(prev => {
+        const newDate = new Date(prev);
+        newDate.setHours(time.getHours(), time.getMinutes());
+        return newDate;
+      });
+    }
+    setIsTimeSelected(true);
+    setShowTimePicker(false);
+  };
+
+  const formatDate = (date: Date) =>
+    `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}-${date.getFullYear()}`;
+
+  const formatTime = (date: Date) =>
+    `${date.getHours().toString().padStart(2, '0')}:${date
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+
+  const submitSchedule = () => {
+    const date = formatDate(selectedDate);
+    const time = formatTime(selectedDate);
+    applicationActionRequest({
+      status: 'scheduled',
+      candidateId: id,
+      recruiterId: recruiterId,
+      jobId: jobId,
+      date: date,
+      time: time,
+    });
+  };
 
   return (
     <>
@@ -188,19 +248,6 @@ export const CandidatedetailsScreen: React.FC = () => {
               {status === 'applied' ? (
                 <View style={styles.buttonGroup}>
                   <TouchableOpacity
-                    style={styles.shortlistButton}
-                    onPress={() => ShortlistORReject('shortlisted')}>
-                    {applicationActionResponse?.originalArgs?.status ==
-                      'shortlisted' && applicationActionResponse?.isLoading ? (
-                      <>
-                        <ActivityIndicator size={'small'} color={'#FFFF'} />
-                      </>
-                    ) : (
-                      <Text style={styles.buttonText}>Shortlist</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
                     style={styles.rejectButton}
                     onPress={() => ShortlistORReject('rejected')}>
                     {applicationActionResponse?.originalArgs?.status ==
@@ -212,27 +259,123 @@ export const CandidatedetailsScreen: React.FC = () => {
                       <Text style={styles.buttonText}>Reject</Text>
                     )}
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.shortlistButton}
+                    onPress={() => setModalVisible(true)}>
+                    {applicationActionResponse?.originalArgs?.status ==
+                      'shortlisted' && applicationActionResponse?.isLoading ? (
+                      <>
+                        <ActivityIndicator size={'small'} color={'#FFFF'} />
+                      </>
+                    ) : (
+                      <Text style={styles.buttonText}>Schedule</Text>
+                    )}
+                  </TouchableOpacity>
                 </View>
               ) : (
                 <TouchableOpacity
                   style={
-                    status == 'shortlisted'
+                    status == 'scheduled'
                       ? styles.shortlistedButton
                       : styles.rejectedButton
                   }>
                   <Text
                     style={
-                      status == 'shortlisted'
+                      status == 'scheduled'
                         ? styles.shortlistedButtonText
                         : styles.rejectedButtonText
                     }>
-                   {`${status === 'rejected' ? '❌' : '✔'} ${status}`}
+                    {`${status === 'rejected' ? '❌' : '✔'} ${status}`}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
           </ScrollView>
         )}
+
+        <Modal transparent visible={modalVisible} animationType="fade">
+          <View style={styles.overlay}>
+            <View style={styles.popup}>
+              <Text style={styles.titlepopup}>Schedule Interview</Text>
+              <TouchableOpacity
+                style={{position: 'absolute', right: 10, top: 10}}
+                onPress={() => setModalVisible(false)}>
+                <SvgIcon
+                  name="close"
+                  strokeColor="red"
+                  height={25}
+                  width={25}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setShowDatePicker(true)}>
+                <Text style={styles.inputLabel}>Select Date</Text>
+                <View style={styles.input}>
+                  <Text style={styles.inputText}>
+                    {formatDate(selectedDate)}
+                  </Text>
+                  <SvgIcon
+                    name="calendor"
+                    width={20}
+                    height={20}
+                    strokeColor="#666"
+                  />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setShowTimePicker(true)}>
+                <Text style={styles.inputLabel}>Select Time</Text>
+                <View style={styles.input}>
+                  <Text style={styles.inputText}>
+                    {formatTime(selectedDate)}
+                  </Text>
+                  <SvgIcon
+                    name="clock"
+                    width={20}
+                    height={20}
+                    strokeColor="#666"
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleDateChange}
+                />
+              )}
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="time"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={handleTimeChange}
+                />
+              )}
+
+              <View style={styles.buttonRow}>
+                <SharedButton
+                  title="Schedule"
+                  onPress={submitSchedule}
+                  style={{backgroundColor: AppColors.AppButtonBackground}}
+                  disabled={
+                    !isDateSelected ||
+                    !isTimeSelected ||
+                    applicationActionResponse?.isLoading
+                  }
+                  isLoading={applicationActionResponse?.isLoading}
+                />
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </>
   );
@@ -350,7 +493,6 @@ const styles = StyleSheet.create({
     bottom: 70,
     left: 20,
     right: 20,
-    //   backgroundColor: AppColors.AppButtonBackground,
     padding: 0,
     borderRadius: 10,
     alignItems: 'center',
@@ -409,7 +551,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    width: '50%', // exactly half width
+    width: '50%',
   },
 
   rejectButton: {
@@ -417,11 +559,55 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
-    width: '50%', // exactly half width
+    width: '50%',
   },
 
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  popup: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '95%',
+  },
+  titlepopup: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+    textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
+  },
+  input: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+  },
+  inputText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  buttonRow: {
+    marginTop: 20,
   },
 });

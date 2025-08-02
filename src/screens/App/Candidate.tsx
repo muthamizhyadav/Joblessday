@@ -7,14 +7,16 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
 import SearchBar from '../../shared/searchInput';
 import SvgIcon from '../../shared/Svg';
 import {useNavigation} from '@react-navigation/native';
 import {AppColors} from '../../constants/colors.config';
-import {FlatList} from 'react-native-gesture-handler';
 import {useAppliedCandidatesMutation} from '../../api/api';
 import {Image} from 'react-native';
+import SkeletonLoader from '../../shared/SkeletonLoader';
 
 interface CandidateCardProps {
   name: string;
@@ -42,15 +44,25 @@ const CandidateScreen: React.FC = () => {
     console.log('Search term:', term);
   };
   const [selectedValue, setSelectedValue] = React.useState<string>('');
+  const [refreshing, setRefreshing] = React.useState(false);
 
   React.useEffect(() => {
     candidatesRequest({});
   }, []);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await candidatesRequest({});
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   React.useEffect(() => {
     if (candidatesResponse?.isSuccess) {
       console.log(candidatesResponse?.data, 'Candidat');
-
+      setRefreshing(false);
       setCandidates(candidatesResponse?.data);
     }
   }, [candidatesResponse]);
@@ -61,7 +73,7 @@ const CandidateScreen: React.FC = () => {
         return '#f97316';
       case 'rejected':
         return '#dc2626';
-      case 'shortlisted':
+      case 'scheduled':
         return '#16a34a';
       default:
         return '#64748b';
@@ -213,9 +225,15 @@ const CandidateScreen: React.FC = () => {
           </View>
         </View>
         {candidatesResponse?.isLoading ? (
-          <ActivityIndicator
-            size="large"
-            color={AppColors.AppButtonBackground}
+          // <ActivityIndicator
+          //   size="large"
+          //   color={AppColors.AppButtonBackground}
+          // />
+          <SkeletonLoader
+            width={'95%'}
+            height={150}
+            rows={10}
+            borderRadius={8}
           />
         ) : candidates?.length > 0 ? (
           <FlatList
@@ -224,6 +242,14 @@ const CandidateScreen: React.FC = () => {
             keyExtractor={item => item.name}
             contentContainerStyle={{padding: 16}}
             ListFooterComponent={<View style={{height: 30}} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={[AppColors.AppButtonBackground]}
+                tintColor={AppColors.AppButtonBackground}
+              />
+            }
           />
         ) : (
           <View style={{margin: 'auto'}}>

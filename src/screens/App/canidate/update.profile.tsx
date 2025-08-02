@@ -1,25 +1,32 @@
 import * as React from 'react';
 import {
-  Alert,
-  Button,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  Dimensions,
+  TouchableHighlight,
+  TouchableOpacity,
 } from 'react-native';
-import SvgIcon from '../../../shared/Svg';
-import {AppColors} from '../../../constants/colors.config';
-import SharedInput from '../../../shared/input';
-import DatePickerComponent from '../../../shared/dateTimePicker';
-import RadioGroup from '../../../shared/radioGroup';
-import TextArea from '../../../shared/textArea';
-import KeySkillsInput from '../../../shared/keySkillInput';
-import PDFUploader from '../../../shared/fileUpload';
+import {
+  Appbar,
+  Card,
+  Text,
+  TextInput,
+  Button,
+  RadioButton,
+  Chip,
+  Portal,
+  Modal,
+  List,
+  Divider,
+  ProgressBar,
+  Surface,
+  IconButton,
+  Avatar,
+  useTheme,
+} from 'react-native-paper';
+import DatePicker from 'react-native-date-picker';
 import {DocumentPickerResponse} from 'react-native-document-picker';
-import SharedButton from '../../../shared/SharedButton';
-import StepIndicator from 'react-native-step-indicator';
-import {customStyles} from '../../../constants/datas';
 import {useFormik} from 'formik';
 import {
   BasicDetailsInitValue,
@@ -39,69 +46,93 @@ import {
 } from '../../../api/api';
 import Toast from 'react-native-toast-message';
 import {useNavigation} from '@react-navigation/native';
-import SharedDropdown from '../../../shared/dropDownWithSearch';
 import {Country, State, City} from 'country-state-city';
+import SvgIcon from '../../../shared/Svg';
+import {AppColors} from '../../../constants/colors.config';
+import DocumentPicker from 'react-native-document-picker';
+
+const {width} = Dimensions.get('window');
 
 type UpdateProfileRouteParams = {
   id: string;
   stepper: string;
 };
+
 const experienceOptions = [
   {label: 'Fresher', value: 'fresher'},
-  {label: '1 years', value: '1'},
+  {label: '1 year', value: '1'},
   {label: '2 years', value: '2'},
   {label: '3 years', value: '3'},
+  {label: '4 years', value: '4'},
   {label: '5 years', value: '5'},
   {label: '6 years', value: '6'},
   {label: '7 years', value: '7'},
   {label: '8 years', value: '8'},
   {label: '9 years', value: '9'},
-  {label: '10 years', value: '10'},
+  {label: '10+ years', value: '10'},
 ];
+
 const UpdateProfileScreen: React.FC<{
   route: {params: UpdateProfileRouteParams};
 }> = ({route}) => {
-  const [skills, setSkills] = React.useState<any>([]);
+  const theme = useTheme();
+  const navigation = useNavigation<any>();
+
+  // State variables
+  const [skills, setSkills] = React.useState<string[]>([]);
   const [file, setFile] = React.useState<DocumentPickerResponse | null>(null);
-  const registrationData = useSelector((state: any) => state.app.data);
   const [currentPosition, setCurrentPosition] = React.useState(0);
+  const [cities, setCities] = React.useState<any>([]);
+  const [selectedState, setSelectedState] = React.useState('');
+  const [States, setStates] = React.useState<any>([]);
+  const [newSkill, setNewSkill] = React.useState('');
+
+  // Modal states
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
+  const [datePickerMode, setDatePickerMode] = React.useState<
+    'dob' | 'graduation' | 'startDate' | 'endDate'
+  >('dob');
+  const [showStateModal, setShowStateModal] = React.useState(false);
+  const [showCityModal, setShowCityModal] = React.useState(false);
+  const [showExperienceModal, setShowExperienceModal] = React.useState(false);
+
+  const registrationData = useSelector((state: any) => state.app.data);
+
+  // API mutations
   const [createBasicDetailRequest, createBasicDetailResponse] =
     useUpdateCandidateProfileMutation();
   const [createEducationDetailRequest, createEducationDetailResponse] =
     useUpdateCandidateProfileEducationMutation();
   const [createEmploymentDetailRequest, createEmploymentDetailResponse] =
     useUpdateCandidateProfileEmploymentMutation();
-  const labels = ['Basic Details', 'Education'];
+
+  const stepLabels = ['Basic Details', 'Education', 'Employment'];
   const indianStates = State.getStatesOfCountry('IN');
-  const [cities, setCities] = React.useState<any>([]);
-  const [selectedState, setSelectedState] = React.useState('');
-  const [States, setStates] = React.useState<any>([]);
-  const navigation = useNavigation<any>();
 
-  const handleFileSelect = (selectedFile: DocumentPickerResponse) => {
-    setFile(selectedFile);
-  };
-
-  console.log(route.params);
+  // Initialize states
   React.useEffect(() => {
-    const States = indianStates.map((state, index) => ({
+    const formattedStates = indianStates.map((state, index) => ({
       id: index + 1,
       value: state.isoCode,
       label: state.name,
     }));
-    setStates(States);
+    setStates(formattedStates);
   }, []);
+
   React.useEffect(() => {
     if (route?.params?.stepper) {
-      setCurrentPosition(route?.params?.stepper);
+      setCurrentPosition(parseInt(route.params.stepper));
     }
   }, [route]);
 
-  const handleChangeState = (stateValue: string) => {
+  // Handlers
+  const handleStateChange = (stateValue: string) => {
     const selectedStateFull = States.find(key => key.value === stateValue);
     if (!selectedStateFull) return;
+
     Basicformik.setFieldValue('state', selectedStateFull.label);
     setSelectedState(selectedStateFull.value);
+
     const citiesOfState = City.getCitiesOfState('IN', stateValue);
     const formattedCities = citiesOfState.map((city, index) => ({
       id: index + 1,
@@ -109,18 +140,88 @@ const UpdateProfileScreen: React.FC<{
       label: city.name,
     }));
     setCities(formattedCities);
+    setShowStateModal(false);
   };
 
-  const handleChangeCity = (city: string) => {
+  const handleCityChange = (city: string) => {
     const selectedCityFullName = cities.find(key => key.value === city)?.label;
     Basicformik.setFieldValue('city', selectedCityFullName);
+    setShowCityModal(false);
   };
 
-  const handleSkillsChange = (updatedSkills: string[]) => {
+  const handleExperienceChange = (value: string) => {
+    Basicformik.setFieldValue('employmentType', value);
+    setShowExperienceModal(false);
+  };
+
+  const addSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      const updatedSkills = [...skills, newSkill.trim()];
+      Educationformik.setFieldValue('educationDetails.keySkill', [
+        ...skills,
+        newSkill.trim(),
+      ]);
+      setSkills(updatedSkills);
+      setNewSkill('');
+    }
+  };
+
+  const removeSkill = (skillToRemove: string) => {
+    const updatedSkills = skills.filter(skill => skill !== skillToRemove);
     setSkills(updatedSkills);
-    console.log('Skills from child:', updatedSkills);
   };
 
+  const handleUploadPress = async () => {
+    try {
+      const res = await DocumentPicker.pick({
+        type: [DocumentPicker.types.pdf],
+      });
+      setFile(res[0]);
+      Educationformik.setFieldValue('resume', res[0]);
+    } catch (err) {
+      if (DocumentPicker.isCancel(err)) {
+        // User cancelled the picker
+      } else {
+        console.error(err);
+      }
+    }
+  };
+
+  const openDatePicker = (
+    mode: 'dob' | 'graduation' | 'startDate' | 'endDate',
+  ) => {
+    setDatePickerMode(mode);
+    setShowDatePicker(true);
+  };
+
+  const handleDateConfirm = (date: Date) => {
+    switch (datePickerMode) {
+      case 'dob':
+        Basicformik.setFieldValue('DOB', date.toISOString());
+        break;
+      case 'graduation':
+        Educationformik.setFieldValue(
+          'educationDetails.year',
+          date.toISOString(),
+        );
+        break;
+      case 'startDate':
+        Employmentformik.setFieldValue(
+          'employmentDetails.startDate',
+          date.toISOString(),
+        );
+        break;
+      case 'endDate':
+        Employmentformik.setFieldValue(
+          'employmentDetails.endDate',
+          date.toISOString(),
+        );
+        break;
+    }
+    setShowDatePicker(false);
+  };
+
+  // Formik configurations
   const Basicformik = useFormik({
     initialValues: BasicDetailsInitValue,
     validationSchema: BasicDetailSchema,
@@ -145,13 +246,17 @@ const UpdateProfileScreen: React.FC<{
     initialValues: EducationDetailsinitialValues,
     validationSchema: EducationDetailSchema,
     onSubmit: values => {
-      let data = [];
-      data.push(values.educationDetails);
-      createEducationDetailRequest({
-        educationDetails: data,
+      const requestData = {
+        educationDetails: {
+          ...values.educationDetails,
+          keySkill: skills,
+        },
         id: route.params.id,
         stepper: 2,
-      });
+      };
+
+      createEducationDetailRequest(requestData);
+      console.log('Request data:', requestData);
     },
   });
 
@@ -168,17 +273,15 @@ const UpdateProfileScreen: React.FC<{
       });
     },
   });
-
   React.useEffect(() => {
-    Educationformik.setFieldValue('educationDetails.keySkill', skills);
-  }, [skills]);
+    console.log(Educationformik.values, 'Educationformik');
+  }, [Educationformik]);
 
+  // Effect hooks for API responses
   React.useEffect(() => {
     if (createBasicDetailResponse?.isSuccess) {
       setCurrentPosition(createBasicDetailResponse?.data?.stepper);
     } else if (createBasicDetailResponse?.isError) {
-      console.log(createBasicDetailResponse?.error, 'message');
-
       Toast.show({
         type: 'error',
         text1: 'Basic Detail submit failed',
@@ -190,9 +293,9 @@ const UpdateProfileScreen: React.FC<{
   React.useEffect(() => {
     if (createEducationDetailResponse?.isSuccess) {
       setCurrentPosition(createEducationDetailResponse?.data?.stepper);
-      navigation.navigate('MainApp');
+      // navigation.navigate('MainApp');
+      setCurrentPosition(createBasicDetailResponse?.data?.stepper);
     } else if (createEducationDetailResponse?.isError) {
-      console.log(createEducationDetailResponse?.error, 'message');
       Toast.show({
         type: 'error',
         text1: 'Education Detail submit failed',
@@ -204,8 +307,8 @@ const UpdateProfileScreen: React.FC<{
   React.useEffect(() => {
     if (createEmploymentDetailResponse?.isSuccess) {
       setCurrentPosition(createEmploymentDetailResponse?.data?.stepper);
+      navigation.navigate('singin');
     } else if (createEmploymentDetailResponse?.isError) {
-      console.log(createEmploymentDetailResponse?.error, 'message');
       Toast.show({
         type: 'error',
         text1: 'Employment Detail submit failed',
@@ -214,329 +317,420 @@ const UpdateProfileScreen: React.FC<{
     }
   }, [createEmploymentDetailResponse]);
 
-  const BasicDetails = () => {
-    return (
-      <View style={styles.basicFormStyle}>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Full Name:
-          </Text>
-          <SharedInput
-            inputType="text"
-            name={'fullName'}
-            style={styles.input}
-            placeholder="Enter Full Name"
-            value={Basicformik.values.fullName}
-            onChange={Basicformik.handleChange('fullName')}
-          />
-        </View>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Profile Headline:
-          </Text>
-          <SharedInput
-            inputType="text"
-            name={'headline'}
-            style={styles.input}
-            placeholder="ex: software engineer"
-            value={Basicformik.values.headline}
-            onChange={Basicformik.handleChange('headline')}
-          />
-        </View>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Your Contact:
-          </Text>
-          <SharedInput
-            inputType="numeric"
-            name={'contact'}
-            style={styles.input}
-            placeholder="Enter Contact number"
-            value={Basicformik.values.contact}
-            onChange={Basicformik.handleChange('contact')}
-          />
-        </View>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Date Of birth:
-          </Text>
-          <DatePickerComponent
-            label="Pick a Date"
-            mode="date"
-            value={
-              Basicformik.values.DOB ? new Date(Basicformik.values.DOB) : null
-            }
-            onChange={(val: Date) =>
-              Basicformik.setFieldValue('DOB', val.toISOString())
-            }
-            placeholder="Select Date Of Birth"
-          />
-        </View>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Select your state:
-          </Text>
-          <SharedDropdown
-            onChange={value => handleChangeState(value)}
-            value={selectedState}
-            data={States}
-            placeholder="select State"
-            searchOptions={false}
-            searchPlaceHolder="Search state"
-          />
-        </View>
-        <View style={{marginTop: 10, marginBottom: 10}}>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Select your City:
-          </Text>
-          <SharedDropdown
-            onChange={value => handleChangeCity(value)}
-            value={Basicformik.values.city}
-            data={cities}
-            placeholder="select city"
-            searchOptions={false}
-            searchPlaceHolder="Search city"
-          />
-        </View>
-        <View style={{marginBottom: 10}}>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Select Gender:
-          </Text>
-          <RadioGroup
-            label="Gender"
-            selectedValue={Basicformik.values.gender}
-            onValueChange={(val: any) =>
-              Basicformik.setFieldValue('gender', val)
-            }
-            options={[
-              {label: 'Male', value: 'male'},
-              {label: 'Female', value: 'female'},
-            ]}
-          />
-        </View>
-        <View>
-          <Text style={{paddingLeft: 5, paddingBottom: 4, fontSize: 18}}>
-            Experience:
-          </Text>
-          <SharedDropdown
-            onChange={value => {
-              Basicformik.setFieldValue('employmentType', value),
-                console.log(value, 'value');
-            }}
-            value={Basicformik.values.employmentType}
-            data={experienceOptions}
-            searchOptions={false}
-          />
-        </View>
+  // Step components
+  const BasicDetails = () => (
+    <Card style={styles.stepCard}>
+      <Card.Content>
+        <Text variant="headlineSmall" style={styles.stepTitle}>
+          Basic Information
+        </Text>
+        <Text variant="bodyMedium" style={styles.stepSubtitle}>
+          Tell us about yourself
+        </Text>
 
-        <View>
-          <TextArea
-            value={Basicformik.values.address}
-            onChangeText={(val: any) =>
-              Basicformik.setFieldValue('address', val)
-            }
-            placeholder="Enter Your Address"
-            style={{backgroundColor: 'white', borderColor: 'white'}}
-          />
-        </View>
+        <TextInput
+          label="Full Name"
+          value={Basicformik.values.fullName}
+          onChangeText={Basicformik.handleChange('fullName')}
+          mode="outlined"
+          style={styles.input}
+          error={Basicformik.touched.fullName && !!Basicformik.errors.fullName}
+        />
 
-        <SharedButton
-          title="Submit"
+        <TextInput
+          label="Profile Headline"
+          value={Basicformik.values.headline}
+          onChangeText={Basicformik.handleChange('headline')}
+          mode="outlined"
+          style={styles.input}
+          placeholder="e.g., Software Engineer"
+          error={Basicformik.touched.headline && !!Basicformik.errors.headline}
+        />
+
+        <TextInput
+          label="Contact Number"
+          value={Basicformik.values.contact}
+          onChangeText={Basicformik.handleChange('contact')}
+          mode="outlined"
+          style={styles.input}
+          keyboardType="phone-pad"
+          error={Basicformik.touched.contact && !!Basicformik.errors.contact}
+        />
+
+        <Surface style={styles.datePickerSurface}>
+          <Text variant="bodyMedium" style={styles.dateLabel}>
+            Date of Birth
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => openDatePicker('dob')}
+            icon="calendar"
+            style={styles.dateButton}>
+            {Basicformik.values.DOB
+              ? new Date(Basicformik.values.DOB).toLocaleDateString()
+              : 'Select Date of Birth'}
+          </Button>
+        </Surface>
+
+        <Surface style={styles.dropdownSurface}>
+          <Text variant="bodyMedium" style={styles.dropdownLabel}>
+            State
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => setShowStateModal(true)}
+            icon="map-marker"
+            style={styles.dropdownButton}>
+            {Basicformik.values.state || 'Select State'}
+          </Button>
+        </Surface>
+
+        <Surface style={styles.dropdownSurface}>
+          <Text variant="bodyMedium" style={styles.dropdownLabel}>
+            City
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => setShowCityModal(true)}
+            icon="city"
+            style={styles.dropdownButton}
+            disabled={!selectedState}>
+            {Basicformik.values.city || 'Select City'}
+          </Button>
+        </Surface>
+
+        <Surface style={styles.radioSurface}>
+          <Text variant="bodyMedium" style={styles.radioLabel}>
+            Gender
+          </Text>
+          <RadioButton.Group
+            onValueChange={value => Basicformik.setFieldValue('gender', value)}
+            value={Basicformik.values.gender}>
+            <View style={styles.radioRow}>
+              <View style={styles.radioItem}>
+                <RadioButton value="male" />
+                <Text>Male</Text>
+              </View>
+              <View style={styles.radioItem}>
+                <RadioButton value="female" />
+                <Text>Female</Text>
+              </View>
+            </View>
+          </RadioButton.Group>
+        </Surface>
+
+        <Surface style={styles.dropdownSurface}>
+          <Text variant="bodyMedium" style={styles.dropdownLabel}>
+            Experience
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => setShowExperienceModal(true)}
+            icon="briefcase"
+            style={styles.dropdownButton}>
+            {experienceOptions.find(
+              opt => opt.value === Basicformik.values.employmentType,
+            )?.label || 'Select Experience'}
+          </Button>
+        </Surface>
+
+        <TextInput
+          label="Address"
+          value={Basicformik.values.address}
+          onChangeText={Basicformik.handleChange('address')}
+          mode="outlined"
+          style={styles.input}
+          multiline
+          numberOfLines={3}
+          error={Basicformik.touched.address && !!Basicformik.errors.address}
+        />
+
+        <Button
+          mode="contained"
           onPress={Basicformik.handleSubmit}
+          loading={createBasicDetailResponse?.isLoading}
           disabled={
             !Basicformik.isValid ||
             !Basicformik.dirty ||
             createBasicDetailResponse?.isLoading
           }
-          style={{marginBottom: 30}}
-          isLoading={createBasicDetailResponse?.isLoading}
-        />
-      </View>
-    );
-  };
+          style={styles.submitButton}>
+          Continue
+        </Button>
+      </Card.Content>
+    </Card>
+  );
 
-  const EducationDetails = () => {
-    return (
-      <View style={styles.basicFormStyle}>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'educationDetails.degree'}
-            style={styles.input}
-            placeholder="Enter Degree"
-            value={Educationformik.values.educationDetails.degree}
-            onChange={(e: string) =>
-              Educationformik.setFieldValue('educationDetails.degree', e)
-            }
-          />
-        </View>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'educationDetails.institution'}
-            style={styles.input}
-            placeholder="Enter Institution Name"
-            value={Educationformik.values.educationDetails.institution}
-            onChange={(e: string) =>
-              Educationformik.setFieldValue('educationDetails.institution', e)
-            }
-          />
-        </View>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'educationDetails.grade'}
-            style={styles.input}
-            placeholder="Enter Grade/Percentage"
-            value={Educationformik.values.educationDetails.grade}
-            onChange={(e: string) =>
-              Educationformik.setFieldValue('educationDetails.grade', e)
-            }
-          />
-        </View>
-        <View>
-          <DatePickerComponent
-            label="Pick a Date"
-            mode="date"
-            placeholder="Year of passing"
-            value={
-              Educationformik.values.educationDetails.year
-                ? new Date(Educationformik.values.educationDetails.year)
-                : null
-            }
-            onChange={(val: Date) =>
-              Educationformik.setFieldValue(
-                'educationDetails.year',
-                val.toISOString(),
-              )
-            }
-          />
-        </View>
-        <View>
-          <KeySkillsInput onSkillsChange={handleSkillsChange} />
-        </View>
-        <View style={{marginBottom: 20}}>
-          <PDFUploader onFileSelect={handleFileSelect} label="Resume (.pdf)" />
+  const EducationDetails = () => (
+    <Card style={styles.stepCard}>
+      <Card.Content style={{elevation: 0}}>
+        <Text variant="headlineSmall" style={styles.stepTitle}>
+          Education Details
+        </Text>
+        <Text variant="bodyMedium" style={styles.stepSubtitle}>
+          Share your educational background
+        </Text>
+
+        <TextInput
+          label="Degree"
+          value={Educationformik.values.educationDetails.degree}
+          onChangeText={value =>
+            Educationformik.setFieldValue('educationDetails.degree', value)
+          }
+          mode="outlined"
+          style={styles.input}
+          error={
+            Educationformik.touched.educationDetails?.degree &&
+            !!Educationformik.errors.educationDetails?.degree
+          }
+        />
+
+        <TextInput
+          label="Institution Name"
+          value={Educationformik.values.educationDetails.institution}
+          onChangeText={value =>
+            Educationformik.setFieldValue('educationDetails.institution', value)
+          }
+          mode="outlined"
+          style={styles.input}
+          error={
+            Educationformik.touched.educationDetails?.institution &&
+            !!Educationformik.errors.educationDetails?.institution
+          }
+        />
+
+        <TextInput
+          label="Grade/Percentage"
+          value={Educationformik.values.educationDetails.grade}
+          onChangeText={value =>
+            Educationformik.setFieldValue('educationDetails.grade', value)
+          }
+          mode="outlined"
+          style={styles.input}
+          error={
+            Educationformik.touched.educationDetails?.grade &&
+            !!Educationformik.errors.educationDetails?.grade
+          }
+        />
+
+        <Surface style={styles.datePickerSurface}>
+          <Text variant="bodyMedium" style={styles.dateLabel}>
+            Year of Graduation
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={() => openDatePicker('graduation')}
+            style={styles.dateButton}>
+            {Educationformik.values.educationDetails.year
+              ? new Date(
+                  Educationformik.values.educationDetails.year,
+                ).getFullYear()
+              : 'Select Year'}
+            <SvgIcon
+              name="calendor"
+              width={20}
+              height={20}
+              strokeColor={AppColors.AppButtonBackground}
+            />
+          </Button>
+        </Surface>
+
+        <Surface style={styles.skillsSurface}>
+          <Text variant="bodyMedium" style={styles.skillsLabel}>
+            Key Skills
+          </Text>
+          <View style={styles.skillsInputRow}>
+            <TextInput
+              value={newSkill}
+              onChangeText={setNewSkill}
+              mode="outlined"
+              style={styles.skillInput}
+              placeholder="Add a skill"
+              onSubmitEditing={addSkill}
+            />
+            <TouchableOpacity onPress={addSkill} style={styles.addSkillButton}>
+              <Text
+                style={{
+                  color: AppColors.AppButtonBackground,
+                  fontSize: 16,
+                  fontWeight: 700,
+                }}>
+                + Add
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.skillsContainer}>
+            {skills.map((skill, index) => (
+              // <Chip
+              //   key={index}
+              //   onClose={() => removeSkill(skill)}
+              //   style={styles.skillChip}>
+              //   {skill}
+              // </Chip>
+              <View style={styles.chipContainer}>
+                <Text style={styles.chipText}>{skill}</Text>
+                <TouchableOpacity
+                  onPress={() => removeSkill(skill)}
+                  style={styles.closeButton}>
+                  <SvgIcon
+                    name="close"
+                    width={16}
+                    height={16}
+                    strokeColor="red"
+                  />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </Surface>
+
+        <Surface style={styles.fileSurface}>
+          <Text variant="bodyMedium" style={styles.fileLabel}>
+            Resume (PDF)
+          </Text>
+          <Button
+            mode="outlined"
+            onPress={handleUploadPress}
+            style={styles.fileButton}>
+            <SvgIcon
+              name="upload"
+              width={22}
+              height={22}
+              strokeColor={AppColors.AppButtonBackground}
+            />
+            {'Upload Resume'}
+          </Button>
           {file && (
-            <Text style={{marginTop: 10}}>
+            <Text variant="bodySmall" style={styles.fileInfo}>
               {file.name} ({(file.size / 1024).toFixed(2)} KB)
             </Text>
           )}
-        </View>
-        <SharedButton
-          title="Submit"
+        </Surface>
+
+        <Button
+          mode="contained"
           onPress={Educationformik.handleSubmit}
+          loading={createEducationDetailResponse?.isLoading}
           disabled={
             !Educationformik.isValid ||
             !Educationformik.dirty ||
             createEducationDetailResponse?.isLoading
           }
-          style={{marginBottom: 30}}
-          isLoading={createEducationDetailResponse?.isLoading}
-        />
-      </View>
-    );
-  };
+          style={styles.submitButton}>
+          Continue
+        </Button>
+      </Card.Content>
+    </Card>
+  );
 
-  const EmploymentDetails = () => {
-    return (
-      <View style={styles.basicFormStyle}>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'company'}
-            style={styles.input}
-            placeholder="Company Name"
-            value={Employmentformik.values.employmentDetails.company}
-            onChange={(e: string) =>
-              Employmentformik.setFieldValue('employmentDetails.company', e)
-            }
-          />
+  const EmploymentDetails = () => (
+    <Card style={styles.stepCard}>
+      <Card.Content>
+        <Text variant="headlineSmall" style={styles.stepTitle}>
+          Employment Details
+        </Text>
+        <Text variant="bodyMedium" style={styles.stepSubtitle}>
+          Share your work experience
+        </Text>
+
+        <TextInput
+          label="Company Name"
+          value={Employmentformik.values.employmentDetails.company}
+          onChangeText={value =>
+            Employmentformik.setFieldValue('employmentDetails.company', value)
+          }
+          mode="outlined"
+          style={styles.input}
+          error={
+            Employmentformik.touched.employmentDetails?.company &&
+            !!Employmentformik.errors.employmentDetails?.company
+          }
+        />
+
+        <TextInput
+          label="Job Title"
+          value={Employmentformik.values.employmentDetails.jobTitle}
+          onChangeText={value =>
+            Employmentformik.setFieldValue('employmentDetails.jobTitle', value)
+          }
+          mode="outlined"
+          style={styles.input}
+          error={
+            Employmentformik.touched.employmentDetails?.jobTitle &&
+            !!Employmentformik.errors.employmentDetails?.jobTitle
+          }
+        />
+
+        <View style={styles.dateRow}>
+          <Surface style={[styles.datePickerSurface, styles.halfWidth]}>
+            <Text variant="bodyMedium" style={styles.dateLabel}>
+              Start Date
+            </Text>
+            <Button
+              mode="outlined"
+              onPress={() => openDatePicker('startDate')}
+              icon="calendar"
+              style={styles.dateButton}>
+              {Employmentformik.values.employmentDetails.startDate
+                ? new Date(
+                    Employmentformik.values.employmentDetails.startDate,
+                  ).toLocaleDateString()
+                : 'Start Date'}
+            </Button>
+          </Surface>
+
+          <Surface style={[styles.datePickerSurface, styles.halfWidth]}>
+            <Text variant="bodyMedium" style={styles.dateLabel}>
+              End Date
+            </Text>
+            <Button
+              mode="outlined"
+              onPress={() => openDatePicker('endDate')}
+              icon="calendar"
+              style={styles.dateButton}>
+              {Employmentformik.values.employmentDetails.endDate
+                ? new Date(
+                    Employmentformik.values.employmentDetails.endDate,
+                  ).toLocaleDateString()
+                : 'End Date'}
+            </Button>
+          </Surface>
         </View>
-        <View>
-          <SharedInput
-            inputType="text"
-            name={'jobTitle'}
-            style={styles.input}
-            placeholder="Job Title"
-            value={Employmentformik.values.employmentDetails.jobTitle}
-            onChange={(e: string) =>
-              Employmentformik.setFieldValue('employmentDetails.jobTitle', e)
-            }
-          />
-        </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-          }}>
-          <View style={{width: '48%'}}>
-            <DatePickerComponent
-              label="Pick a Date"
-              mode="date"
-              placeholder="Start Date"
-              value={
-                Employmentformik.values.employmentDetails.startDate
-                  ? new Date(
-                      Employmentformik.values.employmentDetails.startDate,
-                    )
-                  : null
-              }
-              onChange={(val: Date) =>
-                Employmentformik.setFieldValue(
-                  'employmentDetails.startDate',
-                  val.toISOString(),
-                )
-              }
-            />
-          </View>
-          <View style={{width: '48%'}}>
-            <DatePickerComponent
-              label="Pick a Date"
-              mode="date"
-              value={
-                Employmentformik.values.employmentDetails.endDate
-                  ? new Date(Employmentformik.values.employmentDetails.endDate)
-                  : null
-              }
-              onChange={(val: Date) =>
-                Employmentformik.setFieldValue(
-                  'employmentDetails.endDate',
-                  val.toISOString(),
-                )
-              }
-              placeholder="End Date"
-            />
-          </View>
-        </View>
-        <View>
-          <TextArea
-            label="Candidate Bio"
-            value={Employmentformik.values.employmentDetails.responsibility}
-            onChangeText={(val: any) =>
-              Employmentformik.setFieldValue(
-                'employmentDetails.responsibility',
-                val,
-              )
-            }
-            placeholder="Responsibilities"
-            style={{backgroundColor: 'white', borderColor: 'white'}}
-          />
-        </View>
-        <SharedButton
-          title="Submit"
+
+        <TextInput
+          label="Responsibilities"
+          value={Employmentformik.values.employmentDetails.responsibility}
+          onChangeText={value =>
+            Employmentformik.setFieldValue(
+              'employmentDetails.responsibility',
+              value,
+            )
+          }
+          mode="outlined"
+          style={styles.input}
+          multiline
+          numberOfLines={4}
+          error={
+            Employmentformik.touched.employmentDetails?.responsibility &&
+            !!Employmentformik.errors.employmentDetails?.responsibility
+          }
+        />
+
+        <Button
+          mode="contained"
           onPress={Employmentformik.handleSubmit}
+          loading={createEmploymentDetailResponse?.isLoading}
           disabled={
             !Employmentformik.isValid ||
             !Employmentformik.dirty ||
-            createEducationDetailResponse?.isLoading
+            createEmploymentDetailResponse?.isLoading
           }
-          style={{marginBottom: 30}}
-          isLoading={createEducationDetailResponse?.isLoading}
-        />
-      </View>
-    );
-  };
+          style={styles.submitButton}>
+          Complete Profile
+        </Button>
+      </Card.Content>
+    </Card>
+  );
 
   const renderStepContent = () => {
     switch (currentPosition) {
@@ -547,233 +741,295 @@ const UpdateProfileScreen: React.FC<{
       case 2:
         return EmploymentDetails();
       default:
-        return null;
+        return BasicDetails();
     }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity
-            style={{backgroundColor: 'white', margin: 10, borderRadius: 5}}>
-            <SvgIcon
-              name="back"
-              width={30}
-              height={30}
-              strokeColor={AppColors.headerBackground}
-            />
-          </TouchableOpacity>
-          <Text
-            style={{
-              fontSize: 20,
-              color: 'white',
-              fontWeight: 600,
-              height: '100%',
-              marginTop: 15,
-            }}>
-            Update your Profile
-          </Text>
-          <TouchableOpacity
-            style={{
-              backgroundColor: 'white',
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 2,
-              margin: 10,
-              borderRadius: 5,
-            }}></TouchableOpacity>
-        </View>
-      </View>
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.container1}>
-          <StepIndicator
-            customStyles={customStyles}
-            currentPosition={currentPosition}
-            labels={labels}
-            stepCount={labels.length}
-            renderStepIndicator={({position, stepStatus}) => {
-              switch (position) {
-                case 0:
-                  return (
-                    <SvgIcon
-                      name="profile"
-                      strokeColor={
-                        stepStatus === 'finished'
-                          ? '#fff'
-                          : AppColors.headerBackground
-                      }
-                      width={22}
-                      height={22}
-                    />
-                  );
-                case 1:
-                  return (
-                    <SvgIcon
-                      name="education"
-                      strokeColor={
-                        stepStatus === 'finished'
-                          ? '#fff'
-                          : AppColors.headerBackground
-                      }
-                      width={22}
-                      height={22}
-                    />
-                  );
-                case 2:
-                  return (
-                    <SvgIcon
-                      name="employment"
-                      strokeColor={
-                        stepStatus === 'finished'
-                          ? '#fff'
-                          : AppColors.headerBackground
-                      }
-                      width={22}
-                      height={22}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            }}
+      <Appbar.Header elevated>
+        {/* <Appbar.BackAction /> */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{paddingRight: 20}}>
+          <SvgIcon
+            name="back"
+            width={30}
+            height={30}
+            strokeColor={AppColors.AppButtonBackground}
           />
-          <View style={styles.content}>{renderStepContent()}</View>
-        </View>
+        </TouchableOpacity>
+        <Appbar.Content title="Update Profile" />
+      </Appbar.Header>
+
+      <Surface style={styles.progressContainer}>
+        <Text variant="bodyMedium" style={styles.progressText}>
+          Step {currentPosition + 1} of {stepLabels.length}:{' '}
+          {stepLabels[currentPosition]}
+        </Text>
+        <ProgressBar
+          progress={(currentPosition + 1) / stepLabels.length}
+          style={styles.progressBar}
+        />
+      </Surface>
+
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
+        {renderStepContent()}
       </ScrollView>
+
+      {/* Modals */}
+      <Portal>
+        <Modal
+          visible={showStateModal}
+          onDismiss={() => setShowStateModal(false)}
+          contentContainerStyle={styles.modalContainer}>
+          <Text variant="headlineSmall" style={styles.modalTitle}>
+            Select State
+          </Text>
+          <ScrollView style={styles.modalScrollView}>
+            {States.map(state => (
+              <List.Item
+                key={state.id}
+                title={state.label}
+                onPress={() => handleStateChange(state.value)}
+                style={styles.listItem}
+              />
+            ))}
+          </ScrollView>
+        </Modal>
+
+        <Modal
+          visible={showCityModal}
+          onDismiss={() => setShowCityModal(false)}
+          contentContainerStyle={styles.modalContainer}>
+          <Text variant="headlineSmall" style={styles.modalTitle}>
+            Select City
+          </Text>
+          <ScrollView style={styles.modalScrollView}>
+            {cities.map(city => (
+              <List.Item
+                key={city.id}
+                title={city.label}
+                onPress={() => handleCityChange(city.value)}
+                style={styles.listItem}
+              />
+            ))}
+          </ScrollView>
+        </Modal>
+
+        <Modal
+          visible={showExperienceModal}
+          onDismiss={() => setShowExperienceModal(false)}
+          contentContainerStyle={styles.modalContainer}>
+          <Text variant="headlineSmall" style={styles.modalTitle}>
+            Select Experience
+          </Text>
+          <ScrollView style={styles.modalScrollView}>
+            {experienceOptions.map(option => (
+              <List.Item
+                key={option.value}
+                title={option.label}
+                onPress={() => handleExperienceChange(option.value)}
+                style={styles.listItem}
+              />
+            ))}
+          </ScrollView>
+        </Modal>
+
+        <DatePicker
+          modal
+          open={showDatePicker}
+          date={new Date()}
+          onConfirm={handleDateConfirm}
+          onCancel={() => setShowDatePicker(false)}
+          mode="date"
+        />
+      </Portal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: AppColors.AppBackground,
-  },
-  header: {
-    width: '100%',
-    height: 60,
-    backgroundColor: AppColors.headerBackground,
-    borderBottomRightRadius: 10,
-    borderBottomLeftRadius: 10,
-  },
-  headerContent: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  scrollContainer: {
-    padding: 20,
-    paddingBottom: 120,
-  },
-  basicFormStyle: {
-    width: '100%',
-    paddingBottom: 125,
-  },
-  header1: {
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 5,
-    height: 40,
-    paddingLeft: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  company: {
-    fontSize: 18,
-    color: '#333',
-    marginBottom: 3,
-  },
-  location: {
-    fontSize: 16,
-    color: '#666',
-  },
-  companyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    flex: 1,
+    backgroundColor: '#f5f5f5',
     elevation: 0,
   },
-  logo: {
-    width: 60,
-    height: 60,
-    borderRadius: 10,
-    marginRight: 15,
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    margin: 16,
+    // borderRadius: 12,
   },
-  companyInfo: {
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 18,
+  progressText: {
+    marginBottom: 8,
     fontWeight: '600',
   },
-  jobType: {
-    fontSize: 16,
-    color: '#666',
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
   },
-  section: {
-    marginBottom: 20,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  stepCard: {
+    marginBottom: 100,
+    // borderRadius: 10,
     elevation: 0,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
+  stepTitle: {
+    marginBottom: 8,
+    fontWeight: '700',
   },
-  sectionContent: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#444',
+  stepSubtitle: {
+    marginBottom: 24,
+    // opacity: 0.7,
   },
-  listItem: {
-    fontSize: 16,
-    marginLeft: 10,
-    marginBottom: 5,
-    color: '#444',
+  input: {
+    marginBottom: 16,
   },
-  link: {
-    color: '#2196F3',
-    fontSize: 16,
-    marginVertical: 5,
-    textDecorationLine: 'underline',
+  datePickerSurface: {
+    padding: 16,
+    marginBottom: 16,
+    // borderRadius: 12,
+    // elevation: 1,
   },
-  applyButton: {
-    position: 'absolute',
-    bottom: 70,
-    left: 20,
-    right: 20,
-    backgroundColor: AppColors.AppButtonBackground,
-    padding: 15,
-    borderRadius: 10,
+  dateLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  dateButton: {
+    justifyContent: 'flex-start',
+  },
+  dropdownSurface: {
+    padding: 16,
+    marginBottom: 16,
+    // borderRadius: 12,
+    // elevation: 1,
+  },
+  dropdownLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  dropdownButton: {
+    justifyContent: 'flex-start',
+  },
+  radioSurface: {
+    padding: 16,
+    marginBottom: 16,
+    // borderRadius: 12,
+    // elevation: 1,
+  },
+  radioLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  radioRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 3,
   },
-  applyButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+  radioItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 24,
   },
-  container1: {flex: 1},
-  content: {marginTop: 50, alignItems: 'center'},
-  buttons: {
+  skillsSurface: {
+    padding: 16,
+    marginBottom: 16,
+    // borderRadius: 12,
+    // elevation: 1,
+  },
+  skillsLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  skillsInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+
+    marginBottom: 1,
+  },
+  skillInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  addSkillButton: {
+    margin: 0,
+  },
+  skillsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  skillChip: {
+    margin: 4,
+  },
+  fileSurface: {
+    padding: 16,
+    marginBottom: 16,
+    // borderRadius: 12,
+    // elevation: 1,
+  },
+  fileLabel: {
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  fileButton: {
+    justifyContent: 'flex-start',
+  },
+  fileInfo: {
+    marginTop: 8,
+    // opacity: 0.7,
+  },
+  dateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+  },
+  halfWidth: {
+    width: '48%',
+  },
+  submitButton: {
+    marginTop: 24,
+    paddingVertical: 8,
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    margin: 20,
+    // borderRadius: 16,
+    maxHeight: '80%',
+    // elevation: 5,
+  },
+  modalTitle: {
+    padding: 20,
+    paddingBottom: 10,
+    fontWeight: '700',
+  },
+  modalScrollView: {
+    maxHeight: 400,
+  },
+  listItem: {
+    paddingHorizontal: 20,
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: AppColors.AppButtonBackground,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+    marginTop: 2,
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#FFFF',
+    marginRight: 6,
+  },
+  closeButton: {
+    padding: 2,
   },
 });
 

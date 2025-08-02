@@ -51,7 +51,7 @@ const SigninScreen: React.FC = () => {
       console.log(loginResponse?.data);
       if (
         loginResponse?.data?.user?.role == 'candidate' &&
-        loginResponse?.data?.user?.stepper != 2
+        loginResponse?.data?.user?.stepper != 3
       ) {
         navigation.navigate('updateProfile', {
           id: loginResponse?.data?.user?._id,
@@ -129,7 +129,7 @@ const SigninScreen: React.FC = () => {
             onPress={formik.handleSubmit}
             isLoading={loginResponse?.isLoading}
           />
-          <View style={styles.orContainer}>
+          {/* <View style={styles.orContainer}>
             <Text style={styles.line}></Text>
             <Text style={styles.orText}>OR</Text>
             <Text style={styles.line}></Text>
@@ -139,7 +139,7 @@ const SigninScreen: React.FC = () => {
               <SvgIcon name="google" height={24} width={24} />
               <Text style={styles.googleText}>Login with Google</Text>
             </View>
-          </TouchableHighlight>
+          </TouchableHighlight> */}
           <TouchableHighlight style={styles.signup}>
             <View style={styles.googleBtnContent}>
               <Text style={styles.googleText}>

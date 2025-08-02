@@ -186,17 +186,17 @@ export const CandidateJoblist: React.FC = () => {
         </View>
         <View
           style={{
-            width: '90%',
+            width: '95%',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
           }}>
           <SearchBar
             onSearch={handleSearch}
-            style={{width: '91%'}}
+            style={{width: '100%'}}
             placeholder="search jobs"
           />
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               backgroundColor: 'white',
               display: 'flex',
@@ -213,7 +213,7 @@ export const CandidateJoblist: React.FC = () => {
               height={30}
               strokeColor={AppColors.AppButtonBackground}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </View>
       {fetchJobsResponse?.isLoading ? (
