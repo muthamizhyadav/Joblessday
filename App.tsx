@@ -1,13 +1,15 @@
 'use strict';
 import 'react-native-gesture-handler';
-import React from 'react';
-import {SafeAreaView, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {SafeAreaView, StyleSheet, View} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import StackNavigator from './src/routers';
 import {Provider as ReduxProvider} from 'react-redux';
 import {store} from './src/store/store';
 import Toast from 'react-native-toast-message';
 import {Provider as PaperProvider, DefaultTheme} from 'react-native-paper';
+import SplashScreen from 'react-native-splash-screen';
+import SplashScreenComponent from './src/components/SplashScreen';
 
 const lightTheme = {
   ...DefaultTheme,
@@ -22,6 +24,22 @@ const lightTheme = {
 };
 
 function App(): React.JSX.Element {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Hide splash screen after 3 seconds
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+      SplashScreen.hide();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (showSplash) {
+    return <SplashScreenComponent />;
+  }
+
   return (
     <ReduxProvider store={store}>
       <PaperProvider theme={lightTheme}>
