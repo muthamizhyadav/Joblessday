@@ -20,6 +20,7 @@ import {useDispatch} from 'react-redux';
 import {setProfileData} from '../../store/slice';
 import {useLoginMutation} from '../../api/api';
 import Toast from 'react-native-toast-message';
+import {FontFamily} from '../../constants/fonts';
 
 const SigninScreen: React.FC = () => {
   const {height, width} = useWindowDimensions();

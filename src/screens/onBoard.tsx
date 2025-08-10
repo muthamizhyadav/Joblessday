@@ -4,6 +4,7 @@ import {useState} from 'react';
 import SvgIcon from '../shared/Svg';
 import SharedButton from '../shared/SharedButton';
 import {useNavigation} from '@react-navigation/native';
+import {FontFamily} from '../constants/fonts';
 
 const OnboardScreen = () => {
   const [selected, setSelected] = useState<number>(0);
@@ -30,7 +31,8 @@ const OnboardScreen = () => {
             textAlign: 'center',
             fontSize: 20,
             marginBottom: 20,
-            fontWeight: 800,
+            fontWeight: '800',
+            fontFamily: FontFamily.Inter.Bold,
           }}>
           How would you like to continue?
         </Text>

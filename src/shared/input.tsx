@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import SvgIcon from './Svg';
+import { FontFamily } from '../constants/fonts';
 
 // Define the props interface
 interface InputProps extends TextInputProps {
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
     marginBottom: 8,
+    fontFamily: FontFamily.Inter.Medium,
   },
   input: {
     height: 40,
@@ -138,6 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     fontSize: 16,
     color: '#333',
+    fontFamily: FontFamily.Inter.Regular,
   },
   inputError: {
     borderColor: 'red',
@@ -146,6 +149,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'red',
     marginTop: 4,
+    fontFamily: FontFamily.Inter.Regular,
   },
 });
 

@@ -1,14 +1,11 @@
 import React from 'react';
 import {View, Text, StyleSheet, Dimensions} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 
 const {width, height} = Dimensions.get('window');
 
 const SplashScreenComponent: React.FC = () => {
   return (
-    <LinearGradient
-      colors={['#8E44AD', '#6A1B9A', '#7B1FA2']}
-      style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Interview Spot</Text>
         {/* Add your character illustration here if you have it as an image */}
@@ -17,7 +14,7 @@ const SplashScreenComponent: React.FC = () => {
           <Text style={styles.characterEmoji}>🏃‍♂️💼</Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 };
 
@@ -28,6 +25,7 @@ const styles = StyleSheet.create({
     height: height,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#8E44AD', // Purple background
   },
   content: {
     alignItems: 'center',

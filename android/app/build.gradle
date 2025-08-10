@@ -85,6 +85,14 @@ android {
         versionCode 1
         versionName "1.0"
     }
+    
+    configurations {
+        all {
+            exclude group: 'com.android.support', module: 'support-compat'
+            exclude group: 'com.android.support', module: 'support-core-utils'
+        }
+    }
+    
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -115,5 +123,14 @@ dependencies {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
+    }
+    
+    // Add explicit AndroidX dependencies to avoid conflicts
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    
+    // Exclude support library from all dependencies
+    configurations.all {
+        exclude group: 'com.android.support'
     }
 }

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { AppColors } from '../constants/colors.config';
+import { FontFamily } from '../constants/fonts';
 
 interface ButtonProps {
   title: string;
@@ -56,6 +57,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: FontFamily.Inter.SemiBold,
   },
 });
 
