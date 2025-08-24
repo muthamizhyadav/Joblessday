@@ -49,6 +49,8 @@ const SharedInput: React.FC<InputProps> = ({
   inputStyle,
   ...rest
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   const getInputProps = (): TextInputProps => {
     switch (inputType) {
       // case 'password':
@@ -72,44 +74,71 @@ const SharedInput: React.FC<InputProps> = ({
         };
     }
   };
+
+  const getInputStyle = () => {
+    let style = {...styles.input};
+    if (error) {
+      style = {...style, ...styles.inputError};
+    } else if (isFocused) {
+      style = {...style, ...styles.inputFocused};
+    }
+    if (inputStyle || rest?.style) {
+      style = {...style, ...(inputStyle || rest?.style)};
+    }
+    return style;
+  };
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
       <TextInput
         style={[
-          styles.input,
-          error && styles.inputError,
-          inputStyle || rest?.style,
+          getInputStyle(),
+          (name === 'password' || name === 'confirmPassword') && {paddingRight: 50}
         ]}
-        placeholderTextColor="#999"
+        placeholderTextColor="#9CA3AF"
         {...getInputProps()}
         {...rest}
         value={value}
         onChangeText={text => {
           onChange(text);
         }}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
       {error && <Text style={[styles.error, errorStyle]}>{error}</Text>}
       {name == 'password' ? (
         <TouchableOpacity
           onPress={PasswordIconChange}
-          style={{position: 'absolute', right: 10, marginTop: 8}}>
+          style={{
+            position: 'absolute', 
+            right: 16, 
+            top: '50%',
+            marginTop: -12,
+            zIndex: 1
+          }}>
           <SvgIcon
             name={passwordIcon ? 'eye' : 'eyeclose'}
             height={24}
             width={24}
-            strokeColor="gray"
+            strokeColor="#6B7280"
           />
         </TouchableOpacity>
       ) : name == 'confirmPassword' ? (
         <TouchableOpacity
           onPress={confiemPasswordIconChange}
-          style={{position: 'absolute', right: 10, marginTop: 8}}>
+          style={{
+            position: 'absolute', 
+            right: 16, 
+            top: '50%',
+            marginTop: -12,
+            zIndex: 1
+          }}>
           <SvgIcon
             name={confirmpasswordIcon ? 'eye' : 'eyeclose'}
             height={24}
             width={24}
-            strokeColor="gray"
+            strokeColor="#6B7280"
           />
         </TouchableOpacity>
       ) : null}
@@ -119,36 +148,56 @@ const SharedInput: React.FC<InputProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: 20,
     position: 'relative',
-    borderColor: '#ccc',
-    // borderWidth: 1,
-    borderRadius: 5,
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    color: '#374151',
     marginBottom: 8,
     fontFamily: FontFamily.Inter.Medium,
   },
   input: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingHorizontal: 8,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
-    color: '#333',
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
     fontFamily: FontFamily.Inter.Regular,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 0  ,
+  },
+  inputFocused: {
+    borderColor: '#6D28D9',
+    shadowColor: '#6D28D9',
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 0,
   },
   inputError: {
-    borderColor: 'red',
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
   },
   error: {
     fontSize: 12,
-    color: 'red',
-    marginTop: 4,
+    color: '#EF4444',
+    marginTop: 6,
+    marginLeft: 4,
     fontFamily: FontFamily.Inter.Regular,
   },
 });

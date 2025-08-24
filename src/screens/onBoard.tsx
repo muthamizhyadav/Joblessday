@@ -1,4 +1,4 @@
-import {Text, TouchableOpacity, View} from 'react-native';
+import {Text, TouchableOpacity, View, ScrollView} from 'react-native';
 import {AppColors} from '../constants/colors.config';
 import {useState} from 'react';
 import SvgIcon from '../shared/Svg';
@@ -9,22 +9,27 @@ import {FontFamily} from '../constants/fonts';
 const OnboardScreen = () => {
   const [selected, setSelected] = useState<number>(0);
   const OnSelect = (selectedValue: number) => {
-    console.log(selectedValue, 'onPress={()=>OnSelect(1)}');
     setSelected(selectedValue);
   };
   const navigation = useNavigation<any>();
 
-  return (
-    <View
-      style={{
-        width: '100%',
-        height: '100%',
-        backgroundColor: AppColors.AppBackground,
-        position: 'relative',
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: AppColors.AppBackground,
+        }}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            minHeight: '100%',
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
       <View>
         <Text
           style={{
@@ -38,75 +43,87 @@ const OnboardScreen = () => {
         </Text>
         <View
           style={{
-            width: '90%',
-            height: 300,
-            margin: 'auto',
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            // alignItems:'center',
-            gap: 10,
+            width: '100%',
+            paddingHorizontal: 20,
+            gap: 15,
           }}>
           <TouchableOpacity
             style={{
-              width: '50%',
-              height: '50%',
-              borderCurve: 'circular',
-              borderColor: AppColors.AppButtonBackground,
+              flexDirection: 'row',
+              alignItems: 'center',
               backgroundColor: 'white',
-              borderRadius: 5,
-              borderWidth: selected == 1 ? 2 : 0,
-            }}
-            onPress={() => navigation.navigate('Signup', {id: 1})}>
-            <SvgIcon
-              name="recruiter"
-              height={'80%'}
-              width={'100%'}
-              color={AppColors.AppButtonBackground}
-            />
-            <Text
-              style={{
-                textAlign: 'center',
-                fontSize: 18,
-                color: selected == 1 ? AppColors.AppButtonBackground : 'black',
-              }}>
-              Recruiter
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              width: '50%',
-              height: '50%',
-              borderCurve: 'circular',
-              borderColor: AppColors.AppButtonBackground,
-              backgroundColor: 'white',
-              borderRadius: 5,
+              borderRadius: 12,
+              padding: 10,
               borderWidth: selected == 2 ? 2 : 0,
+              borderColor: AppColors.AppButtonBackground,
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 0,
+              justifyContent: 'space-between',
             }}
             onPress={() => navigation.navigate('Signup', {id: 2})}>
             <SvgIcon
               name="jobseaker"
-              height={'80%'}
-              width={'100%'}
+              height={100}
+              width={100}
               color={AppColors.AppButtonBackground}
             />
             <Text
               style={{
-                textAlign: 'center',
-                fontSize: 18,
+                fontSize: 20,
+                fontFamily: FontFamily.Inter.Medium,
                 color: selected == 2 ? AppColors.AppButtonBackground : 'black',
+                textAlign: 'center',
               }}>
-              JobSeaker
+              JobSeeker
             </Text>
+            <SvgIcon name="right" strokeColor="gray" width={20} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: 'white',
+              borderRadius: 12,
+              padding: 10,
+              borderWidth: selected == 1 ? 2 : 0,
+              borderColor: AppColors.AppButtonBackground,
+              shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 0,
+              justifyContent: 'space-between',
+              width: '100%',
+            }}
+            onPress={() => navigation.navigate('Signup', {id: 1})}>
+            <SvgIcon
+              name="recruiter"
+              height={100}
+              width={100}
+              color={AppColors.AppButtonBackground}
+            />
+            <Text
+              style={{
+                fontSize: 20,
+                fontFamily: FontFamily.Inter.Medium,
+                color: selected == 1 ? AppColors.AppButtonBackground : 'black',
+                textAlign: 'center',
+              }}>
+              Recruiter
+            </Text>
+            <SvgIcon name="right" strokeColor="gray" width={20} />
           </TouchableOpacity>
         </View>
       </View>
-      {/* <SharedButton
-        title="Continue"
-        disabled={selected == 0}
-        onPress={() => navigation.navigate('Signup', {id: selected})}
-        style={{position: 'absolute', bottom: 30, width: '90%', height: 50}}
-      /> */}
 
       <View
         style={{
@@ -122,17 +139,20 @@ const OnboardScreen = () => {
         <Text style={{fontSize: 16}}>Already have an account?</Text>
         <TouchableOpacity
           style={{paddingLeft: 5}}
-          onPress={() => navigation.navigate('singin')}>
+          onPress={() => navigation.navigate('employmentDetails', { 
+  experienceLevel: 'internship'
+})}>
           <Text
             style={{
               fontSize: 18,
-              color: AppColors.AppButtonBackground,
+              color: '#694bc3',
               fontWeight: 800,
             }}>
             Sign in
           </Text>
         </TouchableOpacity>
       </View>
+        </ScrollView>
     </View>
   );
 };

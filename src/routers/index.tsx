@@ -8,6 +8,7 @@ import {JobdetailsScreen} from '../screens/App/canidate/jobDetails';
 import {UpdateProfile} from '../screens/App/canidate/update.profile';
 import {UpdateProfileRecruiter} from '../screens/App/updateProfileRecruiter';
 import {CandidatedetailsScreen} from '../screens/App/candidate.detail';
+import EmploymentDetails from '../screens/App/canidate/employmentDetails';
 
 const Stack = createStackNavigator();
 
@@ -28,6 +29,7 @@ const StackNavigator = () => {
       <Stack.Screen name="jobdetail" component={JobdetailsScreen} />
       <Stack.Screen name="candidatedetail" component={CandidatedetailsScreen} />
       <Stack.Screen name="updateProfile" component={UpdateProfile} />
+      <Stack.Screen name="employmentDetails" component={EmploymentDetails} />
       <Stack.Screen
         name="updateProfileRecruiter"
         component={UpdateProfileRecruiter}

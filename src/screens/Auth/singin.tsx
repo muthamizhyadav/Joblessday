@@ -92,7 +92,7 @@ const SigninScreen: React.FC = () => {
         contentContainerStyle={styles.formContainer}
         keyboardShouldPersistTaps="handled">
         <SvgIcon name="signin" height={imageHeight} width={imageWidth} />
-        <Text style={styles.loginText}>Sign in</Text>
+        <Text style={styles.loginText}>Login</Text>
         <View style={{position: 'relative'}}>
           <SharedInput
             placeholder="Email"
@@ -130,17 +130,17 @@ const SigninScreen: React.FC = () => {
             onPress={formik.handleSubmit}
             isLoading={loginResponse?.isLoading}
           />
-          {/* <View style={styles.orContainer}>
-            <Text style={styles.line}></Text>
+          <View style={styles.orContainer}>
+            <View style={styles.line}></View>
             <Text style={styles.orText}>OR</Text>
-            <Text style={styles.line}></Text>
+            <View style={styles.line}></View>
           </View>
-          <TouchableHighlight style={styles.googleBTN} underlayColor="#ddd">
+          <TouchableHighlight style={styles.googleBTN} underlayColor="#f3f4f6">
             <View style={styles.googleBtnContent}>
               <SvgIcon name="google" height={24} width={24} />
               <Text style={styles.googleText}>Login with Google</Text>
             </View>
-          </TouchableHighlight> */}
+          </TouchableHighlight>
           <TouchableHighlight style={styles.signup}>
             <View style={styles.googleBtnContent}>
               <Text style={styles.googleText}>
@@ -172,30 +172,32 @@ const styles = StyleSheet.create({
   },
   loginText: {
     width: '100%',
-    marginLeft: 10,
-    marginTop: 10,
-    marginBottom: 10,
+    marginLeft: 5,
+    marginTop: 20,
+    marginBottom: 30,
     textAlign: 'left',
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '800',
     color: '#6d28d9',
+    fontFamily: FontFamily.Inter.Bold,
   },
   emailInputContainer: {
     width: '100%',
   },
   forgotPassword: {
     alignItems: 'flex-end',
-    marginBottom: 20,
+    marginBottom: 25,
+    marginTop: 8,
   },
   orContainer: {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginVertical: 20,
   },
   line: {
-    width: '45%',
+    flex: 1,
     height: 1,
     backgroundColor: '#94a3b8',
   },
@@ -203,18 +205,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     color: '#94a3b8',
     fontWeight: 'bold',
+    fontSize: 14,
+    fontFamily: FontFamily.Inter.Medium,
   },
   googleBTN: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
-    paddingVertical: 12,
+    paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#ddd',
-    marginTop: 15,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 0    ,
   },
   googleBtnContent: {
     flexDirection: 'row',
@@ -225,6 +237,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    fontFamily: FontFamily.Inter.Medium,
   },
   signupText: {
     fontSize: 14,

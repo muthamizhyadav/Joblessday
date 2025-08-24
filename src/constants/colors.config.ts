@@ -1,5 +1,6 @@
 export const AppColors = {
-    AppBackground: '#f9fafb',
+    // AppBackground: '#f9fafb',
+        AppBackground: '#e6e6e6',
     AppButtonBackground: '#7c3aed',
     AppDisabledColor: '#9ca3af',
     AppTextColor: '#ffff',

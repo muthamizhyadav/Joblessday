@@ -1,27 +1,29 @@
-import * as React from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
-  TouchableHighlight,
-  ToastAndroid,
-} from 'react-native';
-import SharedButton from '../../shared/SharedButton';
-import {useNavigation} from '@react-navigation/native';
-import SvgIcon from '../../shared/Svg';
-import SharedInput from '../../shared/input';
-import {useFormik} from 'formik';
-import {SignupinitValue, SignUpSchema} from '../../validations';
-import {useRoute} from '@react-navigation/native';
-import {useRegisterMutation} from '../../api/api';
-import {RegisterRequest} from '../../api/models';
-import Toast from 'react-native-toast-message';
-import {useDispatch} from 'react-redux';
-import {setRegistrationData} from '../../store/slice';
+  import * as React from 'react';
+  import {
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
+    KeyboardAvoidingView,
+    ScrollView,
+    Platform,
+    TouchableHighlight,
+    ToastAndroid,
+  } from 'react-native';
+  import SharedButton from '../../shared/SharedButton';
+  import {useNavigation} from '@react-navigation/native';
+  import SvgIcon from '../../shared/Svg';
+  import SharedInput from '../../shared/input';
+  import RadioGroup from '../../shared/radioGroup';
+  import {useFormik} from 'formik';
+  import {SignupinitValue, SignUpSchema} from '../../validations';
+  import {useRoute} from '@react-navigation/native';
+  import {useRegisterMutation} from '../../api/api';
+  import {RegisterRequest} from '../../api/models';
+  import Toast from 'react-native-toast-message';
+  import {useDispatch} from 'react-redux';
+  import {setRegistrationData} from '../../store/slice';
+  import {FontFamily} from '../../constants/fonts';
 
 const SignupScreen: React.FC = () => {
   const route = useRoute<any>();
@@ -32,8 +34,15 @@ const SignupScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const [passwordIcon, setPasswordIcon] = React.useState(false);
   const [confirmpasswordIcon, setconfirmpasswordIcon] = React.useState(false);
+  const [experienceLevel, setExperienceLevel] = React.useState('');
   const [registerRequest, registerResponse] = useRegisterMutation();
   const dispatch = useDispatch();
+
+  const experienceOptions = [
+        { label: 'Internship', value: 'internship' },
+    { label: 'Fresher', value: 'fresher' },
+    { label: 'Experienced', value: 'experienced' },
+  ];
 
   const PasswordIconChange = () => {
     setPasswordIcon(!passwordIcon);
@@ -44,14 +53,20 @@ const SignupScreen: React.FC = () => {
   };
 
   const formik = useFormik({
-    initialValues: SignupinitValue,
-    validationSchema: SignUpSchema,
+    initialValues: {
+      name: '',
+      contact: '',
+      email: '',
+      location: '',
+    },
+    // validationSchema: SignUpSchema,
     onSubmit: values => {
       const requestData = {
         ...values,
-        ...{role: id == '1' ? 'recruiter' : 'candidate'},
+        experienceLevel,
+        role: id == '1' ? 'recruiter' : 'candidate',
       };
-      Submit(requestData);
+      Submit(requestData as any);
     },
   });
 
@@ -100,12 +115,14 @@ const SignupScreen: React.FC = () => {
       <ScrollView
         contentContainerStyle={styles.formContainer}
         keyboardShouldPersistTaps="handled">
-        <SvgIcon name="signup" height={imageHeight} width={imageWidth} />
+        <View style={{paddingTop:10}}>
+          <SvgIcon name="signup" height={imageHeight} width={imageWidth} />
+        </View>
 
-        <Text style={styles.loginText}>Sign up</Text>
+        <Text style={styles.loginText}>Create your account</Text>
         <View style={{position: 'relative'}}>
           <SharedInput
-            placeholder="Name"
+            placeholder="Full Name"
             containerStyle={styles.emailInputContainer}
             inputType="text"
             name={'name'}
@@ -113,7 +130,15 @@ const SignupScreen: React.FC = () => {
             onChange={formik.handleChange('name')}
           />
           <SharedInput
-            placeholder="Email"
+            placeholder="Contact Number"
+            containerStyle={styles.emailInputContainer}
+            inputType="numeric"
+            name={'contact'}
+            value={formik.values.contact}
+            onChange={formik.handleChange('contact')}
+          />
+          <SharedInput
+            placeholder="Email Address"
             containerStyle={styles.emailInputContainer}
             inputType="email"
             name={'email'}
@@ -121,35 +146,31 @@ const SignupScreen: React.FC = () => {
             onChange={formik.handleChange('email')}
           />
           <SharedInput
-            placeholder="Password"
-            containerStyle={{
-              ...styles.emailInputContainer,
-              ...{marginBottom: 1},
-            }}
-            inputType={!passwordIcon ? 'password' : 'text'}
-            name={'password'}
-            value={formik.values.password}
-            onChange={formik.handleChange('password')}
-            PasswordIconChange={PasswordIconChange}
-            passwordIcon={passwordIcon}
+            placeholder="Location"
+            containerStyle={styles.emailInputContainer}
+            inputType="text"
+            name={'location'}
+            value={formik.values.location}
+            onChange={formik.handleChange('location')}
           />
-          <SharedInput
-            placeholder="Confirm password"
-            containerStyle={{
-              ...styles.emailInputContainer,
-              ...{marginTop: 15},
-            }}
-            inputType={!passwordIcon ? 'password' : 'text'}
-            name={'confirmPassword'}
-            value={formik.values.confirmPassword}
-            onChange={formik.handleChange('confirmPassword')}
-            confiemPasswordIconChange={confirmPasswordIconChange}
-            confirmpasswordIcon={confirmpasswordIcon}
-          />
+          
+          <View style={styles.experienceContainer}>
+            {/* <Text style={styles.experienceLabel}>Experience Level</Text> */}
+            <RadioGroup
+              options={experienceOptions}
+              selectedValue={experienceLevel}
+              onValueChange={(value) => setExperienceLevel(value as string)}
+            />
+          </View> 
           <SharedButton
-            title="Create your acccount"
-            disabled={
-              !formik.isValid || !formik.dirty || registerResponse?.isLoading
+            title="Submit"
+            disabled={  
+              !formik.values.name || 
+              !formik.values.contact || 
+              !formik.values.email || 
+              !formik.values.location || 
+              !experienceLevel ||
+              registerResponse?.isLoading
             }
             onPress={formik.handleSubmit}
             isLoading={registerResponse?.isLoading}
@@ -173,16 +194,28 @@ const styles = StyleSheet.create({
   },
   loginText: {
     width: '100%',
-    marginLeft: 10,
-    marginTop: 10,
-    marginBottom: 10,
+    marginLeft: 5,
+    marginTop: 20,
+    marginBottom: 30,
     textAlign: 'left',
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '800',
-    color: '#6d28d9',
+    color: '#8971d0',
+    fontFamily: FontFamily.Inter.Bold,
   },
   emailInputContainer: {
     width: '100%',
+  },
+  experienceContainer: {
+    marginBottom: 20,
+  },
+  experienceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+    marginLeft: 4,
+    fontFamily: FontFamily.Inter.Medium,
   },
   forgotPassword: {
     alignItems: 'flex-end',

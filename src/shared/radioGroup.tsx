@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { FontFamily } from '../constants/fonts';
 
 type RadioOption = {
   label: string;
@@ -27,10 +28,16 @@ const RadioGroup: React.FC<RadioGroupProps> = ({
           style={styles.option}
           onPress={() => onValueChange(option.value)}
         >
-          <View style={styles.radioCircle}>
+          <View style={[
+            styles.radioCircle,
+            selectedValue === option.value && styles.selectedCircle
+          ]}>
             {selectedValue === option.value && <View style={styles.selectedDot} />}
           </View>
-          <Text style={styles.optionLabel}>{option.label}</Text>
+          <Text style={[
+            styles.optionLabel,
+            selectedValue === option.value && styles.selectedLabel
+          ]}>{option.label}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -41,10 +48,9 @@ export default RadioGroup;
 
 const styles = StyleSheet.create({
   container: {
-    display:'flex',
-    flexDirection:'row',
-    gap:5,
-    marginLeft:10
+    flexDirection: 'row',
+    gap: 20,
+    paddingHorizontal: 4,
   },
   groupLabel: {
     fontSize: 16,
@@ -54,25 +60,40 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   radioCircle: {
     height: 20,
     width: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#4A90E2',
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 8,
+    backgroundColor: '#FFFFFF',
+  },
+  selectedCircle: {
+    borderColor: '#6D28D9',
   },
   selectedDot: {
     height: 10,
     width: 10,
     borderRadius: 5,
-    backgroundColor: '#4A90E2',
+    backgroundColor: '#6D28D9',
   },
   optionLabel: {
     fontSize: 15,
+    color: '#6B7280',
+    fontFamily: FontFamily.Inter.Medium,
+  },
+  selectedLabel: {
+    color: '#6D28D9',
+    fontWeight: '600',
   },
 });

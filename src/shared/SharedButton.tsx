@@ -43,7 +43,7 @@ const SharedButton: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: AppColors.headerBackground,
+    backgroundColor: '#8971d0',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
