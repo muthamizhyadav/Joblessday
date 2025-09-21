@@ -1,7 +1,8 @@
 // components/CustomDropdown.tsx
 import React, { useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
-import { Menu, TextInput, HelperText } from 'react-native-paper';
+import { TouchableOpacity, View, Text } from 'react-native';
+import { Menu } from 'react-native-paper';
+import SharedInput from './input';
 
 interface Props {
   label: string;
@@ -23,15 +24,25 @@ const CustomDropdown = ({ label, value, options, onSelect, error, touched }: Pro
           visible={visible}
           onDismiss={() => setVisible(false)}
           anchor={
-            <TouchableOpacity onPress={() => setVisible(true)}>
-              <TextInput
-                mode="outlined"
-                label={label}
+            <TouchableOpacity onPress={() => setVisible(true)} style={{ position: 'relative' }}>
+              <SharedInput
+                placeholder={label}
                 value={value}
-                editable={false}
-                pointerEvents="none"
-                style={{ backgroundColor: '#fff' }}
+                onChange={() => {}} // Read-only, handled by dropdown
+                inputType="text"
+                name={label.toLowerCase()}
+                containerStyle={{ width: '100%' }}
               />
+              <View style={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                marginTop: -10,
+                zIndex: 1,
+                pointerEvents: 'none'
+              }}>
+                <Text style={{ fontSize: 16, color: '#6B7280' }}>▼</Text>
+              </View>
             </TouchableOpacity>
           }
           style={{ width }}
@@ -49,7 +60,11 @@ const CustomDropdown = ({ label, value, options, onSelect, error, touched }: Pro
           ))}
         </Menu>
       </View>
-      {touched && error && <HelperText type="error">{error}</HelperText>}
+      {touched && error && (
+        <View style={{ marginTop: 4 }}>
+          <Text style={{ color: 'red', fontSize: 12 }}>{error}</Text>
+        </View>
+      )}
     </View>
   );
 };

@@ -12,7 +12,106 @@
 // import SvgIcon from '../../shared/Svg';
 // import {useState} from 'react';
 // import {AppColors} from '../../constants/colors.config';
-// import SharedInput from '../../shared/input';
+import SharedInput from '../../shared/input';
+
+// Modern Input Wrapper Component - Signin Style
+const SigninStyleInput: React.FC<{
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  inputType?: string;
+  name?: string;
+  PasswordIconChange?: () => void;
+  passwordIcon?: boolean;
+  containerStyle?: any;
+}> = ({ placeholder, value, onChange, inputType = 'text', name = '', PasswordIconChange, passwordIcon, containerStyle = {} }) => {
+  return (
+    <SharedInput
+      placeholder={placeholder}
+      containerStyle={[styles.signinInputContainer, containerStyle]}
+      inputType={inputType}
+      value={value}
+      onChange={onChange}
+      name={name}
+      PasswordIconChange={PasswordIconChange}
+      passwordIcon={passwordIcon}
+    />
+  );
+};
+
+// Date Input Component - Looks like input but opens date picker
+const DateInput: React.FC<{
+  placeholder: string;
+  value: string;
+  onPress: () => void;
+  error?: string;
+  touched?: boolean;
+}> = ({ placeholder, value, onPress, error, touched }) => {
+  return (
+    <View>
+      <TouchableOpacity onPress={onPress} style={{ position: 'relative' }}>
+        <SharedInput
+          placeholder={placeholder}
+          value={value}
+          onChange={() => {}} // Read-only, handled by date picker
+          inputType="text"
+          name="date"
+          containerStyle={styles.signinInputContainer}
+        />
+        <View style={{
+          position: 'absolute',
+          right: 16,
+          top: '50%',
+          marginTop: -10,
+          zIndex: 1,
+          pointerEvents: 'none'
+        }}>
+          <Text style={{ fontSize: 16, color: '#6B7280' }}>📅</Text>
+        </View>
+      </TouchableOpacity>
+      {touched && error && (
+        <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{error}</Text>
+      )}
+    </View>
+  );
+};
+
+// Time Input Component - Looks like input but opens time picker
+const TimeInput: React.FC<{
+  placeholder: string;
+  value: string;
+  onPress: () => void;
+  error?: string;
+  touched?: boolean;
+}> = ({ placeholder, value, onPress, error, touched }) => {
+  return (
+    <View>
+      <TouchableOpacity onPress={onPress} style={{ position: 'relative' }}>
+        <SharedInput
+          placeholder={placeholder}
+          value={value}
+          onChange={() => {}} // Read-only, handled by time picker
+          inputType="text"
+          name="time"
+          containerStyle={styles.signinInputContainer}
+        />
+        <View style={{
+          position: 'absolute',
+          right: 16,
+          top: '50%',
+          marginTop: -10,
+          zIndex: 1,
+          pointerEvents: 'none'
+        }}>
+          <Text style={{ fontSize: 16, color: '#6B7280' }}>🕐</Text>
+        </View>
+      </TouchableOpacity>
+      {touched && error && (
+        <Text style={{ color: 'red', fontSize: 12, marginTop: 4 }}>{error}</Text>
+      )}
+    </View>
+  );
+};
 // import {Department, Industries, Roles} from '../../constants/datas';
 // import SharedDropdown from '../../shared/dropDownWithSearch';
 // import SharedButton from '../../shared/SharedButton';
@@ -1099,11 +1198,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {
-  TextInput,
   Button,
-  HelperText,
   Text,
-  useTheme,
 } from 'react-native-paper';
 import DatePicker from 'react-native-date-picker';
 import {Formik} from 'formik';
@@ -1131,7 +1227,6 @@ const JobPostSchema = Yup.object().shape({
 });
 
 export const AddJobPost = () => {
-  const theme = useTheme();
   const [openDate, setOpenDate] = useState(false);
   const [openStartTime, setOpenStartTime] = useState(false);
   const [openEndTime, setOpenEndTime] = useState(false);
@@ -1151,7 +1246,7 @@ export const AddJobPost = () => {
         params: {new: true},
       });
     }
-  }, [createJobPostResponse]);
+  }, [createJobPostResponse, navigation]);
 
   const initialValues = {
     industry: '',
@@ -1199,7 +1294,6 @@ export const AddJobPost = () => {
           onSubmit={handleFormSubmit}>
           {({
             handleChange,
-            handleBlur,
             handleSubmit,
             setFieldValue,
             values,
@@ -1240,63 +1334,67 @@ export const AddJobPost = () => {
                 {label: 'Description', name: 'description', multiline: true},
               ].map(field => (
                 <View key={field.name} style={styles.inputWrapper}>
-                  <TextInput
-                    mode="outlined"
-                    label={field.label}
+                  <SigninStyleInput
+                    placeholder={field.label}
                     value={values[field.name]}
-                    onChangeText={handleChange(field.name)}
-                    onBlur={handleBlur(field.name)}
-                    multiline={field.multiline}
+                    onChange={handleChange(field.name)}
+                    inputType={field.multiline ? 'text' : 'text'}
+                    name={field.name}
                   />
                   {touched[field.name] && errors[field.name] && (
-                    <HelperText type="error">{errors[field.name]}</HelperText>
+                    <Text style={{color: 'red', fontSize: 12, marginTop: 4}}>{errors[field.name]}</Text>
                   )}
                 </View>
               ))}
 
               {/* Salary */}
               <View style={styles.row}>
-                {['salaryfrom', 'salaryto'].map(key => (
-                  <View style={styles.inputHalf} key={key}>
-                    <TextInput
-                      mode="outlined"
-                      label={key === 'salaryfrom' ? 'Salary From' : 'Salary To'}
-                      keyboardType="numeric"
-                      value={values[key]?.toString()}
-                      onChangeText={handleChange(key)}
-                      onBlur={handleBlur(key)}
-                    />
-                    {touched[key] && errors[key] && (
-                      <HelperText type="error">{errors[key]}</HelperText>
-                    )}
-                  </View>
-                ))}
+                <View style={styles.inputHalf}>
+                  <SigninStyleInput
+                    placeholder="Salary From"
+                    value={values.salaryfrom}
+                    onChange={handleChange('salaryfrom')}
+                    inputType="numeric"
+                    name="salaryfrom"
+                  />
+                  {touched.salaryfrom && errors.salaryfrom && (
+                    <Text style={{color: 'red', fontSize: 12, marginTop: 4}}>{errors.salaryfrom}</Text>
+                  )}
+                </View>
+                <View style={styles.inputHalf}>
+                  <SigninStyleInput
+                    placeholder="Salary To"
+                    value={values.salaryto}
+                    onChange={handleChange('salaryto')}
+                    inputType="numeric"
+                    name="salaryto"
+                  />
+                  {touched.salaryto && errors.salaryto && (
+                    <Text style={{color: 'red', fontSize: 12, marginTop: 4}}>{errors.salaryto}</Text>
+                  )}
+                </View>
               </View>
 
               {/* Openings */}
-              <TextInput
-                mode="outlined"
-                label="Openings"
-                keyboardType="numeric"
+              <SigninStyleInput
+                placeholder="Openings"
                 value={values.openings.toString()}
-                onChangeText={handleChange('openings')}
-                onBlur={handleBlur('openings')}
-                style={styles.inputWrapper}
+                onChange={handleChange('openings')}
+                inputType="numeric"
+                name="openings"
               />
               {touched.openings && errors.openings && (
-                <HelperText type="error">{errors.openings}</HelperText>
+                <Text style={{color: 'red', fontSize: 12, marginTop: 4}}>{errors.openings}</Text>
               )}
 
               {/* Date Picker */}
-              <Button
-                mode="outlined"
+              <DateInput
+                placeholder="Select Job Date"
+                value={values.date ? new Date(values.date).toDateString() : ''}
                 onPress={() => setOpenDate(true)}
-                style={styles.pickerBtn}
-                labelStyle={styles.pickerLabel}>
-                {values.date
-                  ? new Date(values.date).toDateString()
-                  : 'Select Job Date'}
-              </Button>
+                error={errors.date}
+                touched={touched.date}
+              />
               <DatePicker
                 modal
                 mode="date"
@@ -1308,20 +1406,15 @@ export const AddJobPost = () => {
                 }}
                 onCancel={() => setOpenDate(false)}
               />
-              {touched.date && errors.date && (
-                <HelperText type="error">{errors.date}</HelperText>
-              )}
 
               {/* Time Pickers */}
-              <Button
-                mode="outlined"
+              <TimeInput
+                placeholder="Select Start Time"
+                value={values.startTime ? new Date(values.startTime).toLocaleTimeString() : ''}
                 onPress={() => setOpenStartTime(true)}
-                style={styles.pickerBtn}
-                labelStyle={styles.pickerLabel}>
-                {values.startTime
-                  ? new Date(values.startTime).toLocaleTimeString()
-                  : 'Select Start Time'}
-              </Button>
+                error={errors.startTime}
+                touched={touched.startTime}
+              />
               <DatePicker
                 modal
                 mode="time"
@@ -1335,19 +1428,14 @@ export const AddJobPost = () => {
                 }}
                 onCancel={() => setOpenStartTime(false)}
               />
-              {touched.startTime && errors.startTime && (
-                <HelperText type="error">{errors.startTime}</HelperText>
-              )}
 
-              <Button
-                mode="outlined"
+              <TimeInput
+                placeholder="Select End Time"
+                value={values.endTime ? new Date(values.endTime).toLocaleTimeString() : ''}
                 onPress={() => setOpenEndTime(true)}
-                style={styles.pickerBtn}
-                labelStyle={styles.pickerLabel}>
-                {values.endTime
-                  ? new Date(values.endTime).toLocaleTimeString()
-                  : 'Select End Time'}
-              </Button>
+                error={errors.endTime}
+                touched={touched.endTime}
+              />
               <DatePicker
                 modal
                 mode="time"
@@ -1359,9 +1447,6 @@ export const AddJobPost = () => {
                 }}
                 onCancel={() => setOpenEndTime(false)}
               />
-              {touched.endTime && errors.endTime && (
-                <HelperText type="error">{errors.endTime}</HelperText>
-              )}
 
               <Button
                 mode="contained"
@@ -1429,5 +1514,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: 'white',
     fontWeight: '600',
+  },
+  signinInputContainer: {
+    width: '100%',
+  },
+  modernInputContainer: {
+    marginBottom: 20,
+  },
+  modernInputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  modernInputWrapper: {
+    position: 'relative',
+  },
+  modernInputField: {
+    marginBottom: 0,
+  },
+  modernInputStyle: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
 });
