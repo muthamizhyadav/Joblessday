@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {
-  Alert,
   Image,
   Linking,
   ScrollView,
@@ -8,105 +7,73 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from 'react-native';
 import SvgIcon from '../../shared/Svg';
 import {useSelector} from 'react-redux';
 import {AppColors} from '../../constants/colors.config';
 import {useNavigation} from '@react-navigation/native';
 import {Platform} from 'react-native';
-interface JobPost {
+
+const {width} = Dimensions.get('window');
+
+interface ActiveJob {
   id: string;
   title: string;
-  company: string;
-  location: string;
   applications: number;
-  status: 'active' | 'closed';
-}
-
-interface Interview {
-  id: number;
-  candidateName: string;
-  jobTitle: string;
-  interviewTime: string;
-  status: 'Confirmed' | 'Pending';
-}
-
-interface TimeSlot {
-  id: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  availableSlots: number;
-  duration: number;
+  views: number;
+  timeRemaining: string;
+  status: 'active' | 'expiring_soon';
 }
 
 const HomeScreen: React.FC = () => {
-  const {user, tokens} = useSelector((state: any) => state.app.data);
+  const {user} = useSelector((state: any) => state.app.data);
   const navigation = useNavigation<any>();
-  console.log(user, 'user');
 
-  const stats = [
-    {title: 'Jobs Posted Today', value: 12, icon: 'briefcase'},
-    {title: 'Total Applications Today', value: 45, icon: 'file'},
-    {title: 'Interviews Scheduled', value: 8, icon: 'clock'},
-    {title: 'Applications Awaiting Review', value: 23, icon: 'email'},
+  // Mock data for active 24-hour job posts
+  const activeJobs: ActiveJob[] = [
+    {
+      id: '1',
+      title: 'Senior React Developer',
+      applications: 12,
+      views: 45,
+      timeRemaining: '18h 32m',
+      status: 'active',
+    },
+    {
+      id: '2',
+      title: 'UX/UI Designer',
+      applications: 8,
+      views: 32,
+      timeRemaining: '12h 15m',
+      status: 'active',
+    },
+    {
+      id: '3',
+      title: 'Product Manager',
+      applications: 15,
+      views: 67,
+      timeRemaining: '6h 45m',
+      status: 'expiring_soon',
+    },
   ];
 
-  const slotCreationNavigation = () => {
-    console.log('DD');
+  const stats = [
+    {title: 'Active Jobs', value: 3, icon: 'briefcase', color: '#4CAF50'},
+    {title: 'Total Applications', value: 35, icon: 'file', color: '#2196F3'},
+    {title: 'Jobs Expiring Soon', value: 1, icon: 'clock', color: '#FF9800'},
+    {title: 'Profile Views', value: 144, icon: 'eye', color: '#9C27B0'},
+  ];
+
+  const navigateToAddPost = () => {
     navigation.navigate('Addpost');
   };
 
-  const interviews: Interview[] = [
-    {
-      id: 1,
-      candidateName: 'Sarah Johnson',
-      jobTitle: 'Senior UX Designer',
-      interviewTime: 'Today, 2:30 PM',
-      status: 'Confirmed',
-    },
-    {
-      id: 2,
-      candidateName: 'Michael Chen',
-      jobTitle: 'Mobile Developer',
-      interviewTime: 'Tomorrow, 10:00 AM',
-      status: 'Pending',
-    },
-    {
-      id: 3,
-      candidateName: 'Emma Williams',
-      jobTitle: 'Product Manager',
-      interviewTime: 'Fri, 11:30 AM',
-      status: 'Confirmed',
-    },
-  ];
+  const navigateToJobDetails = (jobId: string) => {
+    // Navigate to job details/applications
+    console.log('Navigate to job:', jobId);
+  };
 
-  const renderStatusIndicator = (status: 'Confirmed' | 'Pending') => (
-    <View
-      style={[
-        styles.statusIndicator,
-        status === 'Confirmed' ? styles.statusConfirmed : styles.statusPending,
-      ]}>
-      <Text style={styles.statusText}>{status}</Text>
-    </View>
-  );
-
-  const QuickStat = ({title, value, icon}) => (
-    <View style={styles.statContainer}>
-      <View style={styles.iconContainer}>
-        <SvgIcon
-          name={icon}
-          width={30}
-          height={30}
-          strokeColor={AppColors.AppButtonBackground}
-        />
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statTitle}>{title}</Text>
-      </View>
-    </View>
-  );
   const makeCall = () => {
     let phoneNumber = '';
     if (Platform.OS === 'android') {
@@ -118,438 +85,449 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <>
-      <View style={styles.headerSection}>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            height: '100%',
-            paddingLeft: 10,
-          }}>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
           <Image
             source={{
               uri: 'https://images.unsplash.com/photo-1729824186570-4d4aede00043?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
             }}
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: 25,
-              overflow: 'hidden',
-            }}
+            style={styles.profileImage}
           />
-          <View style={{paddingLeft: 10}}>
-            <Text style={{fontSize: 20, color: '#333', fontWeight: 600}}>
-              Hi {user?.name}!
-            </Text>
-            <Text style={{fontSize: 14, color: '#666'}}>Good morning</Text>
+          <View>
+            <Text style={styles.welcomeText}>Welcome back,</Text>
+            <Text style={styles.userName}>{user?.name || 'Recruiter'}</Text>
           </View>
         </View>
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            height: '100%',
-            paddingLeft: 10,
-          }}>
-          <View style={{position: 'relative'}}>
-            <TouchableOpacity style={{paddingRight: 10}}>
-              <SvgIcon
-                name="bell"
-                width={30}
-                height={30}
-                strokeColor={AppColors.AppButtonBackground}
-              />
-              <Text
-                style={{
-                  width: 10,
-                  height: 10,
-                  backgroundColor: 'red',
-                  borderRadius: 50,
-                  position: 'absolute',
-                  top: 0,
-                  right: 15,
-                }}></Text>
-            </TouchableOpacity>
-          </View> 
-        </View>
+        <TouchableOpacity style={styles.notificationButton}>
+          <SvgIcon
+            name="bell"
+            width={24}
+            height={24}
+            strokeColor={AppColors.AppButtonBackground}
+          />
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationCount}>3</Text>
+          </View>
+        </TouchableOpacity>
       </View>
-      <ScrollView style={styles.container}>
-        <View style={styles.bannerSlot}>
-          <View style={styles.header}>
-            <Text style={styles.greeting}>Hello, Recruiter 👋</Text>
-            {/* <View style={styles.notificationBadge}>
-            <Text style={styles.notificationText}>3</Text>
-          </View> */}
+
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View style={styles.heroContent}>
+            <Text style={styles.heroTitle}>🚀 Your Job Portal Dashboard</Text>
+            <Text style={styles.heroSubtitle}>
+              Manage your 24-hour job posts and connect with top talent
+            </Text>
+            <TouchableOpacity style={styles.primaryButton} onPress={navigateToAddPost}>
+              <Text style={styles.primaryButtonText}>+ Post New Job</Text>
+            </TouchableOpacity>
           </View>
-
-          <View style={styles.jobSummary}>
-            {/* <View style={styles.summaryHeader}>
-              <Text style={styles.jobTitle}>Open Job Slots: 3</Text>
-              <SvgIcon name="clock" strokeColor="#fff" height={20} width={20} />
+          <View style={styles.heroStats}>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatNumber}>{activeJobs.length}</Text>
+              <Text style={styles.heroStatLabel}>Active Jobs</Text>
             </View>
-            <Text style={styles.jobTime}>⏳ 10:00 AM – 5:00 PM </Text>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, {width: '60%'}]} />
-            </View> */}
-          </View>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <SvgIcon
-                name="briefcase"
-                width={20}
-                height={20}
-                strokeColor="#fff"
-              />
-              <Text style={styles.statNumber}>3</Text>
-              <Text style={styles.statLabel}>Jobs Today</Text>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatNumber}>
+                {activeJobs.reduce((sum, job) => sum + job.applications, 0)}
+              </Text>
+              <Text style={styles.heroStatLabel}>Applications</Text>
             </View>
-            <View style={styles.statCard}>
-              <SvgIcon
-                name="candidate"
-                width={20}
-                height={20}
-                strokeColor="#fff"
-              />
-              <Text style={styles.statNumber}>21</Text>
-              <Text style={styles.statLabel}>Applicants</Text>
+            <View style={styles.heroStat}>
+              <Text style={styles.heroStatNumber}>
+                {activeJobs.reduce((sum, job) => sum + job.views, 0)}
+              </Text>
+              <Text style={styles.heroStatLabel}>Profile Views</Text>
             </View>
-            <View style={styles.statCard}>
-              <SvgIcon
-                name="calendor"
-                width={20}
-                height={20}
-                strokeColor="#fff"
-              />
-              <Text style={styles.statNumber}>2</Text>
-              <Text style={styles.statLabel}>Interviews</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={slotCreationNavigation}>
-            <Text style={styles.createButtonText}> + Create New Job Slot</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.container2}>
-          <Text style={styles.sectionTitle}>Quick Stats</Text>
-          <View style={styles.gridContainer}>
-            {stats.map((stat, index) => (
-              <QuickStat
-                key={index}
-                title={stat.title}
-                value={stat.value}
-                icon={stat.icon}
-              />
-            ))}
           </View>
         </View>
 
-        <View style={styles.container3}>
-          <Text style={styles.sectionTitle3}>Upcoming Interviews</Text>
-          <ScrollView>
-            {interviews.map(interview => (
-              <View key={interview.id} style={styles.interviewItem}>
-                <View style={styles.leftContainer}>
-                  <Text style={styles.candidateName}>
-                    {interview.candidateName}
-                  </Text>
-                  <Text style={styles.jobTitle}>{interview.jobTitle}</Text>
-                  <View style={styles.timeStatusContainer}>
-                    <SvgIcon
-                      name="clock"
-                      width={20}
-                      height={20}
-                      strokeColor="gray"
-                    />
-                    <Text style={styles.interviewTime}>
-                      {interview.interviewTime}
-                    </Text>
-                    {renderStatusIndicator(interview.status)}
-                  </View>
+        {/* Active Jobs Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>🔥 Active Job Posts (24h)</Text>
+            <Text style={styles.sectionSubtitle}>Jobs expiring soon need attention</Text>
+          </View>
+
+          {activeJobs.map((job) => (
+            <TouchableOpacity
+              key={job.id}
+              style={[
+                styles.jobCard,
+                job.status === 'expiring_soon' && styles.expiringSoonCard,
+              ]}
+              onPress={() => navigateToJobDetails(job.id)}
+            >
+              <View style={styles.jobCardHeader}>
+                <View style={styles.jobTitleContainer}>
+                  <Text style={styles.jobTitle}>{job.title}</Text>
+                  {job.status === 'expiring_soon' && (
+                    <View style={styles.expiringBadge}>
+                      <Text style={styles.expiringText}>⚠️ Expiring Soon</Text>
+                    </View>
+                  )}
                 </View>
+                <View style={styles.timeRemaining}>
+                  <SvgIcon name="clock" width={16} height={16} strokeColor="#FF6B35" />
+                  <Text style={styles.timeText}>{job.timeRemaining}</Text>
+                </View>
+              </View>
 
-                <View style={styles.rightContainer}>
-                  <TouchableOpacity
-                    style={styles.callButton}
-                    onPress={makeCall}>
-                    <SvgIcon
-                      name="phone"
-                      width={20}
-                      height={20}
-                      strokeColor={AppColors.AppButtonBackground}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.rescheduleButton}>
-                    <Text style={styles.rescheduleText}>Reschedule</Text>
-                  </TouchableOpacity>
+              <View style={styles.jobStats}>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{job.applications}</Text>
+                  <Text style={styles.statLabel}>Applications</Text>
+                </View>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{job.views}</Text>
+                  <Text style={styles.statLabel}>Views</Text>
+                </View>
+                <TouchableOpacity style={styles.viewButton}>
+                  <Text style={styles.viewButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Quick Stats */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📊 Performance Overview</Text>
+          <View style={styles.statsGrid}>
+            {stats.map((stat, index) => (
+              <View key={index} style={[styles.statCard, {borderLeftColor: stat.color}]}>
+                <View style={[styles.statIcon, {backgroundColor: stat.color + '20'}]}>
+                  <SvgIcon
+                    name={stat.icon}
+                    width={24}
+                    height={24}
+                    strokeColor={stat.color}
+                  />
+                </View>
+                <View style={styles.statContent}>
+                  <Text style={styles.statValue}>{stat.value}</Text>
+                  <Text style={styles.statTitle}>{stat.title}</Text>
                 </View>
               </View>
             ))}
-          </ScrollView>
+          </View>
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>⚡ Quick Actions</Text>
+          <View style={styles.actionsGrid}>
+            <TouchableOpacity style={styles.actionButton} onPress={navigateToAddPost}>
+              <SvgIcon name="plus" width={24} height={24} strokeColor="#fff" />
+              <Text style={styles.actionButtonText}>Post Job</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+              <SvgIcon name="applications" width={24} height={24} strokeColor="#fff" />
+              <Text style={styles.actionButtonText}>View Apps</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={makeCall}>
+              <SvgIcon name="phone" width={24} height={24} strokeColor="#fff" />
+              <Text style={styles.actionButtonText}>Support</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
+              <SvgIcon name="setting" width={24} height={24} strokeColor="#fff" />
+              <Text style={styles.actionButtonText}>Settings</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  headerSection: {
-    marginTop: 1,
-    height: 60,
-    width: '100%',
-    margin: 'auto',
-    display: 'flex',
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-  },
-  bannerSlot: {
-    width: '95%',
-    margin: 'auto',
-    minHeight: 200,
-    padding: 16,
-    backgroundColor: '#694bc3',
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  greeting: {
-    color: AppColors.White,
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  jobSummary: {
-    marginBottom: 16,
-  },
-  jobTitle: {
-    color: AppColors.White,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  jobTime: {
-    color: AppColors.White,
-    fontSize: 14,
-    marginTop: 2,
-    marginBottom: 4,
-  },
-  countdown: {
-    color: '#FFD700',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
-  },
-  statCard: {
-    backgroundColor: '#ffffff20',
-    padding: 10,
-    borderRadius: 8,
-    width: '30%',
-    alignItems: 'center',
-  },
-  statNumber: {
-    color: AppColors.White,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    color: AppColors.White,
-    fontSize: 12,
-  },
-  createButton: {
-    marginTop: 20,
-    backgroundColor: '#fff',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  createButtonText: {
-    color: AppColors.AppButtonBackground,
-    fontWeight: '600',
-    fontSize: 14,
+    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#6c757d',
+    fontWeight: '500',
+  },
+  userName: {
+    fontSize: 18,
+    color: '#212529',
+    fontWeight: '700',
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: '#dc3545',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationCount: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  heroSection: {
+    backgroundColor: AppColors.AppButtonBackground,
+    margin: 16,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  heroContent: {
+    marginBottom: 20,
+  },
+  heroTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontSize: 14,
+    color: '#e8f4fd',
+    lineHeight: 20,
     marginBottom: 16,
   },
-
-  notificationBadge: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    minWidth: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+  primaryButton: {
+    backgroundColor: '#fff',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
-  notificationText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+  primaryButtonText: {
+    color: AppColors.AppButtonBackground,
+    fontSize: 16,
+    fontWeight: '600',
   },
-
-  summaryHeader: {
+  heroStats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  heroStat: {
     alignItems: 'center',
+    flex: 1,
+  },
+  heroStatNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
     marginBottom: 4,
   },
-
-  progressBar: {
-    height: 8,
-    backgroundColor: '#fff',
-    borderRadius: 4,
-    overflow: 'hidden',
+  heroStatLabel: {
+    fontSize: 12,
+    color: '#e8f4fd',
+    textAlign: 'center',
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#00FFAA',
+  section: {
+    marginHorizontal: 16,
+    marginBottom: 24,
   },
-  container2: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    margin: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 0,
+  sectionHeader: {
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212529',
+    marginBottom: 4,
   },
-  gridContainer: {
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  jobCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  expiringSoonCard: {
+    borderColor: '#FF6B35',
+    borderWidth: 2,
+  },
+  jobCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  jobTitleContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  jobTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
+  },
+  expiringBadge: {
+    backgroundColor: '#FFF3CD',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  expiringText: {
+    fontSize: 12,
+    color: '#856404',
+    fontWeight: '600',
+  },
+  timeRemaining: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#FF6B35',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  jobStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#212529',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 2,
+  },
+  viewButton: {
+    backgroundColor: AppColors.AppButtonBackground,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  statContainer: {
-    width: '48%',
-    flexDirection: 'row',
+  statCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    width: (width - 48) / 2,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderLeftWidth: 4,
+    borderLeftColor: '#007bff',
+  },
+  statIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
     marginBottom: 12,
   },
-  iconContainer: {
-    backgroundColor: AppColors.AppBackground,
-    borderRadius: 20,
-    padding: 8,
-    marginRight: 12,
-  },
-  textContainer: {
+  statContent: {
     flex: 1,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#2a2a2a',
+    color: '#212529',
     marginBottom: 4,
   },
   statTitle: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
   },
-
-  container3: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    margin: 16,
-    padding: 16,
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  actionButton: {
+    backgroundColor: AppColors.AppButtonBackground,
+    width: (width - 48) / 2,
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 0,
-    marginBottom: 80,
+    elevation: 3,
   },
-  sectionTitle3: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333',
-  },
-  interviewItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  leftContainer: {
-    flex: 1,
-    marginRight: 12,
-  },
-  candidateName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  jobTitle2: {
+  actionButtonText: {
+    color: '#fff',
     fontSize: 14,
-    color: '#666',
-  },
-  timeStatusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  interviewTime: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
-    marginRight: 8,
-  },
-  statusIndicator: {
-    borderRadius: 12,
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-  },
-  statusConfirmed: {
-    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-  },
-  statusPending: {
-    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-  },
-  rightContainer: {
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-  },
-  callButton: {
-    padding: 8,
-    marginBottom: 8,
-  },
-  rescheduleButton: {
-    borderWidth: 1,
-    borderColor: AppColors.AppButtonBackground,
-    borderRadius: 6,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-  },
-  rescheduleText: {
-    color: AppColors.AppButtonBackground,
-    fontSize: 12,
     fontWeight: '600',
+    marginTop: 8,
   },
 });
 
