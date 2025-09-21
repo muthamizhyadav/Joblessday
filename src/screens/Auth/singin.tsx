@@ -117,7 +117,7 @@ const SigninScreen: React.FC = () => {
           />
           <TouchableHighlight style={styles.forgotPassword}>
             <Text
-              style={{color: '#6d28d9', fontSize: 16, fontWeight: '700'}}
+              style={{color: '#694bc3', fontSize: 16, fontWeight: '700'}}
               onPress={() => navigation.navigate('Forgot')}>
               Forgot Password?
             </Text>
@@ -146,7 +146,7 @@ const SigninScreen: React.FC = () => {
               <Text style={styles.googleText}>
                 Don't have an account?{' '}
                 <Text
-                  style={{color: '#6d28d9', fontWeight: 700}}
+                  style={{color: '#694bc3', fontWeight: 700}}
                   onPress={() => navigation.navigate('Onboard')}>
                   Signup
                 </Text>
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontSize: 32,
     fontWeight: '800',
-    color: '#6d28d9',
+    color: '#694bc3',
     fontFamily: FontFamily.Inter.Bold,
   },
   emailInputContainer: {

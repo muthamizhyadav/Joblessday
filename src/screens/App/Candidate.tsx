@@ -93,42 +93,70 @@ const CandidateScreen: React.FC = () => {
     recruiterId,
   }) => {
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() =>
-          navigation.navigate('candidatedetail', {
-            id: candidateId,
-            status: status,
-            jobId: jobId,
-            recruiterId: recruiterId,
-          })
-        }>
-        {/* Header Row */}
-        <View style={styles.Cardheader}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={[styles.match, {color: getStatusColor(match)}]}>
-            {match.charAt(0).toUpperCase() + match?.slice(1)}
-          </Text>
-        </View>
-
-        {/* Position Details */}
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.location}>📍 {location}</Text>
-          <Text style={styles.experience}>
-            ⏳ {experience == 'fresher' ? experience : `${experience} Years`}
-          </Text>
-        </View>
-
-        {/* Skills Chips */}
-        <View style={styles.skillsContainer}>
-          {skills.map((skill, index) => (
-            <View key={index} style={styles.skill}>
-              <Text style={styles.skillText}>{skill}</Text>
+      <TouchableWithoutFeedback onPress={() => navigation.navigate('candidatedetail', {id: candidateId})}>
+        <View style={styles.card}>
+          <View style={styles.cardGlow}></View>
+          <View style={styles.cardHeader}>
+            <View style={styles.titleContainer}>
+              <SvgIcon name="user" width={24} height={24} strokeColor={AppColors.AppButtonBackground} />
+              <Text style={styles.cardTitle}>{name}</Text>
             </View>
-          ))}
+            <View style={[styles.statusBadge, match?.toLowerCase() === 'pending' ? styles.pendingBadge : match?.toLowerCase() === 'scheduled' ? styles.scheduledBadge : styles.rejectedBadge]}>
+              <Text style={[styles.statusText, match?.toLowerCase() === 'pending' ? styles.pendingText : match?.toLowerCase() === 'scheduled' ? styles.scheduledText : styles.rejectedText]}>
+                {match}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.cardContent}>
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <View style={styles.iconContainer}>
+                  <SvgIcon name="job" width={18} height={18} strokeColor="#64748b" />
+                </View>
+                <Text style={styles.infoLabel}>Position</Text>
+                <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{title}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <View style={styles.iconContainer}>
+                  <SvgIcon name="location" width={18} height={18} strokeColor="#64748b" />
+                </View>
+                <Text style={styles.infoLabel}>Location</Text>
+                <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{location}</Text>
+              </View>
+            </View>
+
+            <View style={styles.infoRow}>
+              <View style={styles.infoItem}>
+                <View style={styles.iconContainer}>
+                  <SvgIcon name="experience" width={18} height={18} strokeColor="#64748b" />
+                </View>
+                <Text style={styles.infoLabel}>Experience</Text>
+                <Text style={styles.infoValue}>{experience === 'fresher' ? 'Fresher' : `${experience} Years`}</Text>
+              </View>
+              <View style={styles.infoItem}>
+                <View style={styles.iconContainer}>
+                  <SvgIcon name="skills" width={18} height={18} strokeColor="#64748b" />
+                </View>
+                <Text style={styles.infoLabel}>Skills</Text>
+                <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{skills?.slice(0, 3).join(', ')}{skills?.length > 3 ? '...' : ''}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.cardFooter}>
+            <View style={styles.applicationsContainer}>
+              <SvgIcon name="clock" width={18} height={18} strokeColor={AppColors.AppButtonBackground} />
+              <Text style={styles.applicationsText}>Applied recently</Text>
+            </View>
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity style={[styles.actionButton, styles.viewButton]} onPress={() => navigation.navigate('candidatedetail', {id: candidateId})}>
+                <Text style={styles.viewButtonText}>View</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </TouchableOpacity>
+      </TouchableWithoutFeedback>
     );
   };
 
@@ -332,74 +360,158 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    backgroundColor: '#f3f0ff',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: AppColors.AppButtonBackground,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(105, 75, 195, 0.15)',
   },
-  Cardheader: {
+  cardGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: AppColors.AppButtonBackground,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: AppColors.AppButtonBackground,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+  },
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A237E',
-  },
-  match: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#4CAF50',
-  },
-  title: {
-    fontSize: 16,
-    color: '#424242',
-    marginBottom: 8,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 12,
-  },
-  location: {
-    color: '#616161',
-    fontSize: 14,
-  },
-  experience: {
-    color: '#616161',
-    fontSize: 14,
-  },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    alignItems: 'center',
     marginBottom: 16,
   },
-  skill: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  skillText: {
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginLeft: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 25,
+    borderWidth: 1,
+  },
+  pendingBadge: {
+    backgroundColor: 'rgba(249, 115, 22, 0.2)',
+    borderColor: '#f97316',
+  },
+  scheduledBadge: {
+    backgroundColor: 'rgba(22, 163, 74, 0.2)',
+    borderColor: '#16a34a',
+  },
+  rejectedBadge: {
+    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+    borderColor: '#dc2626',
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  pendingText: {
+    color: '#ea580c',
+  },
+  scheduledText: {
+    color: '#15803d',
+  },
+  rejectedText: {
+    color: '#dc2626',
+  },
+  cardContent: {
+    marginBottom: 16,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  infoItem: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginRight: 12,
+    maxWidth: '48%',
+  },
+  iconContainer: {
+    marginBottom: 6,
+    alignSelf: 'flex-start',
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#334155',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  applicationsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  applicationsText: {
+    fontSize: 13,
+    color: AppColors.AppButtonBackground,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  viewButton: {
+    backgroundColor: '#e5e7eb',
+    borderColor: '#9ca3af',
+  },
+  viewButtonText: {
     fontSize: 12,
-    color: '#424242',
+    fontWeight: '700',
+    color: '#374151',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   status: {
     alignSelf: 'flex-start',
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
   },
   modal: {
     height: '40%',

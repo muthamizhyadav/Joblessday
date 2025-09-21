@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     margin: 'auto',
     minHeight: 200,
     padding: 16,
-    backgroundColor: AppColors.AppButtonBackground,
+    backgroundColor: '#694bc3',
     borderRadius: 10,
     marginTop: 10,
   },

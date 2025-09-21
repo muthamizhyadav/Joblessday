@@ -10,7 +10,7 @@ import SvgIcon from '../shared/Svg';
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
-const PRIMARY_COLOR = '#6d28d9';
+const PRIMARY_COLOR = '#694bc3';
 const SECONDARY_COLOR = '#fff';
 
 const CustomNavBar: React.FC<BottomTabBarProps> = ({

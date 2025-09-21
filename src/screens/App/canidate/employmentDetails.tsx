@@ -134,10 +134,10 @@ const EmploymentDetails: React.FC = () => {
   ];
 
   const indianLanguages = [
-    'English', 'Hindi', 'Bengali', 'Telugu', 'Marathi', 'Tamil', 'Gujarati', 'Urdu',
-    'Kannada', 'Odia', 'Malayalam', 'Punjabi', 'Assamese', 'Maithili', 'Sanskrit',
+    'English','Tamil', 'Malayalam', 'Telugu',  'Kannada', 'Hindi', 'Bengali','Marathi',  'Gujarati', 'Urdu',
+     'Odia', 'Punjabi', 'Assamese', 'Maithili', 'Sanskrit',
     'Konkani', 'Nepali', 'Manipuri', 'Sindhi', 'Kashmiri', 'Santali', 'Dogri',
-    'Bodo', 'Sinhala', 'Mizo', 'Khasi', 'Garo', 'Tripuri', 'Kokborok'
+    'Bodo', 'Sinhala', 'Mizo', 'Khasi', 'Garo', 'Tripuri',
   ];
 
   const getInitialValues = (): any => {
@@ -500,7 +500,7 @@ const EmploymentDetails: React.FC = () => {
                 styles.languageBatchText,
                 selectedLanguages.includes(language) && styles.selectedLanguageBatchText
               ]}>
-                <Text style={{fontWeight: 'bold', marginRight: 8}}>+</Text>{language}
+                <Text style={{fontWeight: 'bold', marginRight: 8}}></Text>{language}
               </Text>
             </TouchableOpacity>
           ))}
@@ -591,7 +591,7 @@ const EmploymentDetails: React.FC = () => {
                 styles.languageBatchText,
                 selectedLanguages.includes(language) && styles.selectedLanguageBatchText
               ]}>
-                <Text style={{fontWeight: 'bold', marginRight: 8}}>+</Text>{language}
+                <Text style={{fontWeight: 'bold', marginRight: 8}}></Text>{language}
               </Text>
             </TouchableOpacity>
           ))}

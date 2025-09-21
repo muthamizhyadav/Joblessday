@@ -33,8 +33,10 @@ export const OTPSchema = Yup.object().shape({
 });
 
 export const SetPasswordSchema = Yup.object().shape({
-    password: Yup.string().required("Password required").min(3),
-    confirmPassword: Yup.string()
-        .required("Confirm Password is required")
-        .oneOf([Yup.ref("password")], "Passwords must match"),
+    pin: Yup.string()
+        .required("PIN is required")
+        .matches(/^\d{4}$/, "PIN must be exactly 4 digits"),
+    confirmPin: Yup.string()
+        .required("Confirm PIN is required")
+        .oneOf([Yup.ref("pin")], "PINs must match"),
 });

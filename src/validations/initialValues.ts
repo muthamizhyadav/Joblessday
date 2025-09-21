@@ -19,6 +19,6 @@ export const OTPinitValue = {
 }
 
 export const SetPasswordinitValue = {
-    password: '',
-    confirmPassword: ''
+    pin: '',
+    confirmPin: ''
 }

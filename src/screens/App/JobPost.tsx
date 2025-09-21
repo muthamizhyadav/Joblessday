@@ -153,76 +153,75 @@ const JobPostScreen: React.FC = () => {
     active,
     _id,
   }) => (
-    <View style={styles.card} key={_id}>
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={styles.label}>Industry:</Text>
-          <Text style={styles.text}>{industry}</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={styles.label}>Role:</Text>
-          <Text style={styles.text}>{role}</Text>
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={styles.label}>Department:</Text>
-          <Text style={styles.text}>{department}</Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={styles.label}>Designation:</Text>
-          <Text style={styles.text}>{designation}</Text>
-        </View>
-      </View>
-
-      <View style={styles.row}>
-        <View style={styles.column}>
-          <Text style={styles.label}>Salary:</Text>
-          <Text style={styles.text}>
-            <NumberFormatter
-              value={salaryfrom}
-              symbol="₹"
-              thousandSeparator=","
-            />{' '}
-            -{' '}
-            <NumberFormatter
-              value={salaryto}
-              symbol="₹"
-              thousandSeparator=","
-            />
-          </Text>
-        </View>
-        <View style={styles.column}>
-          <Text style={styles.label}>Status:</Text>
-          <TouchableOpacity
-            style={[
-              styles.batch,
-              active ? styles.activeBackground : styles.inactiveBackground,
-            ]}>
-            <Text style={[active ? styles.activeText : styles.inactiveText]}>
+    <TouchableWithoutFeedback onPress={() => navigation.navigate('jobdetail', {id: _id})}>
+      <View style={styles.card}>
+        <View style={styles.cardGlow}></View>
+        <View style={styles.cardHeader}>
+          <View style={styles.titleContainer}>
+            <SvgIcon name="job" width={24} height={24} strokeColor={AppColors.AppButtonBackground} />
+            <Text style={styles.cardTitle}>{role}</Text>
+          </View>
+          <View style={[styles.statusBadge, active ? styles.activeBadge : styles.inactiveBadge]}>
+            <Text style={[styles.statusText, active ? styles.activeText : styles.inactiveText]}>
               {active ? 'Active' : 'Inactive'}
             </Text>
-          </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.cardContent}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <View style={styles.iconContainer}>
+                <SvgIcon name="industry" width={18} height={18} strokeColor="#64748b" />
+              </View>
+              <Text style={styles.infoLabel}>Industry</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{industry}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <View style={styles.iconContainer}>
+                <SvgIcon name="department" width={18} height={18} strokeColor="#64748b" />
+              </View>
+              <Text style={styles.infoLabel}>Department</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{department}</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoItem}>
+              <View style={styles.iconContainer}>
+                <SvgIcon name="designation" width={18} height={18} strokeColor="#64748b" />
+              </View>
+              <Text style={styles.infoLabel}>Designation</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">{designation}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <View style={styles.iconContainer}>
+                <SvgIcon name="salary" width={18} height={18} strokeColor="#64748b" />
+              </View>
+              <Text style={styles.infoLabel}>Salary Range</Text>
+              <Text style={styles.infoValue} numberOfLines={1} ellipsizeMode="tail">
+                ₹{salaryfrom.toLocaleString()} - ₹{salaryto.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.cardFooter}>
+          <View style={styles.applicationsContainer}>
+            <SvgIcon name="applications" width={18} height={18} strokeColor={AppColors.AppButtonBackground} />
+            <Text style={styles.applicationsText}>1,250 Applications</Text>
+          </View>
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => handleEditChange(_id)}>
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionButton, styles.deleteActionButton]} onPress={() => (setPopupVisible(true), setDeleteId(_id))}>
+              <Text style={styles.deleteButtonText}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      <View style={styles.br}></View>
-      <View style={styles.cardBottom}>
-        <View style={styles.application}>
-          <SvgIcon name="applications" strokeColor="#552bac" />
-          <Text style={styles.applicationText}>Applications : 1000</Text>
-        </View>
-        <View style={{display: 'flex', flexDirection: 'row', gap: 5}}>
-          <TouchableOpacity onPress={() => handleEditChange(_id)}>
-            <SvgIcon name="edit" strokeColor="gray" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => (setPopupVisible(true), setDeleteId(_id))}>
-            <SvgIcon name="delet" strokeColor="red" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
   // );
 
@@ -427,96 +426,155 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 0,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  text: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
-  },
-  listContainer: {
-    padding: 16,
+    backgroundColor: '#c9brr9',
+    borderRadius: 20,
+    padding: 24,
     marginBottom: 20,
+    shadowColor: AppColors.AppButtonBackground,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(105, 75, 195, 0.15)',
   },
-
-  textAlign: {
-    display: 'flex',
+  cardGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 2,
+    right: 2,
+    height: 8,
+    backgroundColor: AppColors.AppButtonBackground,
+    borderTopLeftRadius: 100,
+    borderTopRightRadius: 100,
+    shadowColor: AppColors.AppButtonBackground,
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+  },
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  row: {
+  titleContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    flex: 1,
   },
-  column: {
-    width: '50%',
-    display: 'flex',
-    justifyContent: 'space-between',
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1e293b',
+    marginLeft: 12,
   },
-  batch: {
-    width: 70,
-    padding: 4,
-    borderRadius: 5,
+  statusBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 25,
+    borderWidth: 1,
   },
-  batchText: {
-    textAlign: 'center',
-    fontWeight: '800',
+  activeBadge: {
+    backgroundColor: 'rgba(34, 197, 94, 0.2)',
+    borderColor: '#22c55e',
   },
-  activeBackground: {
-    backgroundColor: '#cffce6',
+  inactiveBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: '#ef4444',
   },
-  inactiveBackground: {
-    backgroundColor: '#fee2e2',
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   activeText: {
-    color: '#047857',
-    textAlign: 'center',
-    fontWeight: '800',
+    color: '#4ade80',
   },
   inactiveText: {
-    color: '#dc2626',
-    textAlign: 'center',
-    fontWeight: '800',
+    color: '#f87171',
   },
-  br: {
-    marginTop: 10,
-    height: 1,
-    width: '100%',
-    backgroundColor: 'gray',
+  cardContent: {
+    marginBottom: 16,
   },
-  cardBottom: {
-    display: 'flex',
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    marginBottom: 16,
+  },
+  infoItem: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginRight: 12,
+    maxWidth: '48%',
+  },
+  iconContainer: {
+    marginBottom: 6,
+    alignSelf: 'flex-start',
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#334155',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  application: {
-    height: '100%',
+  applicationsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  applicationText: {
-    fontSize: 16,
-    marginLeft: 4,
-    color: '#552bac',
-    fontWeight: 600,
+  applicationsText: {
+    fontSize: 13,
+    color: AppColors.AppButtonBackground,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+  },
+  actionButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginLeft: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  editButton: {
+    backgroundColor: '#e5e7eb',
+    borderColor: '#9ca3af',
+  },
+  editButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#374151',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  deleteActionButton: {
+    backgroundColor: '#fecaca',
+    borderColor: '#f87171',
+  },
+  deleteButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#dc2626',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   modal: {
     height: '40%',
