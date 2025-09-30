@@ -58,7 +58,22 @@ const RoleCard = ({
   const handlePress = () => {
     onSelect(id);
     setTimeout(() => {
-      navigation.navigate(route, params);
+      // Handle role-based navigation with proper parameters
+      if (id === 1) {
+        // Recruiter role
+        navigation.navigate('Signup', { 
+          role: 'recruiter', 
+          userType: 'recruiter',
+          fromOnboard: true 
+        });
+      } else if (id === 2) {
+        // Job Seeker role  
+        navigation.navigate('Signup', { 
+          role: 'candidate', 
+          userType: 'jobseeker',
+          fromOnboard: true 
+        });
+      }
     }, 300);
   };
 
@@ -80,34 +95,75 @@ const RoleCard = ({
           isSelected && styles.roleCardSelected,
         ]}>
         <View style={styles.roleCardContent}>
-          {/* Icon Section */}
-          <View style={styles.roleCardIconSection}>
-            <View style={styles.roleCardIconContainer}>
+          {/* Trending Design Background */}
+          <LinearGradient
+            colors={isSelected ? ['#694bc3', '#8b5fbf'] : ['#f8f9ff', '#ffffff']}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={styles.cardGradientBackground}
+          />
+
+          {/* Highlighter Design Elements */}
+          <View style={styles.highlighterContainer}>
+            <View style={[styles.highlighterLine, isSelected && styles.highlighterLineSelected]} />
+            <View style={[styles.highlighterDot, isSelected && styles.highlighterDotSelected]} />
+          </View>
+
+          {/* Modern Card Layout */}
+          <View style={styles.modernCardLayout}>
+            {/* Left Section - Icon */}
+            <View style={styles.iconSection}>
+              <View style={[
+                styles.modernIconContainer,
+                isSelected && styles.modernIconContainerSelected
+              ]}>
+                <SvgIcon
+                  name={icon}
+                  height={32}
+                  width={32}
+                  color={isSelected ? "#fff" : "#694bc3"}
+                />
+              </View>
+            </View>
+
+            {/* Right Section - Content */}
+            <View style={styles.contentSection}>
+              <Text style={[
+                styles.modernCardTitle,
+                isSelected && styles.modernCardTitleSelected
+              ]}>
+                {title}
+              </Text>
+              <Text style={[
+                styles.modernCardDescription,
+                isSelected && styles.modernCardDescriptionSelected
+              ]}>
+                {description}
+              </Text>
+            </View>
+
+            {/* Selection Arrow */}
+            <View style={styles.arrowSection}>
               <SvgIcon
-                name={icon}
-                height={32}
-                width={32}
-                color="#fff"
+                name="right"
+                height={20}
+                width={20}
+                color={isSelected ? "#fff" : "#694bc3"}
               />
             </View>
           </View>
 
-          {/* Text Section */}
-          <View style={styles.roleCardTextSection}>
-            <Text style={styles.roleCardTitle}>
-              {title}
-            </Text>
-            <Text style={styles.roleCardDescription}>
-              {description}
-            </Text>
-          </View>
-
-          {/* Selection Indicator */}
-          <View style={styles.roleCardSelectionContainer}>
-            {isSelected && (
-              <View style={styles.roleCardSelectionDot} />
-            )}
-          </View>
+          {/* Floating Selection Indicator */}
+          {isSelected && (
+            <View style={styles.floatingIndicator}>
+              <SvgIcon
+                name="tick"
+                height={16}
+                width={16}
+                color="#fff"
+              />
+            </View>
+          )}
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -166,9 +222,6 @@ const OnboardScreen = () => {
               transform: [{translateY: slideAnim}],
             },
           ]}>
-          {/* Header Section */}
-          <View style={styles.headerContainer} />
-
           {/* Role Selection */}
           <View style={styles.selectionContainer}>
             <View style={styles.selectionHeader}>
@@ -179,17 +232,17 @@ const OnboardScreen = () => {
             </View>
 
             <Text style={styles.selectionSubtitle}>
-              Select how you'd like to use our platform
+              Choose your path to get started
             </Text>
 
             <View style={styles.cardsContainer}>
               <RoleCard
                 id={1}
-                title="I'm a Recruiter"
-                icon="recruiter"
+                title="Hire Talent"
+                icon="candidate"
                 route="Signup"
                 params={{id: 1}}
-                description="Post jobs, find talent, and build your dream team"
+                description="Post jobs and find the perfect candidates for your company"
                 selected={selected}
                 onSelect={handleRoleSelect}
                 navigation={navigation}
@@ -197,11 +250,11 @@ const OnboardScreen = () => {
 
               <RoleCard
                 id={2}
-                title="I'm a Job Seeker"
-                icon="jobseaker"
-                route="NewPassword"
+                title="Find Jobs"
+                icon="search"
+                route="Signup"
                 params={{id: 2}}
-                description="Discover opportunities and advance your career"
+                description="Explore opportunities and grow your career"
                 selected={selected}
                 onSelect={handleRoleSelect}
                 navigation={navigation}
@@ -222,7 +275,7 @@ const OnboardScreen = () => {
         <View style={styles.footerContent}>
           <Text style={styles.footerText}>Already have an account?</Text>
           <TouchableOpacity
-            onPress={() => navigation.navigate('signin' as never)}
+            onPress={() => navigation.navigate('singin' as never)}
             style={styles.signInButton}>
             <Text style={styles.signInText}>Sign In</Text>
           </TouchableOpacity>
@@ -294,13 +347,15 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingTop: 80,
+    paddingTop: 40,
     paddingBottom: 120,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
+    minHeight: '100%',
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
+    paddingHorizontal: 16,
   },
   welcomeTitle: {
     fontSize: 36,
@@ -349,12 +404,14 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingHorizontal: 20,
+    marginTop: 40,
   },
   cardsContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     width: '100%',
-    justifyContent: 'space-between',
-    paddingHorizontal: 5,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 20,
   },
   selectionTitle: {
     fontSize: 32,
@@ -438,16 +495,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#fff',
-    shadowColor: '#000',
+    shadowColor: '#694bc3',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 6,
     },
     shadowOpacity: 0.15,
     shadowRadius: 16,
     elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    borderWidth: 2,
+    borderColor: 'rgba(105, 75, 195, 0.15)',
   },
   roleCardSelected: {
     shadowColor: '#694bc3',
@@ -455,51 +512,58 @@ const styles = StyleSheet.create({
       width: 0,
       height: 12,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 16,
-    borderColor: 'rgba(105, 75, 195, 0.2)',
+    shadowOpacity: 0.3,
+    shadowRadius: 28,
+    elevation: 20,
+    borderColor: '#694bc3',
+    borderWidth: 3,
+    transform: [{scale: 1.02}],
   },
   roleCardContent: {
-    padding: 24,
-    alignItems: 'center',
-    minHeight: 200,
+    position: 'relative',
+    overflow: 'hidden',
+    minHeight: 80,
   },
   roleCardIconSection: {
-    marginBottom: 16,
+    marginBottom: 20,
+    alignItems: 'center',
   },
   roleCardIconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#694bc3',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#694bc3',
-    shadowOffset: {width: 0, height: 4},
+    shadowOffset: {width: 0, height: 6},
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 8,
+    marginBottom: 4,
   },
   roleCardTextSection: {
     alignItems: 'center',
-    marginBottom: 16,
+    flex: 1,
+    justifyContent: 'center',
   },
   roleCardTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: FontFamily.Inter.Bold,
     color: '#1a1a1a',
     textAlign: 'center',
-    marginBottom: 10,
-    letterSpacing: 0.3,
+    marginBottom: 12,
+    letterSpacing: 0.5,
+    lineHeight: 26,
   },
   roleCardDescription: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: FontFamily.Inter.Regular,
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
-    maxWidth: 140,
+    paddingHorizontal: 8,
+    flexShrink: 1,
   },
   roleCardSelectionContainer: {
     position: 'absolute',
@@ -521,10 +585,169 @@ const styles = StyleSheet.create({
   },
   animatedContainer: {
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 4,
+    width: '100%',
+    flex: 1,
+    justifyContent: 'center',
   },
   roleCardContainer: {
+    width: '100%',
+    maxWidth: 600,
+    minWidth: 320,
+  },
+  roleCardBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.1,
+  },
+  illustrationCircle1: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#694bc3',
+    opacity: 0.3,
+  },
+  illustrationCircle2: {
+    position: 'absolute',
+    bottom: 15,
+    left: 15,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#694bc3',
+    opacity: 0.2,
+  },
+  // Modern Trending Design Styles
+  cardGradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modernCardLayout: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 28,
+    minHeight: 120,
+  },
+  iconSection: {
+    marginRight: 16,
+  },
+  modernIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(105, 75, 195, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(105, 75, 195, 0.2)',
+  },
+  modernIconContainerSelected: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  contentSection: {
     flex: 1,
-    marginHorizontal: 2,
+    paddingRight: 12,
+  },
+  modernCardTitle: {
+    fontSize: 18,
+    fontFamily: FontFamily.Inter.Bold,
+    color: '#1a1a1a',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  modernCardTitleSelected: {
+    color: '#fff',
+  },
+  modernCardDescription: {
+    fontSize: 14,
+    fontFamily: FontFamily.Inter.Regular,
+    color: '#666',
+    lineHeight: 20,
+    letterSpacing: 0.1,
+  },
+  modernCardDescriptionSelected: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  arrowSection: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(105, 75, 195, 0.1)',
+  },
+  floatingIndicator: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#4CAF50',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  // Highlighter Design Styles
+  highlighterContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  highlighterLine: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 4,
+    backgroundColor: 'rgba(105, 75, 195, 0.3)',
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  highlighterLineSelected: {
+    backgroundColor: '#FFD700',
+    width: 6,
+    shadowColor: '#FFD700',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  highlighterDot: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(105, 75, 195, 0.4)',
+  },
+  highlighterDotSelected: {
+    backgroundColor: '#FFD700',
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    shadowColor: '#FFD700',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });

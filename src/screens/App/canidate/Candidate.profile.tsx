@@ -6,6 +6,8 @@ import {
   Image,
   ScrollView,
   ActivityIndicator,
+  Alert,
+  Dimensions,
 } from 'react-native';
 import {AppColors} from '../../../constants/colors.config';
 import SvgIcon from '../../../shared/Svg';
@@ -34,6 +36,14 @@ import {
 } from '../../../api/api';
 import DatePickerComponent from '../../../shared/dateTimePicker';
 import moment from 'moment';
+import * as Animatable from 'react-native-animatable';
+
+// Chart Components
+import SkillsChart from '../../../components/charts/SkillsChart';
+import ExperienceChart from '../../../components/charts/ExperienceChart';
+import EducationProgress from '../../../components/charts/EducationProgress';
+import ResumeSummary from '../../../components/resume/ResumeSummary';
+import ResumeActions from '../../../components/resume/ResumeActions';
 
 const EditUploadComponents = ({onClose}) => {
   const {user} = useSelector((state: any) => state.app.data);
@@ -71,7 +81,7 @@ const EditUploadComponents = ({onClose}) => {
       }
       console.log(formData, 'LPLP');
 
-      request({id:user._id, formData});
+      request({id:user._id, data: formData});
     },
   });
 
@@ -406,6 +416,7 @@ export const CandidateProfile: React.FC = () => {
   const [popupVisibleExpertise, setPopupVisibleExpertise] = useState(false);
   const [popupVisibleProfile, setPopupVisibleProfile] = useState(false);
   const [popupVisibleExperience, setPopupVisibleExperience] = useState(false);
+  const [viewMode, setViewMode] = useState<'profile' | 'resume'>('resume');
 
   const [candidateRequest, candidateResponse] = useGetCandidateDetailMutation();
   const [id, setId] = useState(CandidateDetails?.user?._id);
@@ -415,6 +426,88 @@ export const CandidateProfile: React.FC = () => {
   const Logout = async () => {
     await persistor.purge();
     navigation.navigate('singin');
+  };
+
+  const downloadResumeAsPDF = () => {
+    Alert.alert(
+      'Download Resume',
+      'Resume download functionality will be implemented soon.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const shareProfile = () => {
+    Alert.alert(
+      'Share Profile',
+      'Profile sharing functionality will be implemented soon.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const getAllSkills = () => {
+    if (!user?.educationDetails || user.educationDetails.length === 0) {
+      // Return dummy skills if no data
+      return ['React Native', 'JavaScript', 'TypeScript', 'Node.js', 'MongoDB', 'Git', 'UI/UX Design'];
+    }
+    return user.educationDetails.reduce((skills: string[], edu: any) => {
+      if (edu.keySkill) {
+        return [...skills, ...edu.keySkill];
+      }
+      return skills;
+    }, []);
+  };
+
+  const getDummyExperienceData = () => {
+    if (user?.employmentDetails && user.employmentDetails.length > 0) {
+      return user.employmentDetails;
+    }
+    // Return dummy experience data
+    return [
+      {
+        CompanyName: 'Tech Solutions Inc',
+        role: 'Frontend Developer',
+        fromDate: '2022-01-01',
+        toDate: '2024-06-01',
+        experience: 2.5
+      },
+      {
+        CompanyName: 'Digital Agency',
+        role: 'Mobile Developer',
+        fromDate: '2021-06-01',
+        toDate: '2021-12-31',
+        experience: 0.6
+      },
+      {
+        CompanyName: 'StartupXYZ',
+        role: 'Junior Developer',
+        fromDate: '2020-08-01',
+        toDate: '2021-05-31',
+        experience: 0.8
+      }
+    ];
+  };
+
+  const getDummyEducationData = () => {
+    if (user?.educationDetails && user.educationDetails.length > 0) {
+      return user.educationDetails;
+    }
+    // Return dummy education data
+    return [
+      {
+        degree: 'Bachelor of Computer Science',
+        institution: 'University of Technology',
+        year: '2020-05-01',
+        grade: '85%',
+        keySkill: ['Programming', 'Data Structures', 'Algorithms', 'Web Development']
+      },
+      {
+        degree: '12th Grade',
+        institution: 'Modern High School',
+        year: '2016-05-01',
+        grade: '92%',
+        keySkill: ['Mathematics', 'Physics', 'Chemistry']
+      }
+    ];
   };
 
   useEffect(() => {
@@ -449,20 +542,47 @@ export const CandidateProfile: React.FC = () => {
   ]);
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header Section */}
-      <View style={{margin: 'auto'}}>
-        {candidateResponse.isLoading ? (
-          <View style={{height: '100%', marginTop: '100%'}}>
-            <ActivityIndicator
-              size={'large'}
-              color={AppColors.headerBackground}
-            />
-          </View>
-        ) : (
-          user && (
-            <View style={{marginBottom: 50}}>
-              <View style={styles.header}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {candidateResponse.isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator
+            size={'large'}
+            color={AppColors.headerBackground}
+          />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </View>
+      ) : (
+        user && (
+          <View style={styles.profileContainer}>
+            {/* Header Section with Mode Toggle */}
+            <Animatable.View animation="slideInDown" duration={600} style={styles.header}>
+              <View style={styles.headerTop}>
+                <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
+                  <SvgIcon name="power" strokeColor="red" width={16} height={16} />
+                  <Text style={styles.logoutText}>Logout</Text>
+                </TouchableOpacity>
+                
+                <View style={styles.modeToggle}>
+                  <TouchableOpacity
+                    style={[styles.modeButton, viewMode === 'resume' && styles.activeModeButton]}
+                    onPress={() => setViewMode('resume')}
+                  >
+                    <Text style={[styles.modeButtonText, viewMode === 'resume' && styles.activeModeButtonText]}>
+                      Resume
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modeButton, viewMode === 'profile' && styles.activeModeButton]}
+                    onPress={() => setViewMode('profile')}
+                  >
+                    <Text style={[styles.modeButtonText, viewMode === 'profile' && styles.activeModeButtonText]}>
+                      Profile
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.profileHeaderContent}>
                 <Image
                   source={
                     user?.profileImage
@@ -473,210 +593,280 @@ export const CandidateProfile: React.FC = () => {
                   resizeMode="cover"
                 />
                 <Text style={styles.name}>{user.name}</Text>
-                <Text style={styles.position}>{user.headline ?? 'N / A'}</Text>
+                <Text style={styles.position}>{user.headline ?? 'Professional'}</Text>
 
+                {/* Contact Info - Compact */}
+                <View style={styles.compactContactInfo}>
+                  <View style={styles.contactChip}>
+                    <SvgIcon name="email" strokeColor="#666" width={14} height={14} />
+                    <Text style={styles.contactChipText}>{user.email}</Text>
+                  </View>
+                  <View style={styles.contactChip}>
+                    <SvgIcon name="phone" strokeColor="#666" width={14} height={14} />
+                    <Text style={styles.contactChipText}>{user.contact}</Text>
+                  </View>
+                  <View style={styles.contactChip}>
+                    <SvgIcon name="location" strokeColor="#666" width={14} height={14} />
+                    <Text style={styles.contactChipText}>{`${user.city}, ${user.state}`}</Text>
+                  </View>
+                </View>
+              </View>
+            </Animatable.View>
+
+            {viewMode === 'resume' ? (
+              // Resume View with Charts and Analytics
+              <View style={styles.resumeView}>
+                {/* Resume Actions */}
+                <ResumeActions
+                  onDownloadResume={downloadResumeAsPDF}
+                  onShareResume={shareProfile}
+                  onEditProfile={() => {
+                    setPopupVisibleProfile(true);
+                    SetreadyToReload(true);
+                  }}
+                  candidateName={user.name}
+                />
+
+                {/* Professional Summary */}
+                <ResumeSummary 
+                  user={{
+                    ...user,
+                    educationDetails: getDummyEducationData(),
+                    employmentDetails: getDummyExperienceData()
+                  }} 
+                />
+
+                {/* Skills Chart */}
+                <SkillsChart skills={getAllSkills()} />
+
+                {/* Experience Chart */}
+                <ExperienceChart experiences={getDummyExperienceData()} />
+
+                {/* Education Progress */}
+                <EducationProgress educationDetails={getDummyEducationData()} />
+
+                {/* Bio Section */}
+                {user?.bio && (
+                  <Animatable.View animation="fadeInUp" duration={800} style={styles.sectionContainer}>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Professional Summary</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPopupVisibleBio(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="edit" strokeColor={AppColors.headerBackground} width={20} height={20} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.bioText}>{user.bio}</Text>
+                  </Animatable.View>
+                )}
+
+                {/* Add sections prompts for empty data */}
+                {(!user.bio || getAllSkills().length === 0 || !user.employmentDetails || user.employmentDetails.length === 0) && (
+                  <Animatable.View animation="pulse" iterationCount="infinite" duration={2000} style={styles.prompts}>
+                    <Text style={styles.promptTitle}>Complete Your Resume</Text>
+                    
+                    {!user.bio && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleBio(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Professional Summary</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {getAllSkills().length === 0 && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleExpertise(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Skills & Expertise</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {(!user.employmentDetails || user.employmentDetails.length === 0) && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleExperience(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Work Experience</Text>
+                      </TouchableOpacity>
+                    )}
+                  </Animatable.View>
+                )}
+
+                {/* Bio Section */}
+                {user?.bio && (
+                  <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionTitle}>Professional Summary</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPopupVisibleBio(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="edit" strokeColor={AppColors.headerBackground} width={20} height={20} />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.bioText}>{user.bio}</Text>
+                  </View>
+                )}
+
+                {/* Add sections prompts for empty data */}
+                {(!user.bio || getAllSkills().length === 0 || !user.employmentDetails || user.employmentDetails.length === 0) && (
+                  <View style={styles.prompts}>
+                    <Text style={styles.promptTitle}>Complete Your Resume</Text>
+                    
+                    {!user.bio && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleBio(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Professional Summary</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {getAllSkills().length === 0 && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleExpertise(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Skills & Expertise</Text>
+                      </TouchableOpacity>
+                    )}
+
+                    {(!user.employmentDetails || user.employmentDetails.length === 0) && (
+                      <TouchableOpacity
+                        style={styles.promptButton}
+                        onPress={() => {
+                          setPopupVisibleExperience(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="add" strokeColor={AppColors.AppButtonBackground} width={16} height={16} />
+                        <Text style={styles.promptButtonText}>Add Work Experience</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              </View>
+            ) : (
+              // Traditional Profile View
+              <View style={styles.profileView}>
                 <TouchableOpacity
                   style={styles.editButton}
                   onPress={() => {
-                    setPopupVisibleProfile(true), SetreadyToReload(true);
+                    setPopupVisibleProfile(true);
+                    SetreadyToReload(true);
                   }}>
                   <SvgIcon name="edit" strokeColor="#fff" />
                   <Text style={styles.editButtonText}>Edit Profile</Text>
                 </TouchableOpacity>
-              </View>
 
-              <View style={{position: 'absolute', right: 10, top: 10}}>
-                <TouchableOpacity style={styles.logoutButton} onPress={Logout}>
-                  <SvgIcon
-                    name="power"
-                    strokeColor="red"
-                    width={14}
-                    height={14}
-                  />
-                  <Text style={{color: 'red'}}>Logout</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Stats Section */}
-              {/* <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {profileData.candidates}
-                  </Text>
-                  <Text style={styles.statLabel}>Applied</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>
-                    {profileData.activeJobs}
-                  </Text>
-                  <Text style={styles.statLabel}>Response</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profileData.hired}</Text>
-                  <Text style={styles.statLabel}>Shortlisted</Text>
-                </View>
-              </View> */}
-
-              {/* Contact Info */}
-              <View style={styles.sectionContainer}>
-                <View style={styles.contactItem}>
-                  <SvgIcon name="email" strokeColor="#666" />
-                  <Text style={styles.contactText}>{user.email ?? 'N/A'}</Text>
-                </View>
-                <View style={styles.contactItem}>
-                  <SvgIcon name="phone" strokeColor="#666" />
-                  <Text style={styles.contactText}>
-                    {user.contact ?? 'N/A'}
-                  </Text>
-                </View>
-                <View style={styles.contactItem}>
-                  <SvgIcon name="location" strokeColor="#666" />
-                  <Text
-                    style={
-                      styles.contactText
-                    }>{`${user.city} , ${user.state}`}</Text>
-                </View>
-              </View>
-
-              {/* Bio Section */}
-              <View style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>About Me</Text>
-
-                  {user?.bio && (
+                {/* Bio Section */}
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>About Me</Text>
+                    {user?.bio && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPopupVisibleBio(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="edit" strokeColor={AppColors.headerBackground} width={20} height={20} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  {user?.bio ? (
+                    <Text style={styles.bioText}>{user.bio}</Text>
+                  ) : (
                     <TouchableOpacity
                       onPress={() => {
-                        setPopupVisibleBio(true), SetreadyToReload(true);
+                        setPopupVisibleBio(true);
+                        SetreadyToReload(true);
                       }}>
-                      <SvgIcon
-                        name="edit"
-                        strokeColor={AppColors.headerBackground}
-                        width={20}
-                        height={20}
-                      />
+                      <Text style={styles.addPromptText}>+ Add Your Bio</Text>
                     </TouchableOpacity>
                   )}
                 </View>
-                {user?.bio ? (
-                  <Text style={styles.bioText}>{user.bio}</Text>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setPopupVisibleBio(true), SetreadyToReload(true);
-                    }}>
-                    <Text
-                      style={{
-                        color: AppColors.AppButtonBackground,
-                        fontWeight: '500',
-                        textAlign: 'center',
-                        fontSize: 18,
-                      }}>
-                      + Add Your Bio
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
 
-              {/* Skills Section */}
-              <View style={styles.sectionContainer}>
-                <View
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    flexDirection: 'row',
-                  }}>
-                  <Text style={styles.sectionTitle}>Skills</Text>
-                  {user.educationDetails?.length > 0 &&
-                  user.educationDetails?.[0].keySkill?.length > 0 ? (
+                {/* Skills Section */}
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Skills</Text>
+                    {getAllSkills().length > 0 && (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPopupVisibleExpertise(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <SvgIcon name="edit" strokeColor={AppColors.headerBackground} width={20} height={20} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <View style={styles.skillsContainer}>
+                    {getAllSkills().length > 0 ? (
+                      getAllSkills().map((skill, index) => (
+                        <View key={index} style={styles.skillTag}>
+                          <Text style={styles.skillText}>{skill}</Text>
+                        </View>
+                      ))
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setPopupVisibleExpertise(true);
+                          SetreadyToReload(true);
+                        }}>
+                        <Text style={styles.addPromptText}>+ Add Expertise</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+
+                {/* Experience Section */}
+                <View style={styles.sectionContainer}>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Experience</Text>
                     <TouchableOpacity
                       onPress={() => {
-                        setPopupVisibleExpertise(true), SetreadyToReload(true);
+                        setPopupVisibleExperience(true);
+                        SetreadyToReload(true);
                       }}>
-                      <SvgIcon
-                        name="edit"
-                        strokeColor={AppColors.headerBackground}
-                        width={20}
-                        height={20}
-                      />
+                      <Text style={styles.addButtonText}>+ Add</Text>
                     </TouchableOpacity>
-                  ) : null}
-                </View>
-                <View style={styles.skillsContainer}>
-                  {user.educationDetails?.length > 0 &&
-                  user.educationDetails?.[0].keySkill?.length > 0 ? (
-                    user.educationDetails[0].keySkill.map((skill, index) => (
-                      <View key={index} style={styles.skillTag}>
-                        <Text style={styles.skillText}>{skill}</Text>
+                  </View>
+                  {user?.employmentDetails && user.employmentDetails?.length > 0 ? (
+                    user.employmentDetails.map((job, index) => (
+                      <View key={index} style={styles.jobCard}>
+                        <Text style={styles.jobTitle}>{job.CompanyName}</Text>
+                        <Text style={styles.jobRole}>{job.role}</Text>
+                        <Text style={styles.applicantsText}>{job.experience} Years</Text>
                       </View>
                     ))
                   ) : (
-                    <TouchableOpacity
-                      style={{margin: 'auto'}}
-                      onPress={() => {
-                        setPopupVisibleExpertise(true), SetreadyToReload(true);
-                      }}>
-                      <Text
-                        style={{
-                          color: AppColors.AppButtonBackground,
-                          fontWeight: '500',
-                          textAlign: 'center',
-                          fontSize: 18,
-                        }}>
-                        + Add Expertise
-                      </Text>
-                    </TouchableOpacity>
+                    <Text style={styles.emptyText}>Click add to add Experiences</Text>
                   )}
                 </View>
               </View>
-
-              {/* Active Jobs */}
-              <View style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>Experience</Text>
-                  <TouchableOpacity
-                    onPress={() => {
-                      setPopupVisibleExperience(true), SetreadyToReload(true);
-                    }}>
-                    <Text
-                      style={{
-                        display: 'flex',
-                        fontSize: 16,
-                        color: AppColors.headerBackground,
-                        fontWeight: '600',
-                        flexDirection: 'row',
-                        textAlign: 'center',
-                      }}>
-                      + Add
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                {user?.employmentDetails &&
-                user.employmentDetails?.length > 0 ? (
-                  user.employmentDetails.map(job => (
-                    <TouchableOpacity key={job.id} style={styles.jobCard}>
-                      <Text style={styles.jobTitle} key={job.fromDate}>
-                        {job.CompanyName}
-                      </Text>
-                      <Text style={styles.applicantsText}>
-                        {job.experience} Years
-                      </Text>
-                    </TouchableOpacity>
-                  ))
-                ) : (
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      fontWeight: '500',
-                      color: AppColors.headerBackground,
-                    }}>
-                    Click add to add Experiences
-                  </Text>
-                )}
-              </View>
-            </View>
-          )
-        )}
-      </View>
+            )}
+          </View>
+        )
+      )}
       <Popup
         visible={popupVisibleProfile}
         onClose={() => setPopupVisibleProfile(false)}
@@ -717,89 +907,168 @@ export const CandidateProfile: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
-    minWidth:'100%'
+    backgroundColor: '#f5f6fa',
+  },
+  loadingContainer: {
+    height: Dimensions.get('window').height * 0.8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+  },
+  profileContainer: {
+    paddingBottom: 30,
   },
   header: {
-    alignItems: 'center',
-    padding: 20,
     backgroundColor: '#fff',
-    marginBottom: 10,
-    position: 'relative',
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    marginBottom: 15,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#ffebee',
+    backgroundColor: '#ffebee',
+  },
+  logoutText: {
+    color: 'red',
+    marginLeft: 6,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    padding: 2,
+  },
+  modeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
+  },
+  activeModeButton: {
+    backgroundColor: AppColors.AppButtonBackground,
+  },
+  modeButtonText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeModeButtonText: {
+    color: '#fff',
+  },
+  profileHeaderContent: {
+    alignItems: 'center',
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     marginBottom: 15,
+    borderWidth: 4,
+    borderColor: AppColors.AppBackground,
   },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#333',
   },
   position: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 3,
-  },
-  company: {
-    fontSize: 16,
-    color: AppColors.AppButtonBackground,
     marginBottom: 15,
-    fontWeight: 700,
+    fontWeight: '500',
+  },
+  compactContactInfo: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  contactChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  contactChipText: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: '#555',
+  },
+  resumeView: {
+    paddingHorizontal: 15,
+  },
+  profileView: {
+    paddingHorizontal: 15,
   },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: AppColors.AppButtonBackground,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 25,
+    alignSelf: 'center',
+    marginBottom: 20,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   editButtonText: {
     color: '#fff',
     marginLeft: 8,
-    fontWeight: '500',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 15,
-    backgroundColor: '#fff',
-    marginVertical: 10,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: AppColors.AppButtonBackground,
-  },
-  statLabel: {
-    color: '#666',
-    fontSize: 12,
+    fontWeight: '600',
+    fontSize: 16,
   },
   sectionContainer: {
     backgroundColor: '#fff',
-    padding: 15,
+    padding: 20,
     marginVertical: 8,
+    borderRadius: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  editSectionText: {
-    color: AppColors.AppButtonBackground,
-    fontWeight: '500',
-    textDecorationLine: 'underline',
+    color: '#333',
   },
   contactItem: {
     flexDirection: 'row',
@@ -812,65 +1081,104 @@ const styles = StyleSheet.create({
     color: '#444',
   },
   bioText: {
-    lineHeight: 22,
-    color: '#444',
+    lineHeight: 24,
+    color: '#555',
+    fontSize: 15,
   },
   skillsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 10,
-    minWidth:'90%'
   },
   skillTag: {
     backgroundColor: AppColors.AppBackground,
-    borderRadius: 15,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
     margin: 4,
   },
   skillText: {
     color: AppColors.AppButtonBackground,
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '500',
   },
   jobCard: {
     backgroundColor: '#f8f9fa',
     padding: 15,
-    borderRadius: 10,
-    marginVertical: 5,
+    borderRadius: 12,
+    marginVertical: 6,
+    borderLeftWidth: 4,
+    borderLeftColor: AppColors.AppButtonBackground,
   },
   jobTitle: {
     fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 5,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#333',
+  },
+  jobRole: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
   },
   applicantsText: {
     color: '#666',
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '500',
   },
-  postJobButton: {
-    backgroundColor: AppColors.AppButtonBackground,
-    padding: 16,
-    margin: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 100,
-  },
-  postJobButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  addPromptText: {
+    color: AppColors.AppButtonBackground,
+    fontWeight: '500',
+    textAlign: 'center',
     fontSize: 16,
+    paddingVertical: 20,
   },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: 'red',
-    paddingHorizontal: 10,
-    display: 'flex',
+  addButtonText: {
+    fontSize: 16,
+    color: AppColors.headerBackground,
+    fontWeight: '600',
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontWeight: '500',
+    color: AppColors.headerBackground,
+    paddingVertical: 15,
+  },
+  prompts: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 15,
+    marginVertical: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  promptTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#333',
+  },
+  promptButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    paddingVertical: 5,
-    borderRadius: 25,
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: AppColors.AppBackground,
   },
+  promptButtonText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: AppColors.AppButtonBackground,
+    fontWeight: '500',
+  },
+  // Original styles for modals
   squareBox: {
     width: '100%',
     height: 80,

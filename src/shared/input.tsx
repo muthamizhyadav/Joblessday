@@ -53,12 +53,18 @@ const SharedInput: React.FC<InputProps> = ({
 
   const getInputProps = (): TextInputProps => {
     switch (inputType) {
-      // case 'password':
-      //   return {
-      //     secureTextEntry: true,
-      //     autoCapitalize: 'none',
-      //     keyboardType: 'default',
-      //   };
+      case 'password':
+        return {
+          secureTextEntry: true,
+          autoCapitalize: 'none',
+          keyboardType: 'default',
+        };
+      case 'text':
+        return {
+          secureTextEntry: false,
+          autoCapitalize: 'none',
+          keyboardType: 'default',
+        };
       case 'email':
         return {
           autoCapitalize: 'none',
@@ -121,7 +127,8 @@ const SharedInput: React.FC<InputProps> = ({
             name={passwordIcon ? 'eye' : 'eyeclose'}
             height={24}
             width={24}
-            strokeColor="#6B7280"
+            color="#9CA3AF"
+            strokeColor="#9CA3AF"
           />
         </TouchableOpacity>
       ) : name == 'confirmPassword' ? (
@@ -138,7 +145,8 @@ const SharedInput: React.FC<InputProps> = ({
             name={confirmpasswordIcon ? 'eye' : 'eyeclose'}
             height={24}
             width={24}
-            strokeColor="#6B7280"
+            color="#9CA3AF"
+            strokeColor="#9CA3AF"
           />
         </TouchableOpacity>
       ) : null}

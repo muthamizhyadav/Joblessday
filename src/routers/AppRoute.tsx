@@ -14,6 +14,7 @@ import {Candidate} from '../screens/App/Candidate';
 import {CandidateProfile} from '../screens/App/canidate/Candidate.profile';
 import {CandidateDashboard} from '../screens/App/canidate/Dashboard';
 import {CandidateJoblist} from '../screens/App/canidate/Joblist';
+import RecruitersFollow from '../screens/App/canidate/RecruitersFollow';
 
 const Tab = createBottomTabNavigator();
 
@@ -56,6 +57,11 @@ const TabNavigator = () => {
     {
       name: 'Job Posts',
       component: CandidateJoblist,
+      options: {animation: 'fade', lazy: true},
+    },
+    {
+      name: 'Recruiters',
+      component: RecruitersFollow,
       options: {animation: 'fade', lazy: true},
     },
     {
